@@ -1,5 +1,5 @@
 mountpoints:
   /:
-    url: "https://author-p28413-e1765753.adobeaemcloud.com/bin/franklin.delivery/smomin/groceries/carousel"
+    url: "https://author-p28413-e1765753.adobeaemcloud.com/bin/franklin.delivery/smomin/groceries/main"
     type: "markup"
     suffix: ".html"
