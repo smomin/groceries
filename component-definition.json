@@ -121,7 +121,7 @@
                 "resourceType": "core/franklin/components/block/v1/block",
                 "template": {
                   "name": "Carousel",
-                  "filter": "carousel"
+                  "model": "carousel"
                 }
               }
             }
@@ -166,7 +166,7 @@
                 "resourceType": "core/franklin/components/block/v1/block",
                 "template": {
                   "name": "Features",
-                  "filter": "features"
+                  "model": "features"
                 }
               }
             }
@@ -203,6 +203,21 @@
           }
         },
         {
+          "title": "Global Search",
+          "id": "global-search",
+          "plugins": {
+            "xwalk": {
+              "page": {
+                "resourceType": "core/franklin/components/block/v1/block",
+                "template": {
+                  "name": "Global Search",
+                  "model": "global-search"
+                }
+              }
+            }
+          }
+        },
+        {
           "title": "Hero",
           "id": "hero",
           "plugins": {
@@ -212,6 +227,51 @@
                 "template": {
                   "name": "Hero",
                   "model": "hero"
+                }
+              }
+            }
+          }
+        },
+        {
+          "title": "Search Box",
+          "id": "search-box",
+          "plugins": {
+            "xwalk": {
+              "page": {
+                "resourceType": "core/franklin/components/block/v1/block",
+                "template": {
+                  "name": "Search Box",
+                  "model": "search-box"
+                }
+              }
+            }
+          }
+        },
+        {
+          "title": "Search Index",
+          "id": "search-index",
+          "plugins": {
+            "xwalk": {
+              "page": {
+                "resourceType": "core/franklin/components/block/v1/block",
+                "template": {
+                  "name": "Search Index",
+                  "model": "search-index"
+                }
+              }
+            }
+          }
+        },
+        {
+          "title": "Search Results",
+          "id": "search-results",
+          "plugins": {
+            "xwalk": {
+              "page": {
+                "resourceType": "core/franklin/components/block/v1/block",
+                "template": {
+                  "name": "Search Results",
+                  "model": "search-results"
                 }
               }
             }

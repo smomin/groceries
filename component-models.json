@@ -161,6 +161,22 @@
     ]
   },
   {
+    "id": "carousel",
+    "fields": [
+      {
+        "component": "multiselect",
+        "name": "style",
+        "label": "Style",
+        "options": [
+          {
+            "name": "Highlight",
+            "value": "highlight"
+          }
+        ]
+      }
+    ]
+  },
+  {
     "id": "item",
     "fields": [
       {
@@ -246,6 +262,27 @@
     ]
   },
   {
+    "id": "global-search",
+    "fields": [
+      {
+        "component": "text",
+        "valueType": "string",
+        "name": "appId",
+        "label": "App Id",
+        "value": "",
+        "key-value": true
+      },
+      {
+        "component": "text",
+        "valueType": "string",
+        "name": "apiKey",
+        "label": "API Key",
+        "value": "",
+        "key-value": true
+      }
+    ]
+  },
+  {
     "id": "hero",
     "fields": [
       {
@@ -268,6 +305,67 @@
         "value": "",
         "label": "Text",
         "valueType": "string"
+      }
+    ]
+  },
+  {
+    "id": "search-box",
+    "fields": [
+      {
+        "component": "text",
+        "valueType": "string",
+        "name": "placeholderText",
+        "label": "PlaceHolder Text",
+        "value": "",
+        "key-value": true
+      }
+    ]
+  },
+  {
+    "id": "search-index",
+    "fields": [
+      {
+        "component": "text",
+        "valueType": "string",
+        "name": "indexName",
+        "label": "Index Name",
+        "value": "",
+        "key-value": true
+      },
+      {
+        "component": "aem-content",
+        "name": "hitTemplate",
+        "label": "Hit Template",
+        "value": "",
+        "key-value": true
+      },
+      {
+        "component": "aem-content",
+        "name": "noResultsTemplate",
+        "label": "No Results Template",
+        "value": "",
+        "key-value": true
+      }
+    ]
+  },
+  {
+    "id": "search-results",
+    "fields": [
+      {
+        "component": "text",
+        "valueType": "string",
+        "name": "appId",
+        "label": "App Id",
+        "value": "",
+        "key-value": true
+      },
+      {
+        "component": "text",
+        "valueType": "string",
+        "name": "apiKey",
+        "label": "API Key",
+        "value": "",
+        "key-value": true
       }
     ]
   }

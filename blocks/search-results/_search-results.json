@@ -1,0 +1,51 @@
+{
+  "definitions": [
+    {
+      "title": "Search Results",
+      "id": "search-results",
+      "plugins": {
+        "xwalk": {
+          "page": {
+            "resourceType": "core/franklin/components/block/v1/block",
+            "template": {
+              "name": "Search Results",
+              "model": "search-results"
+            }
+          }
+        }
+      }
+    }
+  ],
+  "models": [
+    {
+      "id": "search-results",
+      "fields": [
+        {
+          "component": "text",
+          "valueType": "string",
+          "name": "appId",
+          "label": "App Id",
+          "value": "",
+          "key-value": true
+        },
+        {
+          "component": "text",
+          "valueType": "string",
+          "name": "apiKey",
+          "label": "API Key",
+          "value": "",
+          "key-value": true
+        }
+      ]
+    }
+  ],
+  "filters": [
+    {
+      "id": "search-results",
+      "components": [
+        "search-box",
+        "search-index"
+      ]
+    }
+  ]
+}

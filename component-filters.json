@@ -17,7 +17,8 @@
       "columns",
       "fragment",
       "carousel",
-      "features"
+      "features",
+      "search-results"
     ]
   },
   {
@@ -51,6 +52,20 @@
     "id": "features",
     "components": [
       "item"
+    ]
+  },
+  {
+    "id": "global-search",
+    "components": [
+      "search-box",
+      "search-index"
+    ]
+  },
+  {
+    "id": "search-results",
+    "components": [
+      "search-box",
+      "search-index"
     ]
   }
 ]

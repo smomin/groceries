@@ -52,7 +52,8 @@
         "columns",
         "fragment",
         "carousel",
-        "features"
+        "features",
+        "search-results"
       ]
     }
   ]
