@@ -164,15 +164,11 @@
     "id": "carousel",
     "fields": [
       {
-        "component": "multiselect",
+        "component": "text",
         "name": "style",
         "label": "Style",
-        "options": [
-          {
-            "name": "Highlight",
-            "value": "highlight"
-          }
-        ]
+        "value": "",
+        "valueType": "string"
       }
     ]
   },
@@ -218,10 +214,11 @@
     "id": "features",
     "fields": [
       {
-        "component": "multiselect",
+        "component": "text",
         "name": "style",
         "label": "Style",
-        "options": []
+        "value": "",
+        "valueType": "string"
       }
     ]
   },

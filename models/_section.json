@@ -53,6 +53,7 @@
         "fragment",
         "carousel",
         "features",
+        "global-search",
         "search-results"
       ]
     }
