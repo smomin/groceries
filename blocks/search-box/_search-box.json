@@ -21,6 +21,7 @@
       "id": "search-box",
       "fields": [
         {
+          "id": "placeholderText",
           "component": "text",
           "valueType": "string",
           "name": "placeholderText",

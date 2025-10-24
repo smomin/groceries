@@ -22,6 +22,7 @@
       "id": "global-search",
       "fields": [
         {
+          "id": "appId",
           "component": "text",
           "valueType": "string",
           "name": "appId",
@@ -30,6 +31,7 @@
           "key-value": true
         },
         {
+          "id": "apiKey",
           "component": "text",
           "valueType": "string",
           "name": "apiKey",

@@ -7,63 +7,10 @@ import { loadFragment } from '../fragment/fragment.js';
  */
 export default async function decorate(block) {
   // load nav as fragment
-  // const navMeta = getMetadata('nav');
-  // const navPath = navMeta ? new URL(navMeta, window.location).pathname : '/nav';
-  // const fragment = await loadFragment(navPath);
-
-  // // decorate nav DOM
-  // block.textContent = '';
-  // const nav = document.createElement('nav');
-  // nav.id = 'nav';
-  // while (fragment.firstElementChild) nav.append(fragment.firstElementChild);
-
-  // const classes = ['brand', 'sections', 'tools'];
-  // classes.forEach((c, i) => {
-  //   const section = nav.children[i];
-  //   if (section) section.classList.add(`nav-${c}`);
-  // });
-
-  // const navBrand = nav.querySelector('.nav-brand');
-  // const brandLink = navBrand.querySelector('.button');
-  // if (brandLink) {
-  //   brandLink.className = '';
-  //   brandLink.closest('.button-container').className = '';
-  // }
-
-  // const navSections = nav.querySelector('.nav-sections');
-  // if (navSections) {
-  //   navSections.querySelectorAll(':scope .default-content-wrapper > ul > li').forEach((navSection) => {
-  //     if (navSection.querySelector('ul')) navSection.classList.add('nav-drop');
-  //     navSection.addEventListener('click', () => {
-  //       if (isDesktop.matches) {
-  //         const expanded = navSection.getAttribute('aria-expanded') === 'true';
-  //         toggleAllNavSections(navSections);
-  //         navSection.setAttribute('aria-expanded', expanded ? 'false' : 'true');
-  //       }
-  //     });
-  //   });
-  // }
-
-  // // hamburger for mobile
-  // const hamburger = document.createElement('div');
-  // hamburger.classList.add('nav-hamburger');
-  // hamburger.innerHTML = `<button type="button" aria-controls="nav" aria-label="Open navigation">
-  //     <span class="nav-hamburger-icon"></span>
-  //   </button>`;
-  // hamburger.addEventListener('click', () => toggleMenu(nav, navSections));
-  // nav.prepend(hamburger);
-  // nav.setAttribute('aria-expanded', 'false');
-  // // prevent mobile nav behavior on window resize
-  // toggleMenu(nav, navSections, isDesktop.matches);
-  // isDesktop.addEventListener('change', () => toggleMenu(nav, navSections, isDesktop.matches));
-
-  // const navWrapper = document.createElement('div');
-  // navWrapper.className = 'nav-wrapper';
-  // navWrapper.append(nav);
-  // block.append(navWrapper);
-
-
-  block.append(generateHeader());
+  const navMeta = getMetadata('nav');
+  const navPath = navMeta ? new URL(navMeta, window.location).pathname : '/nav';
+  const fragment = await loadFragment(navPath);
+  block.append(generateHeader(fragment));
   attachEventListeners();
 }
 
@@ -140,9 +87,18 @@ const headerData = {
 };
 
 // Render header component
-function generateHeader() {
-  const headerHTML = `
-    <header class="header">
+function generateHeader(fragment) {
+  let topContainerHTML = '';
+  let bottomContainerHTML = '';
+
+  const topContainer = fragment.firstElementChild;
+  if (topContainer && topContainer.children.length > 2) {
+    const companyNameElement = topContainer.children[0];
+    const globalSearchElement = topContainer.children[1];
+    const siteControlsElement = topContainer.children[2];
+
+    headerData.logo.text = companyNameElement.textContent;
+    topContainerHTML = `
       <!-- Top Bar -->
       <div class="header__top-bar">
         <!-- Logo Section -->
@@ -157,10 +113,7 @@ function generateHeader() {
 
         <!-- Search Bar -->
         <div class="header__search-container">
-          <input type="text" placeholder="${headerData.search.placeholder}" class="header__search-input">
-          <button class="header__search-button" aria-label="Search">
-            ${headerData.search.icon}
-          </button>
+          ${globalSearchElement.innerHTML}
         </div>
 
         <!-- Right Icons -->
@@ -173,7 +126,12 @@ function generateHeader() {
           `).join('')}
         </div>
       </div>
+    `;
+  }
 
+  const bottomContainer = fragment.lastElementChild;
+  if (bottomContainer && bottomContainer.children.length > 2) {
+    bottomContainerHTML = `
       <!-- Bottom Navigation Bar -->
       <div class="header__bottom-bar">
         <nav class="navigation" aria-label="Main navigation">
@@ -195,6 +153,15 @@ function generateHeader() {
           <span class="header__contact-hours">${headerData.contact.hours}</span>
         </div>
       </div>
+    `;
+  }
+  const headerHTML = `
+    <header class="header">
+      <!-- Top Bar -->
+      ${topContainerHTML}
+
+      <!-- Bottom Navigation Bar -->
+      ${bottomContainerHTML}
     </header>
   `;
 

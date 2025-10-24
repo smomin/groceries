@@ -5,10 +5,13 @@ import { readBlockConfig } from '../../scripts/aem.js';
 export default function decorate(block) {
   const { algoliasearch } = window;
   const { autocomplete, getAlgoliaResults } = window['@algolia/autocomplete-js'];
+  console.log(block);
 
   const config = readBlockConfig(block);
   console.log(config);
 
+
+  // block.textContent = '';
   const searchClient = algoliasearch(
     '0EXRPAXB56',
     '4350d61521979144d2012720315f5fc6',

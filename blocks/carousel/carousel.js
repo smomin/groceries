@@ -79,34 +79,6 @@ function createSlide(htmlElement) {
     return slide;
 }
 
-// Create subscription form
-function createSubscriptionForm() {
-    const form = document.createElement('form');
-    form.className = 'hero-form';
-    form.onsubmit = (e) => {
-        e.preventDefault();
-        const email = form.querySelector('input').value;
-        console.log('Subscription email:', email);
-        alert(`Thank you for subscribing with: ${email}`);
-        form.reset();
-        return false;
-    };
-    
-    const input = document.createElement('input');
-    input.type = 'email';
-    input.placeholder = 'Enter your email address';
-    input.required = true;
-    
-    const button = document.createElement('button');
-    button.type = 'submit';
-    button.textContent = 'Subscribe';
-    
-    form.appendChild(input);
-    form.appendChild(button);
-    
-    return form;
-}
-
 // Create navigation arrow
 function createArrow(direction, moveDirection) {
     const arrow = document.createElement('button');

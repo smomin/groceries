@@ -21,6 +21,7 @@
       "id": "search-index",
       "fields": [
         {
+          "id": "indexName",
           "component": "text",
           "valueType": "string",
           "name": "indexName",
@@ -29,6 +30,7 @@
           "key-value": true
         },
         {
+          "id": "hitTemplate",
           "component": "aem-content",
           "name": "hitTemplate",
           "label": "Hit Template",
@@ -36,6 +38,7 @@
           "key-value": true
         },
         {
+          "id": "noResultsTemplate",
           "component": "aem-content",
           "name": "noResultsTemplate",
           "label": "No Results Template",
