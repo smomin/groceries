@@ -6,42 +6,19 @@ import { loadFragment } from '../fragment/fragment.js';
  * @param {Element} block The header block element
  */
 export default async function decorate(block) {
-
-  block.append(generateHeroCarousel());
+  block.append(generateHeroCarousel(block));
 
   // Initialize carousel functionality
   initCarousel();
 }
 
-
-// Hero Carousel Data
-const heroSlides = [
-    {
-        title: "Don't miss our daily amazing deals.",
-        subtitle: "Save up to 60% off on your first order",
-        image: "hero.png",
-        imageAlt: "Fresh vegetables and fruits"
-    },
-    {
-        title: "Fresh Organic Vegetables",
-        subtitle: "Get the best quality produce delivered to your door",
-        image: "hero.png",
-        imageAlt: "Fresh vegetables and fruits"
-    },
-    {
-        title: "Healthy Living Starts Here",
-        subtitle: "Discover our wide range of fresh products",
-        image: "hero.png",
-        imageAlt: "Fresh vegetables and fruits"
-    }
-];
-
 // Carousel State
 let currentSlide = 0;
 let autoSlideInterval;
+const heroSlides = [];
 
 // Render Hero Carousel
-function generateHeroCarousel() {
+function generateHeroCarousel(block) {
     const heroSection = document.createElement('section');
     heroSection.className = 'hero-carousel';
     
@@ -52,12 +29,12 @@ function generateHeroCarousel() {
     const carouselTrack = document.createElement('div');
     carouselTrack.className = 'carousel-track';
     carouselTrack.id = 'carouselTrack';
-    
-    // Render slides
-    heroSlides.forEach((slide, index) => {
-        const slideElement = createSlide(slide, index);
+
+    [...block.children].forEach((row) => {
+        const slideElement = createSlide(row);
         carouselTrack.appendChild(slideElement);
-    });
+    })
+
     
     // Create navigation arrows
     const prevArrow = createArrow('prev', -1);
@@ -79,40 +56,26 @@ function generateHeroCarousel() {
 }
 
 // Create individual slide
-function createSlide(slideData, index) {
+function createSlide(htmlElement) {
     const slide = document.createElement('div');
     slide.className = 'carousel-slide';
-    
+
     // Hero content
     const heroContent = document.createElement('div');
     heroContent.className = 'hero-content';
-    
-    const title = document.createElement('h2');
-    title.textContent = slideData.title;
-    
-    const subtitle = document.createElement('p');
-    subtitle.textContent = slideData.subtitle;
-    
-    const form = createSubscriptionForm();
-    
-    heroContent.appendChild(title);
-    heroContent.appendChild(subtitle);
-    heroContent.appendChild(form);
+
+    const text = htmlElement.lastElementChild;
+    heroContent.appendChild(text);
     
     // Hero image
-    const heroImage = document.createElement('div');
+    const heroImage = htmlElement.firstElementChild;
     heroImage.className = 'hero-image';
-    
-    const img = document.createElement('img');
-    img.src = slideData.image;
-    img.alt = slideData.imageAlt;
-    
-    heroImage.appendChild(img);
     
     // Assemble slide
     slide.appendChild(heroContent);
     slide.appendChild(heroImage);
     
+    heroSlides.push(slide);
     return slide;
 }
 
