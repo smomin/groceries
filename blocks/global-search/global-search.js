@@ -7,19 +7,27 @@ export default function decorate(block) {
   const { autocomplete, getAlgoliaResults } = window['@algolia/autocomplete-js'];
   console.log(block);
 
-  const config = readBlockConfig(block);
-  console.log(config);
+  const appId = block.children[0].textContent;
+  const apiKey = block.children[1].textContent;
+  const placeholder = block.children[2].textContent;
+  const index = block.children[3];
+  const indexName = index.children[0].textContent;
+  const hitTemplate = index.children[1].textContent;
+  const noResultsTemplate = index.children[2].textContent;
+
+  // Clear out configurations from the block
+  block.innerHTML = '';
 
 
   // block.textContent = '';
   const searchClient = algoliasearch(
-    '0EXRPAXB56',
-    '4350d61521979144d2012720315f5fc6',
+    appId,
+    apiKey,
   );
 
   autocomplete({
     container: block,
-    placeholder: 'Enter your query',
+    placeholder: placeholder,
     onSubmit({ state }) {
       window.location.href = `search?query=${state.query}&queryID=${state.context.queryID}`;
     },
@@ -32,7 +40,7 @@ export default function decorate(block) {
               searchClient,
               queries: [
                 {
-                  indexName: 'WKND_Commerce_PROD_US_EN_Pages',
+                  indexName: indexName,
                   clickAnalytics: true,
                   query,
                   params: {
