@@ -128,15 +128,15 @@
           }
         },
         {
-          "title": "Item",
-          "id": "item",
+          "title": "Carousel Item",
+          "id": "carousel-item",
           "plugins": {
             "xwalk": {
               "page": {
                 "resourceType": "core/franklin/components/block/v1/block/item",
                 "template": {
-                  "name": "Item",
-                  "model": "item"
+                  "name": "Carousel Item",
+                  "model": "carousel-item"
                 }
               }
             }
@@ -173,15 +173,15 @@
           }
         },
         {
-          "title": "Item",
-          "id": "item",
+          "title": "Feature Item",
+          "id": "feature-item",
           "plugins": {
             "xwalk": {
               "page": {
                 "resourceType": "core/franklin/components/block/v1/block/item",
                 "template": {
-                  "name": "Item",
-                  "model": "item"
+                  "name": "Feature Item",
+                  "model": "feature-item"
                 }
               }
             }

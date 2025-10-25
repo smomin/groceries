@@ -2,6 +2,31 @@ import '../../scripts/lib-algoliasearch.js';
 import '../../scripts/lib-autocomplete.js';
 import { readBlockConfig } from '../../scripts/aem.js';
 
+export const SearchEvents = {
+  QUERY_CHANGE: 'search:query:change',
+  QUERY_SUBMIT: 'search:query:submit',
+  INSTANTSEARCH_READY: 'search:instantsearch:ready',
+  AUTOCOMPLETE_READY: 'search:autocomplete:ready',
+  SEARCH_START: 'search:start',
+  SEARCH_COMPLETE: 'search:complete',
+  ERROR: 'search:error'
+};
+
+function handleSubmit(state) {
+  this.dispatchEvent(SearchEvents.QUERY_SUBMIT, {
+    query: state.query,
+    source: 'autocomplete'
+  });
+  window.location.href = `search?query=${state.query}&queryID=${state.context.queryID}`;
+}
+
+function handleStateChange(state) {
+  this.dispatchEvent(SearchEvents.QUERY_CHANGE, {
+    query: state.query,
+    source: 'autocomplete'
+  });
+}
+
 export default function decorate(block) {
   const { algoliasearch } = window;
   const { autocomplete, getAlgoliaResults } = window['@algolia/autocomplete-js'];
@@ -28,9 +53,6 @@ export default function decorate(block) {
   autocomplete({
     container: block,
     placeholder: placeholder,
-    onSubmit({ state }) {
-      window.location.href = `search?query=${state.query}&queryID=${state.context.queryID}`;
-    },
     getSources({ query }) {
       return [
         {
@@ -124,5 +146,7 @@ export default function decorate(block) {
         },
       ];
     },
+    onSubmit: ({ state }) => handleSubmit(state),
+    onStateChange: ({ state }) => handleStateChange(state),
   });
 }

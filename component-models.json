@@ -173,7 +173,7 @@
     ]
   },
   {
-    "id": "item",
+    "id": "carousel-item",
     "fields": [
       {
         "component": "reference",
@@ -223,7 +223,7 @@
     ]
   },
   {
-    "id": "item",
+    "id": "feature-item",
     "fields": [
       {
         "component": "text",

@@ -16,15 +16,15 @@
       }
     },
     {
-      "title": "Item",
-      "id": "item",
+      "title": "Feature Item",
+      "id": "feature-item",
       "plugins": {
         "xwalk": {
           "page": {
             "resourceType": "core/franklin/components/block/v1/block/item",
             "template": {
-              "name": "Item",
-              "model": "item"
+              "name": "Feature Item",
+              "model": "feature-item"
             }
           }
         }
@@ -45,7 +45,7 @@
       ]
     },
     {
-      "id": "item",
+      "id": "feature-item",
       "fields": [
         {
           "component": "text",
@@ -75,7 +75,7 @@
     {
       "id": "features",
       "components": [
-        "item"
+        "feature-item"
       ]
     }
   ]
