@@ -31,7 +31,7 @@
   {
     "id": "carousel",
     "components": [
-      "carousel-item"
+      "slide"
     ]
   },
   {
@@ -52,7 +52,7 @@
   {
     "id": "features",
     "components": [
-      "feature-item"
+      "feature"
     ]
   },
   {

@@ -161,20 +161,15 @@
     ]
   },
   {
-    "id": "carousel",
+    "id": "slide",
     "fields": [
       {
         "component": "text",
-        "name": "style",
-        "label": "Style",
+        "name": "title",
         "value": "",
+        "label": "Title",
         "valueType": "string"
-      }
-    ]
-  },
-  {
-    "id": "carousel-item",
-    "fields": [
+      },
       {
         "component": "reference",
         "valueType": "string",
@@ -211,19 +206,7 @@
     ]
   },
   {
-    "id": "features",
-    "fields": [
-      {
-        "component": "text",
-        "name": "style",
-        "label": "Style",
-        "value": "",
-        "valueType": "string"
-      }
-    ]
-  },
-  {
-    "id": "feature-item",
+    "id": "feature",
     "fields": [
       {
         "component": "text",
@@ -233,18 +216,18 @@
         "valueType": "string"
       },
       {
-        "component": "richtext",
-        "name": "text",
-        "value": "",
-        "label": "Text",
-        "valueType": "string"
-      },
-      {
         "component": "reference",
         "valueType": "string",
         "name": "image",
         "label": "Image",
         "multi": false
+      },
+      {
+        "component": "richtext",
+        "name": "text",
+        "value": "",
+        "label": "Text",
+        "valueType": "string"
       }
     ]
   },
