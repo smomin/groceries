@@ -161,6 +161,18 @@
     ]
   },
   {
+    "id": "carousel",
+    "fields": [
+      {
+        "component": "text",
+        "valueType": "string",
+        "name": "classNames",
+        "label": "Class Names",
+        "value": ""
+      }
+    ]
+  },
+  {
     "id": "slide",
     "fields": [
       {
@@ -202,6 +214,18 @@
         "name": "rows",
         "value": "",
         "label": "Rows"
+      }
+    ]
+  },
+  {
+    "id": "features",
+    "fields": [
+      {
+        "component": "text",
+        "valueType": "string",
+        "name": "classNames",
+        "label": "Class Names",
+        "value": ""
       }
     ]
   },
