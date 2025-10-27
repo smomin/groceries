@@ -1,6 +1,5 @@
 import '../../scripts/lib-algoliasearch.js';
 import '../../scripts/lib-autocomplete.js';
-import { readBlockConfig } from '../../scripts/aem.js';
 
 // export const SearchEvents = {
 //   QUERY_CHANGE: 'search:query:change',
@@ -39,15 +38,15 @@ export default function decorate(block) {
     const hitTemplate = index.children[1].textContent;
     const noResultsTemplate = index.children[2].textContent;
 
-    // Clear out configurations from the block
-    block.innerHTML = '';
+    // // Clear out configurations from the block
+    // block.innerHTML = '';
 
 
-    // block.textContent = '';
-    const searchClient = algoliasearch(
-        appId,
-        apiKey,
-    );
+    // // block.textContent = '';
+    // const searchClient = algoliasearch(
+    //     appId,
+    //     apiKey,
+    // );
 
 //   autocomplete({
 //     container: block,
