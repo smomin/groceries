@@ -25,22 +25,27 @@
           "valueType": "string",
           "name": "indexName",
           "label": "Index Name",
-          "value": "",
-          "key-value": true
+          "value": ""
         },
         {
-          "component": "aem-content",
+          "component": "aem-content-fragment",
           "name": "hitTemplate",
           "label": "Hit Template",
-          "value": "",
-          "key-value": true
+          "valueType": "string",
+          "variationName": "contentFragmentVariation",
+          "validation": {
+              "rootPath": "/content/dam/sw-groceries"
+          }
         },
         {
-          "component": "aem-content",
+          "component": "aem-content-fragment",
           "name": "noResultsTemplate",
           "label": "No Results Template",
-          "value": "",
-          "key-value": true
+          "valueType": "string",
+          "variationName": "contentFragmentVariation",
+          "validation": {
+              "rootPath": "/content/dam/sw-groceries"
+          }
         }
       ]
     }

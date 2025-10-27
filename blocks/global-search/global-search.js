@@ -38,11 +38,7 @@ export default function decorate(block) {
     const hitTemplate = index.children[1].textContent;
     const noResultsTemplate = index.children[2].textContent;
 
-    // // Clear out configurations from the block
-    // block.innerHTML = '';
-
-
-    // // block.textContent = '';
+    block.textContent = '';
     const searchClient = algoliasearch(
         appId,
         apiKey,
