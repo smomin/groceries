@@ -15,8 +15,6 @@ export default async function decorate(block) {
   moveInstrumentation(fragment, headerElement);
   block.append(headerElement);
   attachEventListeners();
-
-  block.textContent = '';
 }
 
 
