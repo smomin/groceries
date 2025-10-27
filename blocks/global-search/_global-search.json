@@ -36,6 +36,16 @@
           "label": "API Key",
           "value": "",
           "key-value": true
+        },
+        {
+          "component": "aem-content-fragment",
+          "name": "layoutTemplate",
+          "label": "Layout Template",
+          "valueType": "string",
+          "variationName": "contentFragmentVariation",
+          "validation": {
+              "rootPath": "/content/dam/sw-groceries"
+          }
         }
       ]
     }

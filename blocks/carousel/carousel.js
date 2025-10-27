@@ -29,11 +29,13 @@ function generateHeroCarousel(block) {
     carouselTrack.className = 'carousel-track';
     carouselTrack.id = 'carouselTrack';
 
-    const slides = document.querySelectorAll('[data-aue-model="slide"]')
+    const pictures = document.querySelectorAll('div > picture');
 
-    slides.forEach((row) => {
-        const slideElement = createSlide(row);
-        moveInstrumentation(row, slideElement);
+    pictures.forEach((picture) => {
+        // Get the parent parent element of the slide
+        const parent = picture.parentElement.parentElement;
+        const slideElement = createSlide(parent);
+        moveInstrumentation(parent, slideElement);
         carouselTrack.appendChild(slideElement);
     })
 
