@@ -10,8 +10,13 @@ export default async function decorate(block) {
   const navMeta = getMetadata('nav');
   const navPath = navMeta ? new URL(navMeta, window.location).pathname : '/nav';
   const fragment = await loadFragment(navPath);
-  block.append(generateHeader(fragment));
+
+  const headerElement = generateHeader(fragment);
+  moveInstrumentation(fragment, headerElement);
+  block.append(headerElement);
   attachEventListeners();
+
+  block.textContent = '';
 }
 
 
