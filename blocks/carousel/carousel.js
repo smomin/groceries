@@ -31,7 +31,9 @@ function generateHeroCarousel(block) {
     carouselTrack.className = 'carousel-track';
     carouselTrack.id = 'carouselTrack';
 
-    [...block.children].forEach((row) => {
+    const slides = document.querySelectorAll('[data-aue-model="slide"]')
+
+    slides.forEach((row) => {
         const slideElement = createSlide(row);
         moveInstrumentation(row, slideElement);
         carouselTrack.appendChild(slideElement);
