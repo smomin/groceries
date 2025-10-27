@@ -28,27 +28,26 @@ import { readBlockConfig } from '../../scripts/aem.js';
 // }
 
 export default function decorate(block) {
-  const { algoliasearch } = window;
-  const { autocomplete, getAlgoliaResults } = window['@algolia/autocomplete-js'];
-  console.log(block);
+  if (block.children.length > 3) {
+    const { algoliasearch } = window;
+    const { autocomplete, getAlgoliaResults } = window['@algolia/autocomplete-js'];
+    const appId = block.children[0].textContent;
+    const apiKey = block.children[1].textContent;
+    const placeholder = block.children[2].textContent;
+    const index = block.children[3];
+    const indexName = index.children[0].textContent;
+    const hitTemplate = index.children[1].textContent;
+    const noResultsTemplate = index.children[2].textContent;
 
-  const appId = block.children[0].textContent;
-  const apiKey = block.children[1].textContent;
-  const placeholder = block.children[2].textContent;
-  const index = block.children[3];
-  const indexName = index.children[0].textContent;
-  const hitTemplate = index.children[1].textContent;
-  const noResultsTemplate = index.children[2].textContent;
-
-  // Clear out configurations from the block
-  block.innerHTML = '';
+    // Clear out configurations from the block
+    block.innerHTML = '';
 
 
-  // block.textContent = '';
-  const searchClient = algoliasearch(
-    appId,
-    apiKey,
-  );
+    // block.textContent = '';
+    const searchClient = algoliasearch(
+        appId,
+        apiKey,
+    );
 
 //   autocomplete({
 //     container: block,
@@ -149,4 +148,5 @@ export default function decorate(block) {
 //     onSubmit: ({ state }) => handleSubmit(state),
 //     onStateChange: ({ state }) => handleStateChange(state),
 //   });
+  }
 }
