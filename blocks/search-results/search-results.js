@@ -42,8 +42,8 @@ export default function decorate(block) {
   block.appendChild(searchContainer);
 
   setTimeout(function() {
-    const { instantsearch } = window['@algolia/instantsearch-js'];
-    const { connectSearchBox } = instantsearch;
+    const { connectSearchBox } = instantsearch.connectors;
+    const { hierarchicalMenu, hits, pagination } = instantsearch.widgets;
 
     const { appId, apiKey } = getCredentials(block);
     const { placeholder } = getSearchBox(block);
@@ -86,5 +86,7 @@ export default function decorate(block) {
     ]);
 
     search.start();
+
+    window['searchInstance'] = search;
   }, 500);
 }

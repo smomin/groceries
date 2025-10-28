@@ -102,7 +102,7 @@ export default function decorate(block) {
 
     // Set the InstantSearch index UI state from external events.
     function setInstantSearchUiState(indexUiState) {
-      search.setUiState((uiState) => ({
+      window['searchInstance'].setUiState((uiState) => ({
         ...uiState,
         [indexName]: {
           ...uiState[indexName],
@@ -112,16 +112,6 @@ export default function decorate(block) {
         },
       }));
     }
-
-    // Return the InstantSearch index UI state.
-    function getInstantSearchUiState() {
-      const uiState = instantSearchRouter.read();
-      return (uiState && uiState[indexName]) || {};
-    }
-
-    const searchPageState = getInstantSearchUiState();
-
-    let skipInstantSearchUiStateUpdate = false;
 
     setTimeout(function() {
       // Code to be executed after 3 seconds
@@ -133,7 +123,7 @@ export default function decorate(block) {
         // plugins: [recentSearchesPlugin, querySuggestionsPlugin],
         plugins: [querySuggestionsPlugin],
         initialState: {
-          query: searchPageState.query || "",
+          query: param('search') || '',
         },
         onSubmit({ state }) {
           setInstantSearchUiState({ query: state.query });
@@ -142,10 +132,9 @@ export default function decorate(block) {
           setInstantSearchUiState({ query: "" });
         },
         onStateChange({ prevState, state }) {
-          if (!skipInstantSearchUiStateUpdate && prevState.query !== state.query) {
+          if (prevState.query !== state.query) {
             setInstantSearchUiState({ query: state.query });
           }
-          skipInstantSearchUiStateUpdate = false;
         },
         getSources({ query }) {
           return [
@@ -256,8 +245,7 @@ export default function decorate(block) {
       // This keeps Autocomplete aware of state changes coming from routing
       // and updates its query accordingly
       window.addEventListener("popstate", () => {
-        skipInstantSearchUiStateUpdate = true;
-        setQuery(search.helper?.state.query || "");
+        setQuery(window['searchInstance'].helper?.state.query || "");
       });
     }, 500);
   }
