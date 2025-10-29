@@ -353,11 +353,16 @@
   gap: 15px;
   align-items: center;
 }
+.footer-social-icon svg {
+  width: 16px;
+  height: 16px;
+}
 
 .footer-social-icon {
   width: 40px;
   height: 40px;
   background-color: #3BB77E;
+  color: #fff;
   border-radius: 50%;
   display: flex;
   align-items: center;
@@ -368,12 +373,6 @@
 
 .footer-social-icon:hover {
   background-color: #2ea56b;
-}
-
-.footer-social-icon-text {
-  color: white;
-  font-size: 14px;
-  font-weight: bold;
 }
 
 /* Responsive Design */
