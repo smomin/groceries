@@ -72,7 +72,6 @@ export default function decorate(block) {
         },
         templates: {
           item(hit, { html, components }) {
-            console.log(hit);
             return html`
                 <img class="product-image" src="${hit.image}" alt="${hit.name}"/>
                 <div class="product-category">${hit.categories.lvl0}</div>

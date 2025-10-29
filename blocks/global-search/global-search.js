@@ -40,27 +40,26 @@ function getCredentials(htmlElement) {
   return { appId, apiKey };
 }
 
+function getLayoutTemplate(htmlElement) {
+  const layoutTemplate = getTextContent(htmlElement.children[2]);
+  return { layoutTemplate };
+}
+
 function getSearchBox(htmlElement) {
-  const placeholder = getTextContent(htmlElement.children[2]);
+  const placeholder = getTextContent(htmlElement.children[3]);
   return { placeholder };
 }
 
 function getSearchIndex(htmlElement) {
-  const index = htmlElement.children[3];
+  const index = htmlElement.children[4];
   const indexName = getTextContent(index.children[0]);
-  let hitTemplate = null;
-  let noResultsTemplate = null;
-  if (index.children[1]) {
-    hitTemplate = getTextContent(index.children[1]);
-  } else {
-    hitTemplate = null;
-  }
-  if (index.children[2]) {
-    noResultsTemplate = getTextContent(index.children[2]);
-  } else {
-    noResultsTemplate = null;
-  }
+  const hitTemplate = getTemplate(index.children[1]);
+  const noResultsTemplate = getTemplate(index.children[2]);
   return { indexName, hitTemplate, noResultsTemplate };
+}
+
+function getTemplate(htmlElement) {
+  return htmlElement ? getTextContent(htmlElement) : null;
 }
 
 function param(name) {
@@ -78,6 +77,7 @@ export default function decorate(block) {
     const ingredientIndexName = "ag_ingredients";
 
     const { appId, apiKey } = getCredentials(block);
+    const { layoutTemplate } = getLayoutTemplate(block);
     const { placeholder } = getSearchBox(block);
     const { indexName, hitTemplate, noResultsTemplate } = getSearchIndex(block);
 
@@ -131,7 +131,7 @@ export default function decorate(block) {
         placeholder: placeholder,
         openOnFocus: true,
         // plugins: [recentSearchesPlugin, querySuggestionsPlugin],
-        plugins: [querySuggestionsPlugin],
+        // plugins: [querySuggestionsPlugin],
         initialState: {
           query: param('search') || '',
         },
