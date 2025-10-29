@@ -28,10 +28,24 @@
 }
 
 .header__logo-text h1 {
-  font-size: 28px;
+  /* Groceyish */
+  width: 150px;
+  height: 26px;
+
+  font-family: 'Quicksand';
+  font-style: normal;
   font-weight: 700;
-  color: #253D4E;
-  margin: 0;
+  font-size: 21px;
+  line-height: 26px;
+
+  /* BaseGreen */
+  color: #3BB77E;
+
+
+  /* Inside auto layout */
+  flex: none;
+  order: 0;
+  flex-grow: 0;
 }
 
 /* Search Container */
@@ -146,43 +160,45 @@
 
 /* Responsive Design */
 @media (max-width: 1200px) {
+
   .header__top-bar,
   .header__bottom-bar {
-      padding-left: 60px;
-      padding-right: 60px;
+    padding-left: 60px;
+    padding-right: 60px;
   }
 }
 
 @media (max-width: 992px) {
   .header__top-bar {
-      flex-wrap: wrap;
-      gap: 20px;
+    flex-wrap: wrap;
+    gap: 20px;
   }
 
   .header__search-container {
-      order: 3;
-      flex-basis: 100%;
-      margin: 0;
+    order: 3;
+    flex-basis: 100%;
+    margin: 0;
   }
 }
 
 @media (max-width: 768px) {
+
   .header__top-bar,
   .header__bottom-bar {
-      padding-left: 20px;
-      padding-right: 20px;
+    padding-left: 20px;
+    padding-right: 20px;
   }
 
   .header__logo-text h1 {
-      font-size: 22px;
+    font-size: 22px;
   }
 
   .header__bottom-bar {
-      justify-content: space-between;
+    justify-content: space-between;
   }
 
   .header__contact-hours {
-      display: none;
+    display: none;
   }
 }
 
@@ -253,16 +269,16 @@
 /* Responsive Design */
 @media (max-width: 992px) {
   .navigation__links {
-      gap: 20px;
+    gap: 20px;
   }
 
   .navigation__link {
-      font-size: 13px;
+    font-size: 13px;
   }
 }
 
 @media (max-width: 768px) {
   .navigation__links {
-      display: none;
+    display: none;
   }
 }

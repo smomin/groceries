@@ -29,10 +29,7 @@ function getSearchIndex(htmlElement) {
 export default function decorate(block) {
   const searchContainer = document.createElement("div");
   searchContainer.innerHTML = `
-    <div class="container">
-      <div>
-        <div id="categories"></div>
-      </div>
+    <div class="products-grid">
       <div>
         <div id="hits"></div>
         <div id="pagination"></div>
@@ -41,15 +38,15 @@ export default function decorate(block) {
   `;
   block.appendChild(searchContainer);
 
+  const { appId, apiKey } = getCredentials(block);
+  const { placeholder } = getSearchBox(block);
+  const { indexName, hitTemplate, noResultsTemplate } = getSearchIndex(block);
+
   setTimeout(function() {
     const { connectSearchBox } = instantsearch.connectors;
     const { hierarchicalMenu, hits, pagination } = instantsearch.widgets;
 
-    const { appId, apiKey } = getCredentials(block);
-    const { placeholder } = getSearchBox(block);
-    const { indexName, hitTemplate, noResultsTemplate } = getSearchIndex(block);
-
-    const searchClient = algoliasearch(
+    const searchClient = algoliasearch.searchClient(
       appId,
       apiKey,
     );
@@ -66,17 +63,35 @@ export default function decorate(block) {
 
     search.addWidgets([
       virtualSearchBox({}),
-      hierarchicalMenu({
-        container: "#categories",
-        attributes: ["hierarchicalCategories.lvl0", "hierarchicalCategories.lvl1"],
-      }),
       hits({
         container: "#hits",
+        cssClasses: {
+          item: 'product-card',
+          list: 'products-grid',
+          root: 'container',
+        },
         templates: {
           item(hit, { html, components }) {
+            console.log(hit);
             return html`
-              <div>${components.Highlight({ attribute: "name", hit })}</div>
-            `;
+                <img class="product-image" src="${hit.image}" alt="${hit.name}"/>
+                <div class="product-category">${hit.categories.lvl0}</div>
+                <div class="product-name">${components.Highlight({ attribute: "name", hit })}</div>
+                <div class="vendor">
+                  <span class="vendor-label">By</span> <span style="color: #00b207;">${hit.brand}</span>
+                </div>
+                <div class="product-footer">
+                  <div class="price-container">
+                      <span class="current-price">${new Intl.NumberFormat('en-US', {
+                        style: 'currency',
+                        currency: 'USD'
+                      }).format(hit.price)}</span>
+                  </div>
+                  <button class="add-btn">
+                      <span class="cart-icon"></span>
+                      <span>Add</span>
+                  </button>
+                </div>`;
           },
         },
       }),

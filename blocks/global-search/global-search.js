@@ -48,8 +48,18 @@ function getSearchBox(htmlElement) {
 function getSearchIndex(htmlElement) {
   const index = htmlElement.children[3];
   const indexName = getTextContent(index.children[0]);
-  const hitTemplate = getTextContent(index.children[1]);
-  const noResultsTemplate = getTextContent(index.children[2]);
+  let hitTemplate = null;
+  let noResultsTemplate = null;
+  if (index.children[1]) {
+    hitTemplate = getTextContent(index.children[1]);
+  } else {
+    hitTemplate = null;
+  }
+  if (index.children[2]) {
+    noResultsTemplate = getTextContent(index.children[2]);
+  } else {
+    noResultsTemplate = null;
+  }
   return { indexName, hitTemplate, noResultsTemplate };
 }
 
@@ -71,7 +81,7 @@ export default function decorate(block) {
     const { placeholder } = getSearchBox(block);
     const { indexName, hitTemplate, noResultsTemplate } = getSearchIndex(block);
 
-    const searchClient = algoliasearch(
+    const searchClient = algoliasearch.searchClient(
       appId,
       apiKey,
     );

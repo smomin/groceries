@@ -60,7 +60,8 @@ export default async function decorate(block) {
   // Company Information Column
   const companyColumn = createTag('div', { class: 'footer-column footer-company' });
   const companyLogo = createTag('div', { class: 'footer-logo' });
-  const logoIcon = createTag('div', { class: 'footer-logo-icon' });
+  const logoIcon = createTag('div', {  });
+  logoIcon.innerHTML = `<img src="/icons/logo.svg" alt="Groceyish Logo" />`;
   const logoText = createTag('div', { class: 'footer-logo-text' });
   const brandName = createTag('h2', { class: 'footer-brand-name' }, 'Groceyish');
   const brandSubtitle = createTag('p', { class: 'footer-brand-subtitle' }, 'GROCERY');
@@ -72,15 +73,16 @@ export default async function decorate(block) {
   
   const contactInfo = createTag('div', { class: 'footer-contact-info' });
   const contactItems = [
-    { icon: 'location', text: 'Address: 1762 School House Road' },
-    { icon: 'phone', text: 'Call Us: 1233-777' },
-    { icon: 'email', text: 'Email: groceyish@contact.com' },
-    { icon: 'clock', text: 'Work hours: 8:00 - 20:00, Sunday - Thursday' }
+    { icon: 'location', text: 'Address: 1762 School House Road', html: `<img src="/icons/location.svg" alt="Location Icon" />` },
+    { icon: 'phone', text: 'Call Us: 1233-777', html: `<img src="/icons/phone.svg" alt="Phone Icon" />` },
+    { icon: 'email', text: 'Email: groceyish@contact.com', html: `<img src="/icons/email.svg" alt="Email Icon" />` },
+    { icon: 'clock', text: 'Work hours: 8:00 - 20:00, Sunday - Thursday', html: `<img src="/icons/clock.svg" alt="Clock Icon" />` }
   ];
   
   contactItems.forEach(item => {
     const contactItem = createTag('div', { class: 'footer-contact-item' });
-    const icon = createTag('div', { class: `footer-contact-icon ${item.icon}` });
+    const icon = createTag('div', { });
+    icon.innerHTML = item.html;
     const text = createTag('span', { class: 'footer-contact-text' }, item.text);
     
     contactItem.appendChild(icon);
