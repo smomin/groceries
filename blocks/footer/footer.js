@@ -11,6 +11,11 @@ export default async function decorate(block) {
   const footerPath = footerMeta ? new URL(footerMeta, window.location).pathname : '/footer';
   const fragment = await loadFragment(footerPath);
 
+  const fragmentContent = fragment.querySelector(':scope .default-content-wrapper');
+
+  const companyName = fragmentContent.firstElementChild.textContent;
+  const copyrightText = fragmentContent.lastElementChild.textContent;
+
   // decorate footer DOM
   block.textContent = '';
   const footer = document.createElement('div');
@@ -61,13 +66,13 @@ export default async function decorate(block) {
   const companyColumn = createTag('div', { class: 'footer-column footer-company' });
   const companyLogo = createTag('div', { class: 'footer-logo' });
   const logoIcon = createTag('div', {  });
-  logoIcon.innerHTML = `<img src="/icons/logo.svg" alt="Groceyish Logo" />`;
+  logoIcon.innerHTML = `<img src="/icons/logo.svg" alt="${companyName} Logo" />`;
   const logoText = createTag('div', { class: 'footer-logo-text' });
-  const brandName = createTag('h2', { class: 'footer-brand-name' }, 'Groceyish');
-  const brandSubtitle = createTag('p', { class: 'footer-brand-subtitle' }, 'GROCERY');
+  const brandName = createTag('h2', { class: 'footer-brand-name' }, companyName);
+  // const brandSubtitle = createTag('p', { class: 'footer-brand-subtitle' }, 'GROCERY');
   
   logoText.appendChild(brandName);
-  logoText.appendChild(brandSubtitle);
+  // logoText.appendChild(brandSubtitle);
   companyLogo.appendChild(logoIcon);
   companyLogo.appendChild(logoText);
   
@@ -153,8 +158,7 @@ export default async function decorate(block) {
   
   // Copyright
   const copyright = createTag('div', { class: 'footer-copyright' });
-  const copyrightText = createTag('p', { class: 'footer-copyright-text' }, '© 2022, All rights reserved');
-  copyright.appendChild(copyrightText);
+  copyright.appendChild(createTag('p', { class: 'footer-copyright-text' }, copyrightText));
   
   // Payment Methods
   const paymentMethods = createTag('div', { class: 'footer-payment-methods' });
@@ -199,6 +203,14 @@ export default async function decorate(block) {
   footer.appendChild(featureSection);
   footer.appendChild(mainFooter);
   footer.appendChild(bottomFooter);
+
+
+  // Add Adobe Launch script
+  const script = document.createElement('script');
+  script.src = 'https://assets.adobedtm.com/d81baa594224/e2a1d7308ed3/launch-05cfb264aa57-development.min.js';
+  script.async = true;
+  footer.appendChild(script);
+
 
   block.append(footer);
 }

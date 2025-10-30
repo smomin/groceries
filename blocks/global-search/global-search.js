@@ -73,6 +73,7 @@ export default function decorate(block) {
     const { algoliasearch } = window;
     const { autocomplete, getAlgoliaResults } = window['@algolia/autocomplete-js'];
     const { createQuerySuggestionsPlugin } = window["@algolia/autocomplete-plugin-query-suggestions"];
+    const { createLocalStorageRecentSearchesPlugin } = window["@algolia/autocomplete-plugin-recent-searches"];
     
     const ingredientIndexName = "ag_ingredients";
 
@@ -85,6 +86,10 @@ export default function decorate(block) {
       appId,
       apiKey,
     );
+
+    const recentSearchesPlugin = createLocalStorageRecentSearchesPlugin({
+      key: "navbar",
+    });
 
     const querySuggestionsPlugin = createQuerySuggestionsPlugin({
       searchClient,
@@ -130,8 +135,7 @@ export default function decorate(block) {
         shouldPanelOpen: false,
         placeholder: placeholder,
         openOnFocus: true,
-        // plugins: [recentSearchesPlugin, querySuggestionsPlugin],
-        // plugins: [querySuggestionsPlugin],
+        plugins: [recentSearchesPlugin, querySuggestionsPlugin],
         initialState: {
           query: param('search') || '',
         },
@@ -187,57 +191,58 @@ export default function decorate(block) {
                 },
               },
             },
-            {
-              sourceId: "shopping_list",
-              getItems() {
-                if (query.length) return [{}];
-                else return [];
-              },
-              getItemUrl({ item }) {
-                return "::shopping_list";
-              },
-              templates: {
-                item({ item, components, html }) {
-                  return html`<div
-                    onClick="${() => addToShoppingList(uiState().query)}"
-                    class="u-flex u-align aa-shoppingList"
-                  >
-                    <span class="checklist-icon"></span>Add "${query}" to shopping
-                    list
-                  </div>`;
-                },
-              },
-            },
-            {
-              sourceId: "assistant",
-              getItems() {
-                if (query.length) return [{}];
-                else return [];
-              },
-              getItemUrl({ item }) {
-                return "::assistant";
-              },
-              templates: {
-                item({ item, components, html }) {
-                  return html`<div
-                    onClick="${() => openAssistant()}"
-                    class="u-flex u-align aa-assistant"
-                  >
-                    <span class="ai-icon"></span>Open "${query}" in assistant
-                  </div>`;
-                },
-              },
-            },
+            // {
+            //   sourceId: "shopping_list",
+            //   getItems() {
+            //     if (query.length) return [{}];
+            //     else return [];
+            //   },
+            //   getItemUrl({ item }) {
+            //     return "::shopping_list";
+            //   },
+            //   templates: {
+            //     item({ item, components, html }) {
+            //       return html`<div
+            //         onClick="${() => addToShoppingList(uiState().query)}"
+            //         class="u-flex u-align aa-shoppingList"
+            //       >
+            //         <span class="checklist-icon"></span>Add "${query}" to shopping
+            //         list
+            //       </div>`;
+            //     },
+            //   },
+            // },
+            // {
+            //   sourceId: "assistant",
+            //   getItems() {
+            //     if (query.length) return [{}];
+            //     else return [];
+            //   },
+            //   getItemUrl({ item }) {
+            //     return "::assistant";
+            //   },
+            //   templates: {
+            //     item({ item, components, html }) {
+            //       return html`<div
+            //         onClick="${() => openAssistant()}"
+            //         class="u-flex u-align aa-assistant"
+            //       >
+            //         <span class="ai-icon"></span>Open "${query}" in assistant
+            //       </div>`;
+            //     },
+            //   },
+            // },
           ];
         },
         navigator: {
           navigate({ itemUrl }) {
-            if (itemUrl === "::assistant") openAssistant();
-            else if (itemUrl === "::shopping_list")
-              addToShoppingList(uiState().query);
-            else if (itemUrl.startsWith("::ingredient:")) {
-              openIngredient(itemUrl.split("::ingredient:")[1]);
-            } else window.location.assign(itemUrl);
+            // if (itemUrl === "::assistant") openAssistant();
+            // else if (itemUrl === "::shopping_list")
+            //   addToShoppingList(uiState().query);
+            // else if (itemUrl.startsWith("::ingredient:")) {
+            //   openIngredient(itemUrl.split("::ingredient:")[1]);
+            // } else 
+            window.location.assign(itemUrl);
           },
           navigateNewTab({ itemUrl }) {
             const windowReference = window.open(itemUrl, "_blank", "noopener");
