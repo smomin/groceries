@@ -158,12 +158,7 @@ export default async function decorate(block) {
   
   // Copyright
   const copyright = createTag('div', { class: 'footer-copyright' });
-<<<<<<< Updated upstream
   copyright.appendChild(createTag('p', { class: 'footer-copyright-text' }, copyrightText));
-=======
-  const copyrightText = createTag('p', { class: 'footer-copyright-text' }, '© 2025, All rights reserved');
-  copyright.appendChild(copyrightText);
->>>>>>> Stashed changes
   
   // Payment Methods
   const paymentMethods = createTag('div', { class: 'footer-payment-methods' });
