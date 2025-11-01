@@ -89,12 +89,41 @@ export default function decorate(block) {
 
     const recentSearchesPlugin = createLocalStorageRecentSearchesPlugin({
       key: "navbar",
+      limit: 3,
+      transformSource({ source }) {
+        return {
+          ...source,
+          templates: {
+            ...source.templates,
+            header({ createElement }) {
+              return createElement(
+                'div',{},
+                createElement(
+                  'span',
+                  {
+                    className: 'aa-SourceHeaderTitle',
+                  },
+                  "Recent Searches"
+                ),
+                createElement('div', {
+                  className: 'aa-SourceHeaderLine',
+                })
+              );
+            },
+          }
+        };
+      },
     });
 
     const querySuggestionsPlugin = createQuerySuggestionsPlugin({
       searchClient,
       indexName: `${indexName}_query_suggestions`,
       categoryAttribute: [indexName, "facets", "exact_matches", "categories"],
+      getSearchParams() {
+        return {
+          hitsPerPage: 3,
+        };
+      },
       transformSource({ source }) {
         return {
           ...source,
@@ -103,6 +132,24 @@ export default function decorate(block) {
               setUiState({ menu: { categories: item.__autocomplete_qsCategory } });
             }
           },
+          templates: {
+            ...source.templates,
+            header({ createElement }) {
+              return createElement(
+                'div',{},
+                createElement(
+                  'span',
+                  {
+                    className: 'aa-SourceHeaderTitle',
+                  },
+                  "Suggestions"
+                ),
+                createElement('div', {
+                  className: 'aa-SourceHeaderLine',
+                })
+              );
+            },
+          }
         };
       },
     });
@@ -162,7 +209,7 @@ export default function decorate(block) {
                       indexName: ingredientIndexName,
                       params: {
                         query,
-                        hitsPerPage: 5,
+                        hitsPerPage: 9,
                       },
                     },
                   ],
@@ -172,6 +219,21 @@ export default function decorate(block) {
                 return `::ingredient:${item.objectID}`;
               },
               templates: {
+                header({ createElement }) {
+                  return createElement(
+                    'div',{},
+                    createElement(
+                      'span',
+                      {
+                        className: 'aa-SourceHeaderTitle',
+                      },
+                      "Ingredients"
+                    ),
+                    createElement('div', {
+                      className: 'aa-SourceHeaderLine',
+                    })
+                  );
+                },
                 item({ item, components, html }) {
                   return html`<div
                     class="u-flex u-align"
@@ -181,12 +243,12 @@ export default function decorate(block) {
                       src="https://fxqklbpngldowtbkqezm.supabase.co/storage/v1/object/public/ingredient-images/img_ingredient_${item.objectID}.png"
                       width="28px"
                     />
-                    <div>
+                    <h6>
                       ${components.Highlight({
                         hit: item,
                         attribute: "name",
                       })}
-                    </div>
+                    </h6>
                   </div>`;
                 },
               },
@@ -254,6 +316,19 @@ export default function decorate(block) {
           navigateNewWindow({ itemUrl }) {
             window.open(itemUrl, "_blank", "noopener");
           },
+        },
+        render({ elements, render, html }, root) {
+          const { recentSearchesPlugin, querySuggestionsPlugin } = elements;
+          render(
+            html`<div class="aa-PanelLayout aa-Panel--scollable">
+              <div class="ingredients-col">${elements.ingredients}</div>
+              <div class="query-recent-col">
+                  ${recentSearchesPlugin}
+                  ${querySuggestionsPlugin}
+              </div>  
+            </div>`,
+            root,
+          );
         },
       });
 
