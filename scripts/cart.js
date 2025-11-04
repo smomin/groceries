@@ -14,8 +14,40 @@ export function getCartItems() {
     const cartData = localStorage.getItem(CART_STORAGE_KEY);
     return cartData ? JSON.parse(cartData) : [];
   } catch (error) {
+    // eslint-disable-next-line no-console
     console.error('Error reading cart from localStorage:', error);
     return [];
+  }
+}
+
+/**
+ * Get total number of items in cart
+ * @returns {number} Total quantity of items
+ */
+export function getCartTotalItems() {
+  const cart = getCartItems();
+  return cart.reduce((total, item) => total + item.qty, 0);
+}
+
+/**
+ * Update cart badge count in the header
+ */
+export function updateCartBadge() {
+  // Find the cart icon item and its badge
+  const cartIconItem = document.querySelector('.header__icon-item[data-icon="cart"]');
+  const cartBadge = cartIconItem?.querySelector('.header__badge');
+
+  if (cartBadge) {
+    const totalItems = getCartTotalItems();
+    cartBadge.textContent = totalItems;
+    cartBadge.style.display = totalItems > 0 ? 'flex' : 'none';
+  }
+
+  // Refresh cart dropdown if it's open
+  const dropdown = document.querySelector('.cart-dropdown--open');
+  if (dropdown) {
+    // Dispatch a custom event to refresh the dropdown
+    document.dispatchEvent(new CustomEvent('cartUpdated'));
   }
 }
 
@@ -28,6 +60,7 @@ function saveCartItems(items) {
     localStorage.setItem(CART_STORAGE_KEY, JSON.stringify(items));
     updateCartBadge();
   } catch (error) {
+    // eslint-disable-next-line no-console
     console.error('Error saving cart to localStorage:', error);
   }
 }
@@ -40,12 +73,13 @@ function saveCartItems(items) {
  */
 export function addToCart(product, quantity = DEFAULT_QUANTITY) {
   if (!product || !product.objectID) {
+    // eslint-disable-next-line no-console
     console.error('Invalid product data');
     return null;
   }
 
   const cart = getCartItems();
-  const existingItemIndex = cart.findIndex(item => item.objectID === product.objectID);
+  const existingItemIndex = cart.findIndex((item) => item.objectID === product.objectID);
 
   const price = product.price || 0;
   // Use description if available, otherwise fall back to name
@@ -83,37 +117,6 @@ export function addToCart(product, quantity = DEFAULT_QUANTITY) {
 }
 
 /**
- * Get total number of items in cart
- * @returns {number} Total quantity of items
- */
-export function getCartTotalItems() {
-  const cart = getCartItems();
-  return cart.reduce((total, item) => total + item.qty, 0);
-}
-
-/**
- * Update cart badge count in the header
- */
-export function updateCartBadge() {
-  // Find the cart icon item and its badge
-  const cartIconItem = document.querySelector('.header__icon-item[data-icon="cart"]');
-  const cartBadge = cartIconItem?.querySelector('.header__badge');
-  
-  if (cartBadge) {
-    const totalItems = getCartTotalItems();
-    cartBadge.textContent = totalItems;
-    cartBadge.style.display = totalItems > 0 ? 'flex' : 'none';
-  }
-  
-  // Refresh cart dropdown if it's open
-  const dropdown = document.querySelector('.cart-dropdown--open');
-  if (dropdown) {
-    // Dispatch a custom event to refresh the dropdown
-    document.dispatchEvent(new CustomEvent('cartUpdated'));
-  }
-}
-
-/**
  * Clear all items from cart
  */
 export function clearCart() {
@@ -122,6 +125,7 @@ export function clearCart() {
     updateCartBadge();
     return true;
   } catch (error) {
+    // eslint-disable-next-line no-console
     console.error('Error clearing cart:', error);
     return false;
   }

@@ -335,8 +335,7 @@
         "valueType": "string",
         "name": "placeholderText",
         "label": "PlaceHolder Text",
-        "value": "",
-        "key-value": true
+        "value": ""
       }
     ]
   },

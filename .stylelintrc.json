@@ -1,3 +1,21 @@
 {
-  "extends": ["stylelint-config-standard"]
+  "extends": ["stylelint-config-standard"],
+  "rules": {
+    "selector-class-pattern": [
+      "^([a-z][a-z0-9]*(-[a-z0-9]+)*)|([a-z]+(__[a-z]+)?(--[a-z]+)?)$|(ais-.*)",
+      {
+        "message": "Expected class selector to be kebab-case, BEM format, or Algolia (ais-*)"
+      }
+    ],
+    "color-function-notation": null,
+    "alpha-value-notation": null,
+    "media-feature-range-notation": null,
+    "no-duplicate-selectors": null,
+    "no-descending-specificity": null,
+    "declaration-block-single-line-max-declarations": null,
+    "property-no-unknown": [true, { "ignoreProperties": ["text-fill-color"] }],
+    "declaration-property-value-no-unknown": [true, { "ignoreProperties": { "border-color": ["none"] } }],
+    "number-max-precision": null,
+    "no-empty-source": null
+  }
 }

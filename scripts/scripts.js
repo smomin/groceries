@@ -146,7 +146,7 @@ async function loadPage() {
 }
 
 loadPage().then(() => {
-  const agentContainer = document.createElement("div");
+  const agentContainer = document.createElement('div');
   document.body.appendChild(agentContainer);
   loadAgent(agentContainer);
 });

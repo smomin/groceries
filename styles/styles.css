@@ -5,15 +5,24 @@
 }
 
 body {
-  font-family: 'Quicksand', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+  font-family: Quicksand, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
   background-color: #fff;
   scroll-behavior: smooth;
 }
 
 .header {
   width: 100%;
-  background-color: rgba(255, 255, 255, 0.92);
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  background-color: rgb(255 255 255 / 92%);
+  box-shadow: 0 2px 8px rgb(0 0 0 / 10%);
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  z-index: 1000;
+  transition: box-shadow 0.3s ease;
+  min-height: 60px;
+  display: flex;
+  flex-direction: column;
 }
 
 /* Top Bar Styles */
@@ -22,8 +31,8 @@ body {
   align-items: center;
   justify-content: space-between;
   padding: 15px 120px;
-  background-color: rgba(255, 255, 255, 0.92);
-  border-bottom: 1px solid rgba(173, 173, 173, 0.17);
+  background-color: rgb(255 255 255 / 92%);
+  border-bottom: 1px solid rgb(173 173 173 / 17%);
 }
 
 .logo-section {
@@ -131,7 +140,7 @@ body {
   align-items: center;
   justify-content: space-between;
   padding: 0 120px;
-  background-color: rgba(255, 255, 255, 0.92);
+  background-color: rgb(255 255 255 / 92%);
   height: 72px;
 }
 
@@ -211,14 +220,14 @@ body {
 }
 
 /* Responsive Design */
-@media (max-width: 1200px) {
+@media (width <= 1200px) {
   .top-bar,
   .bottom-bar {
       padding: 15px 60px;
   }
 }
 
-@media (max-width: 992px) {
+@media (width <= 992px) {
   .top-bar {
       flex-wrap: wrap;
       gap: 20px;
@@ -239,7 +248,7 @@ body {
   }
 }
 
-@media (max-width: 768px) {
+@media (width <= 768px) {
   .top-bar,
   .bottom-bar {
       padding: 15px 20px;

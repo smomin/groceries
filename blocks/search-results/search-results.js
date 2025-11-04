@@ -28,7 +28,7 @@ function getSearchIndex(htmlElement) {
 }
 
 export default function decorate(block) {
-  const searchContainer = document.createElement("div");
+  const searchContainer = document.createElement('div');
   searchContainer.innerHTML = `
     <div class="products-grid">
       <div>
@@ -40,12 +40,12 @@ export default function decorate(block) {
   block.appendChild(searchContainer);
 
   const { appId, apiKey } = getCredentials(block);
-  const { placeholder } = getSearchBox(block);
-  const { indexName, hitTemplate, noResultsTemplate } = getSearchIndex(block);
+  getSearchBox(block);
+  const { indexName } = getSearchIndex(block);
 
-  setTimeout(function() {
+  setTimeout(() => {
     const { connectSearchBox } = instantsearch.connectors;
-    const { hierarchicalMenu, hits, pagination } = instantsearch.widgets;
+    const { hits, pagination, configure } = instantsearch.widgets;
 
     const searchClient = algoliasearch(
       appId,
@@ -54,8 +54,8 @@ export default function decorate(block) {
 
     const search = instantsearch({
       searchClient,
-      indexName: indexName,
-      stateMapping: instantsearch.stateMappings.singleIndex(indexName),
+      indexName,
+      stateMapping: instantsearch.stateMappings.singleIndex(indexName)
     });
 
     // Mount a virtual search box to manipulate InstantSearch's `query` UI
@@ -64,8 +64,11 @@ export default function decorate(block) {
 
     search.addWidgets([
       virtualSearchBox({}),
+      configure({
+        hitsPerPage: 12,
+      }),
       hits({
-        container: "#hits",
+        container: '#hits',
         cssClasses: {
           list: 'products-grid',
           root: 'container',
@@ -76,19 +79,19 @@ export default function decorate(block) {
                 <div class="product-card">
                   <img class="product-card__image" src="${hit.image}" alt="${hit.name}" />
                   <div class="product-card__category">${hit.categories.lvl0}</div>
-                  <div class="product-card__name">${components.Highlight({ attribute: "name", hit })}</div>
-                  ${hit.brand ? 
-                    html `<div class="vendor">
+                  <div class="product-card__name">${components.Highlight({ attribute: 'name', hit })}</div>
+                  ${hit.brand
+    ? html`<div class="vendor">
                       <span class="vendor-label">By</span> <span style="color: #00b207;">${hit.brand}</span>
                   </div>`
-                  : ''
-                  }
+    : ''
+}
                   <div class="product-card__footer">
                       <div class="price-container">
                           <span class="current-price">${new Intl.NumberFormat('en-US', {
-                              style: 'currency',
-                              currency: 'USD'
-                              }).format(hit.price)}</span>
+    style: 'currency',
+    currency: 'USD',
+  }).format(hit.price)}</span>
                       </div>
                       <button class="add-btn" 
                               data-product-id="${hit.objectID}"
@@ -105,20 +108,20 @@ export default function decorate(block) {
         },
       }),
       pagination({
-        container: "#pagination",
+        container: '#pagination',
         showFirst: false,
         showLast: false,
         templates: {
           previous: '‹ Previous',
           next: 'Next ›',
         },
-        scrollTo: document.querySelector(".products-grid")
+        scrollTo: document.querySelector('.products-grid'),
       }),
     ]);
 
     search.start();
 
-    window['searchInstance'] = search;
+    window.searchInstance = search;
 
     // Handle "Add to cart" button clicks using event delegation
     searchContainer.addEventListener('click', (event) => {
@@ -126,7 +129,7 @@ export default function decorate(block) {
       if (addToCartButton) {
         event.preventDefault();
         event.stopPropagation();
-        
+
         const productData = {
           objectID: addToCartButton.dataset.productId,
           name: addToCartButton.dataset.productName,
@@ -134,7 +137,7 @@ export default function decorate(block) {
           description: addToCartButton.dataset.productDescription,
           image: addToCartButton.dataset.productImage,
         };
-        
+
         const cartItem = addToCart(productData);
         if (cartItem) {
           // Visual feedback - match agent experience
@@ -142,7 +145,7 @@ export default function decorate(block) {
           addToCartButton.textContent = 'Added!';
           addToCartButton.style.backgroundColor = '#00b207';
           addToCartButton.style.color = '#ffffff';
-          
+
           setTimeout(() => {
             addToCartButton.textContent = originalText;
             addToCartButton.style.backgroundColor = '';

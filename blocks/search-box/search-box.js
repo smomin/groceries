@@ -1,3 +1,3 @@
 export default function decorate(block) {
-    block.classList.add('search-box');
+  block.classList.add('search-box');
 }
