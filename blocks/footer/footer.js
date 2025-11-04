@@ -205,11 +205,11 @@ export default async function decorate(block) {
   footer.appendChild(bottomFooter);
 
 
-  // Add Adobe Launch script
-  const script = document.createElement('script');
-  script.src = 'https://assets.adobedtm.com/d81baa594224/e2a1d7308ed3/launch-05cfb264aa57-development.min.js';
-  script.async = true;
-  footer.appendChild(script);
+  // // Add Adobe Launch script
+  // const script = document.createElement('script');
+  // script.src = 'https://assets.adobedtm.com/d81baa594224/e2a1d7308ed3/launch-05cfb264aa57-development.min.js';
+  // script.async = true;
+  // footer.appendChild(script);
 
 
   block.append(footer);

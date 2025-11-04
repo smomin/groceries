@@ -82,7 +82,7 @@ export default function decorate(block) {
     const { placeholder } = getSearchBox(block);
     const { indexName, hitTemplate, noResultsTemplate } = getSearchIndex(block);
 
-    const searchClient = algoliasearch.searchClient(
+    const searchClient = algoliasearch(
       appId,
       apiKey,
     );

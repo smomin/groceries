@@ -634,6 +634,13 @@ async function loadFooter(footer) {
   return loadBlock(footerBlock);
 }
 
+async function loadAgent(agent) {
+  const agentBlock = buildBlock('agent', '');
+  agent.append(agentBlock);
+  decorateBlock(agentBlock);
+  return loadBlock(agentBlock);
+}
+
 /**
  * Wait for Image.
  * @param {Element} section section element
@@ -703,6 +710,7 @@ export {
   loadCSS,
   loadFooter,
   loadHeader,
+  loadAgent,
   loadScript,
   loadSection,
   loadSections,

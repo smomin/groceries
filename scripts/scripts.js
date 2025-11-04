@@ -1,6 +1,7 @@
 import {
   loadHeader,
   loadFooter,
+  loadAgent,
   decorateButtons,
   decorateIcons,
   decorateSections,
@@ -144,4 +145,8 @@ async function loadPage() {
   loadDelayed();
 }
 
-loadPage();
+loadPage().then(() => {
+  const agentContainer = document.createElement("div");
+  document.body.appendChild(agentContainer);
+  loadAgent(agentContainer);
+});

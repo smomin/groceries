@@ -142,6 +142,18 @@
     ]
   },
   {
+    "id": "agent",
+    "fields": [
+      {
+        "component": "text",
+        "name": "agentId",
+        "value": "",
+        "label": "Agent Id",
+        "valueType": "string"
+      }
+    ]
+  },
+  {
     "id": "card",
     "fields": [
       {

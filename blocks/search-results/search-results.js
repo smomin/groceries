@@ -46,7 +46,7 @@ export default function decorate(block) {
     const { connectSearchBox } = instantsearch.connectors;
     const { hierarchicalMenu, hits, pagination } = instantsearch.widgets;
 
-    const searchClient = algoliasearch.searchClient(
+    const searchClient = algoliasearch(
       appId,
       apiKey,
     );
