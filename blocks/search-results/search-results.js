@@ -1,5 +1,6 @@
 import '../../scripts/lib-algoliasearch.js';
 import '../../scripts/lib-instantsearch.js';
+import { addToCart } from '../../scripts/cart.js';
 
 function getTextContent(htmlElement) {
   const textContent = htmlElement.textContent.trim();
@@ -89,7 +90,12 @@ export default function decorate(block) {
                               currency: 'USD'
                               }).format(hit.price)}</span>
                       </div>
-                      <button class="add-btn">
+                      <button class="add-btn" 
+                              data-product-id="${hit.objectID}"
+                              data-product-name="${hit.name}"
+                              data-product-price="${hit.price}"
+                              data-product-description="${hit.description || hit.name}"
+                              data-product-image="${hit.image}">
                           <span class="cart-icon"></span>
                           <span>Add</span>
                       </button>
@@ -113,5 +119,37 @@ export default function decorate(block) {
     search.start();
 
     window['searchInstance'] = search;
+
+    // Handle "Add to cart" button clicks using event delegation
+    searchContainer.addEventListener('click', (event) => {
+      const addToCartButton = event.target.closest('.add-btn');
+      if (addToCartButton) {
+        event.preventDefault();
+        event.stopPropagation();
+        
+        const productData = {
+          objectID: addToCartButton.dataset.productId,
+          name: addToCartButton.dataset.productName,
+          price: parseFloat(addToCartButton.dataset.productPrice) || 0,
+          description: addToCartButton.dataset.productDescription,
+          image: addToCartButton.dataset.productImage,
+        };
+        
+        const cartItem = addToCart(productData);
+        if (cartItem) {
+          // Visual feedback - match agent experience
+          const originalText = addToCartButton.textContent;
+          addToCartButton.textContent = 'Added!';
+          addToCartButton.style.backgroundColor = '#00b207';
+          addToCartButton.style.color = '#ffffff';
+          
+          setTimeout(() => {
+            addToCartButton.textContent = originalText;
+            addToCartButton.style.backgroundColor = '';
+            addToCartButton.style.color = '';
+          }, 1000);
+        }
+      }
+    });
   }, 500);
 }

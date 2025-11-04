@@ -40,7 +40,7 @@ const headerData = {
   icons: [
     {
       id: 'wishlist',
-      badge: 1,
+      badge: 0,
       img: '/icons/wishlist.svg'
     },
     {
@@ -50,7 +50,7 @@ const headerData = {
     },
     {
       id: 'account',
-      badge: 1,
+      badge: 0,
       img: '/icons/account.svg'
     }
   ],
@@ -115,7 +115,7 @@ function generateHeader(fragment) {
           ${headerData.icons.map(icon => `
             <div class="header__icon-item" data-icon="${icon.id}">
               <img src="${icon.img}" width="20" height="20" alt="${icon.id}" />
-              <span class="header__badge ${icon.id === 'cart' ? 'header__badge--cart' : ''}">${icon.badge}</span>
+              ${icon.badge > 0 ? `<span class="header__badge ${icon.id === 'cart' ? 'header__badge--cart' : ''}">${icon.badge}</span>` : ''}
             </div>
           `).join('')}
         </div>

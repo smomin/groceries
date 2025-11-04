@@ -64,6 +64,101 @@ export default function decorate(block) {
   // Start the search
   search.start();
 
+  // Function to add welcome message to chat
+  function addWelcomeMessage() {
+    const messagesContent = block.querySelector('.ais-ChatMessages-content');
+    if (!messagesContent) return;
+
+    // Check if there's already a welcome message to avoid duplicates
+    const existingWelcome = messagesContent.querySelector('[data-welcome-message]');
+    if (existingWelcome) return;
+
+    // Check if there are any messages already (excluding loaders)
+    const existingMessages = messagesContent.querySelectorAll('.ais-ChatMessage:not(.ais-ChatMessageLoader)');
+    if (existingMessages.length > 0) return;
+
+    // Create welcome message element
+    const welcomeMessage = document.createElement('div');
+    welcomeMessage.className = 'ais-ChatMessage ais-ChatMessage--left';
+    welcomeMessage.setAttribute('data-role', 'assistant');
+    welcomeMessage.setAttribute('data-welcome-message', 'true');
+
+    welcomeMessage.innerHTML = `
+      <div class="ais-ChatMessage-container">
+        <div class="ais-ChatMessage-leading"></div>
+        <div class="ais-ChatMessage-content">
+          <div class="ais-ChatMessage-message">
+            <p>👋 Welcome! I'm your shopping assistant. I can help you:</p>
+            <ul style="margin: 0.5rem 0; padding-left: 1.5rem;">
+              <li>Find products and recipes</li>
+              <li>Get ingredient lists for recipes</li>
+              <li>Answer questions about our products</li>
+              <li>Help you with your shopping needs</li>
+            </ul>
+            <p style="margin-top: 0.5rem;">What can I help you find today?</p>
+          </div>
+        </div>
+      </div>
+    `;
+
+    messagesContent.appendChild(welcomeMessage);
+
+    // Scroll to bottom to show the welcome message
+    const messagesScroll = block.querySelector('.ais-ChatMessages-scroll');
+    if (messagesScroll) {
+      messagesScroll.scrollTop = messagesScroll.scrollHeight;
+    }
+  }
+
+  // Watch for chat opening and add welcome message
+  let chatObserver = null;
+
+  // Function to setup chat observer
+  function setupChatObserver() {
+    const chatContainer = block.querySelector('.ais-Chat-container');
+    if (!chatContainer || chatObserver) return;
+
+    // Use MutationObserver to detect when chat opens
+    chatObserver = new MutationObserver((mutations) => {
+      mutations.forEach((mutation) => {
+        if (mutation.type === 'attributes' && mutation.attributeName === 'class') {
+          const isOpen = chatContainer.classList.contains('ais-Chat-container--open');
+          if (isOpen) {
+            // Small delay to ensure chat is fully rendered
+            setTimeout(() => {
+              addWelcomeMessage();
+            }, 300);
+          }
+        }
+      });
+    });
+
+    chatObserver.observe(chatContainer, {
+      attributes: true,
+      attributeFilter: ['class']
+    });
+  }
+
+  // Try to setup observer immediately, or wait for chat container to be created
+  setupChatObserver();
+  if (!chatObserver) {
+    // If chat container doesn't exist yet, wait a bit and try again
+    setTimeout(() => {
+      setupChatObserver();
+    }, 500);
+  }
+
+  // Listen for clear button clicks to add welcome message after clearing
+  block.addEventListener('click', (event) => {
+    const clearButton = event.target.closest('.ais-ChatHeader-clear');
+    if (clearButton) {
+      // Wait a bit for the clear to complete, then add welcome message
+      setTimeout(() => {
+        addWelcomeMessage();
+      }, 300);
+    }
+  });
+
   // Handle "Get Ingredients" button clicks using event delegation
   block.addEventListener('click', (event) => {
     const button = event.target.closest('.ais-Carousel-hit-get-ingredients');
