@@ -1062,6 +1062,62 @@
   font-weight: 600;
   margin-top: auto;
 }
+.ais-ChatMessage-message .ais-Carousel-hit-get-ingredients {
+  margin-top: calc(var(--ais-spacing) * 0.5);
+  padding: calc(var(--ais-spacing) * 0.5) calc(var(--ais-spacing) * 1);
+  background-color: var(--base-color) !important;
+  color: rgba(255, 255, 255, 1);
+  border: none;
+  border-radius: var(--ais-border-radius-md);
+  font-size: calc(var(--ais-spacing) * 0.875);
+  font-weight: 500;
+  cursor: pointer;
+  transition: background-color var(--ais-transition-duration) var(--ais-transition-timing-function), color var(--ais-transition-duration) var(--ais-transition-timing-function);
+  z-index: 1;
+  position: relative;
+  width: 100%;
+}
+@media (hover: hover) {
+  .ais-ChatMessage-message .ais-Carousel-hit-get-ingredients:hover:not(:disabled) {
+    background-color: color-mix(in srgb, var(--base-color), rgb(var(--ais-background-color-rgb)) 20%);
+  }
+}
+.ais-ChatMessage-message .ais-Carousel-hit-get-ingredients:active:not(:disabled) {
+  background-color: var(--base-color);
+}
+.ais-ChatMessage-message .ais-Carousel-hit-get-ingredients:focus-visible {
+  outline: 2px solid rgba(var(--ais-primary-color-rgb), var(--ais-primary-color-alpha));
+  outline-offset: 2px;
+}
+
+.ais-ChatMessage-message .ais-Carousel-hit-add-to-cart {
+  margin-top: calc(var(--ais-spacing) * 0.5);
+  padding: calc(var(--ais-spacing) * 0.5) calc(var(--ais-spacing) * 1);
+  background-color: var(--base-color) !important;
+  color: rgba(255, 255, 255, 1);
+  border: none;
+  border-radius: var(--ais-border-radius-md);
+  font-size: calc(var(--ais-spacing) * 0.875);
+  font-weight: 500;
+  cursor: pointer;
+  transition: background-color var(--ais-transition-duration) var(--ais-transition-timing-function), color var(--ais-transition-duration) var(--ais-transition-timing-function);
+  z-index: 1;
+  position: relative;
+  width: 100%;
+}
+@media (hover: hover) {
+  .ais-ChatMessage-message .ais-Carousel-hit-add-to-cart:hover:not(:disabled) {
+    background-color: color-mix(in srgb, var(--base-color), rgb(var(--ais-background-color-rgb)) 20%);
+  }
+}
+.ais-ChatMessage-message .ais-Carousel-hit-add-to-cart:active:not(:disabled) {
+  background-color: var(--base-color);
+}
+.ais-ChatMessage-message .ais-Carousel-hit-add-to-cart:focus-visible {
+  outline: 2px solid rgba(var(--ais-primary-color-rgb), var(--ais-primary-color-alpha));
+  outline-offset: 2px;
+}
+
 @media (max-width: 680px) {
   .ais-ChatMessage-message .ais-ChatToolSearchIndexCarouselHeaderScrollButtons {
     display: none;

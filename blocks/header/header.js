@@ -1,6 +1,7 @@
 import { getMetadata } from '../../scripts/aem.js';
 import { loadFragment } from '../fragment/fragment.js';
 import { moveInstrumentation } from '../../scripts/scripts.js';
+import { initCartBadge, getCartItems, clearCart, getCartTotalPrice, updateCartBadge } from '../../scripts/cart.js';
 
 /**
  * loads and decorates the header, mainly the nav
@@ -16,6 +17,9 @@ export default async function decorate(block) {
   moveInstrumentation(fragment, headerElement);
   block.append(headerElement);
   attachEventListeners();
+  
+  // Initialize cart badge after header is loaded
+  initCartBadge();
 }
 
 
@@ -185,11 +189,35 @@ function attachEventListeners() {
   // Icon click handlers
   const iconItems = document.querySelectorAll('.header__icon-item');
   iconItems.forEach(item => {
-    item.addEventListener('click', () => {
+    item.addEventListener('click', (e) => {
       const iconType = item.dataset.icon;
-      console.log(`${iconType} icon clicked`);
-      // Add your icon click logic here
+      
+      if (iconType === 'cart') {
+        e.stopPropagation();
+        toggleCartDropdown();
+      } else {
+        console.log(`${iconType} icon clicked`);
+        // Add your icon click logic here
+      }
     });
+  });
+
+  // Close cart dropdown when clicking outside
+  document.addEventListener('click', (e) => {
+    const cartDropdown = document.querySelector('.cart-dropdown');
+    const cartIcon = document.querySelector('.header__icon-item[data-icon="cart"]');
+    
+    if (cartDropdown && cartIcon && !cartDropdown.contains(e.target) && !cartIcon.contains(e.target)) {
+      closeCartDropdown();
+    }
+  });
+
+  // Refresh cart dropdown when cart is updated
+  document.addEventListener('cartUpdated', () => {
+    const dropdown = document.querySelector('.cart-dropdown--open');
+    if (dropdown) {
+      renderCartDropdown();
+    }
   });
 
   // Navigation link handlers
@@ -217,4 +245,221 @@ function attachEventListeners() {
       // Add your browse categories logic here
     });
   }
+}
+
+/**
+ * Truncate text to a specified number of characters
+ * @param {string} text - Text to truncate
+ * @param {number} maxLength - Maximum length
+ * @returns {string} Truncated text
+ */
+function truncateText(text, maxLength = 50) {
+  if (!text) return '';
+  if (text.length <= maxLength) return text;
+  return text.substring(0, maxLength) + '...';
+}
+
+// Store position adjustment cleanup function
+let positionCleanup = null;
+
+/**
+ * Render cart dropdown content
+ */
+function renderCartDropdown() {
+  const cartIconItem = document.querySelector('.header__icon-item[data-icon="cart"]');
+  if (!cartIconItem) return;
+
+  // Remove existing dropdown if any and clean up
+  const existingDropdown = document.querySelector('.cart-dropdown');
+  if (existingDropdown) {
+    if (positionCleanup) {
+      positionCleanup();
+      positionCleanup = null;
+    }
+    existingDropdown.remove();
+  }
+
+  const cartItems = getCartItems();
+  const totalPrice = getCartTotalPrice();
+
+  // Create dropdown container
+  const dropdown = document.createElement('div');
+  dropdown.className = 'cart-dropdown';
+  dropdown.innerHTML = `
+    <div class="cart-dropdown__header">
+      <h3 class="cart-dropdown__title">Shopping Cart</h3>
+      <button class="cart-dropdown__close" aria-label="Close cart">
+        <svg width="20" height="20" viewBox="0 0 20 20" fill="none">
+          <path d="M15 5L5 15M5 5L15 15" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+        </svg>
+      </button>
+    </div>
+    <div class="cart-dropdown__content">
+      ${cartItems.length === 0 ? `
+        <div class="cart-dropdown__empty">
+          <p>Your cart is empty</p>
+        </div>
+      ` : `
+        <ul class="cart-dropdown__items">
+          ${cartItems.map(item => `
+            <li class="cart-dropdown__item">
+              <div class="cart-dropdown__item-image">
+                ${item.image ? `<img src="${item.image}" alt="${item.name}" />` : ''}
+              </div>
+              <div class="cart-dropdown__item-details">
+                <h4 class="cart-dropdown__item-name">${item.name}</h4>
+                <p class="cart-dropdown__item-description">${truncateText(item.description, 60)}</p>
+                <div class="cart-dropdown__item-meta">
+                  <span class="cart-dropdown__item-price">${new Intl.NumberFormat('en-US', {
+                    style: 'currency',
+                    currency: 'USD'
+                  }).format(item.price)}</span>
+                  <span class="cart-dropdown__item-qty">Qty: ${item.qty}</span>
+                  <span class="cart-dropdown__item-total">${new Intl.NumberFormat('en-US', {
+                    style: 'currency',
+                    currency: 'USD'
+                  }).format(item.totalPrice)}</span>
+                </div>
+              </div>
+            </li>
+          `).join('')}
+        </ul>
+        <div class="cart-dropdown__footer">
+          <div class="cart-dropdown__total">
+            <span class="cart-dropdown__total-label">Total:</span>
+            <span class="cart-dropdown__total-amount">${new Intl.NumberFormat('en-US', {
+              style: 'currency',
+              currency: 'USD'
+            }).format(totalPrice)}</span>
+          </div>
+          <div class="cart-dropdown__actions">
+            <button class="cart-dropdown__button cart-dropdown__button--clear" id="clear-cart-btn">
+              Clear Cart
+            </button>
+            <button class="cart-dropdown__button cart-dropdown__button--checkout" id="checkout-btn">
+              Checkout
+            </button>
+          </div>
+        </div>
+      `}
+    </div>
+  `;
+
+  // Position dropdown relative to cart icon
+  const rect = cartIconItem.getBoundingClientRect();
+  const isMobile = window.innerWidth <= 768;
+  
+  if (isMobile) {
+    // On mobile, position from top
+    dropdown.style.top = '0';
+    dropdown.style.right = '0';
+    dropdown.style.left = '0';
+    dropdown.style.bottom = '0';
+  } else {
+    // On desktop, position relative to cart icon
+    const dropdownTop = rect.bottom + 10;
+    const dropdownRight = window.innerWidth - rect.right;
+    dropdown.style.top = `${dropdownTop}px`;
+    dropdown.style.right = `${dropdownRight}px`;
+  }
+
+  document.body.appendChild(dropdown);
+
+  // Adjust position on scroll or resize
+  const adjustPosition = () => {
+    const isMobile = window.innerWidth <= 768;
+    if (isMobile) {
+      dropdown.style.top = '0';
+      dropdown.style.right = '0';
+      dropdown.style.left = '0';
+      dropdown.style.bottom = '0';
+    } else {
+      const newRect = cartIconItem.getBoundingClientRect();
+      dropdown.style.top = `${newRect.bottom + 10}px`;
+      dropdown.style.right = `${window.innerWidth - newRect.right}px`;
+    }
+  };
+
+  window.addEventListener('scroll', adjustPosition, true);
+  window.addEventListener('resize', adjustPosition);
+  
+  // Store cleanup function
+  positionCleanup = () => {
+    window.removeEventListener('scroll', adjustPosition, true);
+    window.removeEventListener('resize', adjustPosition);
+  };
+
+  // Add event listeners for dropdown buttons
+  const closeBtn = dropdown.querySelector('.cart-dropdown__close');
+  if (closeBtn) {
+    closeBtn.addEventListener('click', closeCartDropdown);
+  }
+
+  const clearBtn = dropdown.querySelector('#clear-cart-btn');
+  if (clearBtn) {
+    clearBtn.addEventListener('click', handleClearCart);
+  }
+
+  const checkoutBtn = dropdown.querySelector('#checkout-btn');
+  if (checkoutBtn) {
+    checkoutBtn.addEventListener('click', handleCheckout);
+  }
+
+  // Show dropdown with animation
+  setTimeout(() => {
+    dropdown.classList.add('cart-dropdown--open');
+  }, 10);
+}
+
+/**
+ * Toggle cart dropdown visibility
+ */
+function toggleCartDropdown() {
+  const dropdown = document.querySelector('.cart-dropdown');
+  if (dropdown && dropdown.classList.contains('cart-dropdown--open')) {
+    closeCartDropdown();
+  } else {
+    renderCartDropdown();
+  }
+}
+
+/**
+ * Close cart dropdown
+ */
+function closeCartDropdown() {
+  const dropdown = document.querySelector('.cart-dropdown');
+  if (dropdown) {
+    dropdown.classList.remove('cart-dropdown--open');
+    
+    // Clean up position listeners
+    if (positionCleanup) {
+      positionCleanup();
+      positionCleanup = null;
+    }
+    
+    setTimeout(() => {
+      dropdown.remove();
+    }, 300);
+  }
+}
+
+/**
+ * Handle clear cart button click
+ */
+function handleClearCart() {
+  if (confirm('Are you sure you want to clear your cart?')) {
+    clearCart();
+    renderCartDropdown(); // Re-render to show empty state
+  }
+}
+
+/**
+ * Handle checkout button click
+ */
+function handleCheckout() {
+  // TODO: Implement checkout functionality
+  console.log('Checkout clicked');
+  alert('Checkout functionality coming soon!');
+  // You can redirect to a checkout page here
+  // window.location.href = '/checkout.html';
 }
