@@ -4,6 +4,9 @@ import '../../scripts/lib-instantsearch-chat.js';
 import { addToCart } from '../../scripts/cart.js';
 
 export default function decorate(block) {
+  // Add agent class for CSS scoping
+  block.classList.add('agent');
+  
   const searchClient = algoliasearch(
     "0EXRPAXB56",
     "4350d61521979144d2012720315f5fc6"

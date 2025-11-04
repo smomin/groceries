@@ -2,28 +2,26 @@
 @import url('https://fonts.googleapis.com/css2?family=Quicksand:wght@300;400;500;600;700&display=swap');
 
 /* instantsearch.css/themes/satellite.css */
-[class^=ais-] {
-  box-sizing: border-box;
-}
+/* box-sizing already set globally in styles.css */
 
-.ais-Breadcrumb-list,
-.ais-Carousel-list,
-.ais-CurrentRefinements-list,
-.ais-HierarchicalMenu-list,
-.ais-Hits-list,
-.ais-FrequentlyBoughtTogether-list,
-.ais-LookingSimilar-list,
-.ais-RelatedProducts-list,
-.ais-TrendingItems-list,
-.ais-Results-list,
-.ais-InfiniteHits-list,
-.ais-InfiniteResults-list,
-.ais-Menu-list,
-.ais-NumericMenu-list,
-.ais-Pagination-list,
-.ais-RatingMenu-list,
-.ais-RefinementList-list,
-.ais-ToggleRefinement-list {
+.agent .ais-Breadcrumb-list,
+.agent .ais-Carousel-list,
+.agent .ais-CurrentRefinements-list,
+.agent .ais-HierarchicalMenu-list,
+.agent .ais-Hits-list,
+.agent .ais-FrequentlyBoughtTogether-list,
+.agent .ais-LookingSimilar-list,
+.agent .ais-RelatedProducts-list,
+.agent .ais-TrendingItems-list,
+.agent .ais-Results-list,
+.agent .ais-InfiniteHits-list,
+.agent .ais-InfiniteResults-list,
+.agent .ais-Menu-list,
+.agent .ais-NumericMenu-list,
+.agent .ais-Pagination-list,
+.agent .ais-RatingMenu-list,
+.agent .ais-RefinementList-list,
+.agent .ais-ToggleRefinement-list {
   margin: 0;
   padding: 0;
   list-style: none;
@@ -103,12 +101,12 @@
   overflow-anchor: none;
 }
 
-.ais-Breadcrumb-list,
-.ais-Breadcrumb-item,
-.ais-Pagination-list,
-.ais-RangeInput-form,
-.ais-RatingMenu-link,
-.ais-PoweredBy {
+.agent .ais-Breadcrumb-list,
+.agent .ais-Breadcrumb-item,
+.agent .ais-Pagination-list,
+.agent .ais-RangeInput-form,
+.agent .ais-RatingMenu-link,
+.agent .ais-PoweredBy {
   display: flex;
   align-items: center;
 }
@@ -1127,9 +1125,7 @@
 /**
  * Reset
  */
-[class^=ais-] {
-  box-sizing: border-box;
-}
+/* box-sizing already set globally in styles.css */
 
 /**
  * Disabled
@@ -1143,19 +1139,19 @@
 /**
  * Buttons
  */
-.ais-HierarchicalMenu-showMore,
-.ais-Menu-showMore,
-.ais-RefinementList-showMore,
-.ais-ClearRefinements-button,
-.ais-InfiniteHits-loadMore,
-.ais-RangeInput-submit,
-.ais-InfiniteHits-loadPrevious,
-.ais-Pagination-link,
-.ais-GeoSearch-redo,
-.ais-GeoSearch-reset,
-.ais-VoiceSearch-button,
-.ais-RelevantSort-button,
-.ais-Carousel-navigation {
+.agent .ais-HierarchicalMenu-showMore,
+.agent .ais-Menu-showMore,
+.agent .ais-RefinementList-showMore,
+.agent .ais-ClearRefinements-button,
+.agent .ais-InfiniteHits-loadMore,
+.agent .ais-RangeInput-submit,
+.agent .ais-InfiniteHits-loadPrevious,
+.agent .ais-Pagination-link,
+.agent .ais-GeoSearch-redo,
+.agent .ais-GeoSearch-reset,
+.agent .ais-VoiceSearch-button,
+.agent .ais-RelevantSort-button,
+.agent .ais-Carousel-navigation {
   -webkit-appearance: none;
      -moz-appearance: none;
           appearance: none;
@@ -1194,18 +1190,18 @@
   margin-top: 1rem;
 }
 
-.ais-HierarchicalMenu-showMore:hover,
-.ais-Menu-showMore:hover,
-.ais-RefinementList-showMore:hover,
-.ais-ClearRefinements-button:hover,
-.ais-InfiniteHits-loadMore:hover,
-.ais-RangeInput-submit:hover,
-.ais-InfiniteHits-loadPrevious:hover,
-.ais-Pagination-item:not(.ais-Pagination-item--selected):not(.ais-Pagination-item--disabled) .ais-Pagination-link:hover,
-.ais-GeoSearch-redo:hover,
-.ais-GeoSearch-reset:hover,
-.ais-VoiceSearch-button:hover,
-.ais-Carousel-navigation:hover {
+.agent .ais-HierarchicalMenu-showMore:hover,
+.agent .ais-Menu-showMore:hover,
+.agent .ais-RefinementList-showMore:hover,
+.agent .ais-ClearRefinements-button:hover,
+.agent .ais-InfiniteHits-loadMore:hover,
+.agent .ais-RangeInput-submit:hover,
+.agent .ais-InfiniteHits-loadPrevious:hover,
+.agent .ais-Pagination-item:not(.ais-Pagination-item--selected):not(.ais-Pagination-item--disabled) .ais-Pagination-link:hover,
+.agent .ais-GeoSearch-redo:hover,
+.agent .ais-GeoSearch-reset:hover,
+.agent .ais-VoiceSearch-button:hover,
+.agent .ais-Carousel-navigation:hover {
   background-image: linear-gradient(-180deg, #fff, #f5f5fa);
   border-color: #d6d6e7;
 }
@@ -1227,29 +1223,29 @@
   outline: currentcolor none medium;
 }
 
-.ais-HierarchicalMenu-showMore:active,
-.ais-Menu-showMore:active,
-.ais-RefinementList-showMore:active,
-.ais-ClearRefinements-button:active,
-.ais-InfiniteHits-loadMore:active,
-.ais-InfiniteHits-loadPrevious:active,
-.ais-Pagination-item--selected .ais-Pagination-link,
-.ais-Pagination-link:active,
-.ais-GeoSearch-redo:active,
-.ais-GeoSearch-reset:active,
-.ais-VoiceSearch-button:active,
-.ais-Carousel-navigation:active {
+.agent .ais-HierarchicalMenu-showMore:active,
+.agent .ais-Menu-showMore:active,
+.agent .ais-RefinementList-showMore:active,
+.agent .ais-ClearRefinements-button:active,
+.agent .ais-InfiniteHits-loadMore:active,
+.agent .ais-InfiniteHits-loadPrevious:active,
+.agent .ais-Pagination-item--selected .ais-Pagination-link,
+.agent .ais-Pagination-link:active,
+.agent .ais-GeoSearch-redo:active,
+.agent .ais-GeoSearch-reset:active,
+.agent .ais-VoiceSearch-button:active,
+.agent .ais-Carousel-navigation:active {
   border-color: #d6d6e7;
   box-shadow: rgba(119, 122, 175, 0.4) 0 1px 4px 0 inset, rgba(119, 122, 175, 0.4) 0 1px 1px 0 inset, rgba(35, 38, 59, 0.05) 0 1px 0 0;
 }
 
-.ais-ClearRefinements-button:disabled[disabled],
-.ais-InfiniteHits-loadMore:disabled[disabled],
-.ais-InfiniteHits-loadPrevious:disabled[disabled],
-.ais-Pagination-item--disabled .ais-Pagination-link,
-.ais-GeoSearch-redo--disabled,
-.ais-GeoSearch-reset--disabled,
-.ais-VoiceSearch-button:disabled {
+.agent .ais-ClearRefinements-button:disabled[disabled],
+.agent .ais-InfiniteHits-loadMore:disabled[disabled],
+.agent .ais-InfiniteHits-loadPrevious:disabled[disabled],
+.agent .ais-Pagination-item--disabled .ais-Pagination-link,
+.agent .ais-GeoSearch-redo--disabled,
+.agent .ais-GeoSearch-reset--disabled,
+.agent .ais-VoiceSearch-button:disabled {
   background-image: linear-gradient(-180deg, #fff, #f5f5fa);
   border-color: #efeff5;
   box-shadow: none;
@@ -2056,26 +2052,26 @@
 }
 
 /**
- * Pagination
+ * Pagination - Scoped to agent block only
  */
-.ais-Pagination-item:first-child > .ais-Pagination-link {
+.agent .ais-Pagination-item:first-child > .ais-Pagination-link {
   border-radius: 3px 0 0 3px;
 }
 
-.ais-Pagination-item + .ais-Pagination-item > .ais-Pagination-link {
+.agent .ais-Pagination-item + .ais-Pagination-item > .ais-Pagination-link {
   border-radius: 0;
   margin-left: -1px;
 }
 
-.ais-Pagination-item:last-child > .ais-Pagination-link {
+.agent .ais-Pagination-item:last-child > .ais-Pagination-link {
   border-radius: 0 3px 3px 0;
 }
 
-.ais-Pagination-item {
+.agent .ais-Pagination-item {
   display: inline-block;
 }
 
-.ais-Pagination-item--selected .ais-Pagination-link {
+.agent .ais-Pagination-item--selected .ais-Pagination-link {
   font-weight: bold;
 }
 
@@ -2150,9 +2146,8 @@
   --base-color: #3BB77E;
 }
 
-body {
-  font-family: var(--font-family);
-}
+/* Removed global body font-family override - it was affecting the entire page */
+/* If Quicksand font is needed for agent components, scope it to .agent-wrapper or specific classes */
 
 .ais-Carousel-item {
   padding: 0.5rem !important;
