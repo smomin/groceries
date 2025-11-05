@@ -55,7 +55,7 @@ export default function decorate(block) {
     const search = instantsearch({
       searchClient,
       indexName,
-      stateMapping: instantsearch.stateMappings.singleIndex(indexName)
+      stateMapping: instantsearch.stateMappings.singleIndex(indexName),
     });
 
     // Mount a virtual search box to manipulate InstantSearch's `query` UI

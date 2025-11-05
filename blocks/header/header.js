@@ -472,7 +472,7 @@ function handleHeaderScroll() {
   let ticking = false;
 
   function updateHeader() {
-    const scrollY = window.scrollY;
+    const { scrollY } = window;
 
     if (scrollY > scrollThreshold) {
       header.classList.add('header--minimized');

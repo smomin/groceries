@@ -523,10 +523,7 @@ body {
   }
 
   .header--minimized .header__top-bar {
-    padding-left: 60px;
-    padding-right: 60px;
-    padding-top: 8px;
-    padding-bottom: 8px;
+    padding: 8px 60px;
   }
 }
 
@@ -551,10 +548,7 @@ body {
   }
 
   .header--minimized .header__top-bar {
-    padding-left: 20px;
-    padding-right: 20px;
-    padding-top: 8px;
-    padding-bottom: 8px;
+    padding: 8px 20px;
   }
 
   .header__logo-text h1 {
