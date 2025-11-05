@@ -328,6 +328,123 @@
     ]
   },
   {
+    "id": "product",
+    "fields": [
+      {
+        "component": "text",
+        "valueType": "string",
+        "name": "appId",
+        "label": "App Id",
+        "value": ""
+      },
+      {
+        "component": "text",
+        "valueType": "string",
+        "name": "apiKey",
+        "label": "API Key",
+        "value": ""
+      },
+      {
+        "component": "text",
+        "valueType": "string",
+        "name": "indexName",
+        "label": "Index Name",
+        "value": ""
+      }
+    ]
+  },
+  {
+    "id": "recipe",
+    "fields": [
+      {
+        "component": "text",
+        "valueType": "string",
+        "name": "appId",
+        "label": "App Id",
+        "value": ""
+      },
+      {
+        "component": "text",
+        "valueType": "string",
+        "name": "apiKey",
+        "label": "API Key",
+        "value": ""
+      },
+      {
+        "component": "text",
+        "valueType": "string",
+        "name": "indexName",
+        "label": "Index Name",
+        "value": ""
+      }
+    ]
+  },
+  {
+    "id": "recommend",
+    "fields": [
+      {
+        "component": "text",
+        "valueType": "string",
+        "name": "appId",
+        "label": "App Id",
+        "value": ""
+      },
+      {
+        "component": "text",
+        "valueType": "string",
+        "name": "apiKey",
+        "label": "API Key",
+        "value": ""
+      },
+      {
+        "component": "text",
+        "valueType": "string",
+        "name": "indexName",
+        "label": "Index Name",
+        "value": ""
+      },
+      {
+        "component": "dropdown",
+        "valueType": "string",
+        "name": "model",
+        "label": "Recommend Model",
+        "value": "looking-similar",
+        "options": [
+          {
+            "value": "looking-similar",
+            "label": "Looking Similar"
+          },
+          {
+            "value": "bought-together",
+            "label": "Bought Together"
+          },
+          {
+            "value": "trending-items",
+            "label": "Trending Items"
+          },
+          {
+            "value": "related-products",
+            "label": "Related Products"
+          }
+        ]
+      },
+      {
+        "component": "text",
+        "valueType": "string",
+        "name": "objectId",
+        "label": "Object ID (optional, defaults to URL ?pid= or ?rid=)",
+        "value": ""
+      },
+      {
+        "component": "text",
+        "valueType": "string",
+        "name": "title",
+        "label": "Section Title",
+        "value": "Recommended for You"
+      }
+    ]
+  },
+  {
     "id": "search-box",
     "fields": [
       {
@@ -335,7 +452,8 @@
         "valueType": "string",
         "name": "placeholderText",
         "label": "PlaceHolder Text",
-        "value": ""
+        "value": "",
+        "key-value": true
       }
     ]
   },
