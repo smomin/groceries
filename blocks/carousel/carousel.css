@@ -4,7 +4,7 @@
     width: 100%;
     overflow: hidden;
     background-color: #DEF9EC;
-    margin-top: 0;
+    margin-top: 90px; /* Account for fixed header height - ensures no overlap */
   }
   
   .carousel-container {
@@ -227,6 +227,10 @@
   }
   
   @media (width <= 768px) {
+    .hero-carousel {
+        margin-top: 140px; /* Ensure header clearance on mobile */
+    }
+  
     .carousel-container {
         height: 550px;
     }
