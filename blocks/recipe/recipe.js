@@ -1,28 +1,5 @@
 import '../../scripts/lib-algoliasearch.js';
-import { createOptimizedPicture } from '../../scripts/aem.js';
-import { moveInstrumentation } from '../../scripts/scripts.js';
-
-function getTextContent(htmlElement) {
-  const textContent = htmlElement.textContent.trim();
-  htmlElement.textContent = '';
-  return textContent;
-}
-
-function getCredentials(htmlElement) {
-  const appId = getTextContent(htmlElement.children[0]);
-  const apiKey = getTextContent(htmlElement.children[1]);
-  return { appId, apiKey };
-}
-
-function getIndexName(htmlElement) {
-  const indexName = getTextContent(htmlElement.children[2]);
-  return indexName;
-}
-
-function getRecipeId() {
-  const urlParams = new URLSearchParams(window.location.search);
-  return urlParams.get('rid');
-}
+import { getTextContent, getCredentials, getIndexName, getParamFromUrl, createAlgoliaClient, fetchObjectById, createImageElement } from '../../scripts/blocks-utils.js';
 
 function extractIngredientsFromSteps(steps) {
   if (!Array.isArray(steps)) {
@@ -105,7 +82,7 @@ function formatInstructions(steps) {
 export default function decorate(block) {
   const { appId, apiKey } = getCredentials(block);
   const indexName = getIndexName(block);
-  const recipeId = getRecipeId();
+  const recipeId = getParamFromUrl('rid');
 
   const recipeContainer = document.createElement('div');
   recipeContainer.className = 'recipe-container';
@@ -163,47 +140,9 @@ export default function decorate(block) {
   }
 
   setTimeout(() => {
-    const { algoliasearch } = window;
-    const searchClient = algoliasearch(appId, apiKey);
-    const index = searchClient.initIndex(indexName);
+    const searchClient = createAlgoliaClient(appId, apiKey);
 
-    // Fetch recipe by objectID using getObject() method (primary method)
-    // Fallback to filter search if getObject is not available
-    let recipePromise;
-
-    // Primary method: Use getObject() to fetch by objectID directly
-    if (typeof index.getObject === 'function') {
-      recipePromise = index.getObject(recipeId)
-        .catch((error) => {
-          // If getObject fails, fall back to filter search
-          return index.search('', {
-            filters: `objectID:${recipeId}`,
-            hitsPerPage: 1,
-          })
-            .then((result) => {
-              const recipe = result.hits && result.hits.length > 0 ? result.hits[0] : null;
-              if (recipe && recipe.objectID === recipeId) {
-                return recipe;
-              }
-              throw new Error('Recipe not found');
-            });
-        });
-    } else {
-      // Fallback: Use filter search if getObject is not available
-      recipePromise = index.search('', {
-        filters: `objectID:${recipeId}`,
-        hitsPerPage: 1,
-      })
-        .then((result) => {
-          const recipe = result.hits && result.hits.length > 0 ? result.hits[0] : null;
-          if (recipe && recipe.objectID === recipeId) {
-            return recipe;
-          }
-          throw new Error('Recipe not found');
-        });
-    }
-
-    recipePromise
+    fetchObjectById(searchClient, indexName, recipeId)
       .then((recipe) => {
         const loadingDiv = recipeContainer.querySelector('.recipe-loading');
         const errorDiv = recipeContainer.querySelector('.recipe-error');
@@ -278,43 +217,8 @@ export default function decorate(block) {
         if (recipe.image || recipe.imageUrl) {
           const imageUrl = recipe.image || recipe.imageUrl;
           const alt = recipe.name || recipe.title || 'Recipe image';
-          
-          // Check if image is from external domain (not same origin)
-          try {
-            const imageUrlObj = new URL(imageUrl, window.location.href);
-            const isExternal = imageUrlObj.origin !== window.location.origin;
-            
-            if (isExternal) {
-              // For external images, use simple img tag
-              const img = document.createElement('img');
-              img.src = imageUrl;
-              img.alt = alt;
-              img.loading = 'eager';
-              img.style.width = '100%';
-              img.style.height = 'auto';
-              img.style.objectFit = 'contain';
-              pictureElement.replaceWith(img);
-            } else {
-              // For same-domain images, use optimization
-              const img = document.createElement('img');
-              img.src = imageUrl;
-              img.alt = alt;
-              img.loading = 'eager';
-              const optimizedPic = createOptimizedPicture(imageUrl, alt, false, [{ width: '750' }]);
-              moveInstrumentation(img, optimizedPic.querySelector('img'));
-              pictureElement.replaceWith(optimizedPic);
-            }
-          } catch (error) {
-            // If URL parsing fails, use simple img tag
-            const img = document.createElement('img');
-            img.src = imageUrl;
-            img.alt = alt;
-            img.loading = 'eager';
-            img.style.width = '100%';
-            img.style.height = 'auto';
-            img.style.objectFit = 'contain';
-            pictureElement.replaceWith(img);
-          }
+          const imgElement = createImageElement(imageUrl, alt, true, [{ width: '750' }]);
+          pictureElement.replaceWith(imgElement);
         } else {
           imageWrapper.style.display = 'none';
         }

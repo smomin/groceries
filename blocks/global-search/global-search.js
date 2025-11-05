@@ -2,6 +2,7 @@ import '../../scripts/lib-algoliasearch.js';
 import '../../scripts/lib-autocomplete.js';
 import '../../scripts/lib-autocomplete-plugin-query-suggestions.js';
 import '../../scripts/lib-autocomplete-plugin-recent-searches.js';
+import { getTextContent, getCredentials, createAlgoliaClient, getParamFromUrl } from '../../scripts/blocks-utils.js';
 
 export const SearchEvents = {
   QUERY_CHANGE: 'search:query:change',
@@ -12,18 +13,6 @@ export const SearchEvents = {
   SEARCH_COMPLETE: 'search:complete',
   ERROR: 'search:error',
 };
-
-function getTextContent(htmlElement) {
-  const textContent = htmlElement.textContent.trim();
-  htmlElement.textContent = '';
-  return textContent;
-}
-
-function getCredentials(htmlElement) {
-  const appId = getTextContent(htmlElement.children[0]);
-  const apiKey = getTextContent(htmlElement.children[1]);
-  return { appId, apiKey };
-}
 
 function getLayoutTemplate(htmlElement) {
   const layoutTemplate = getTextContent(htmlElement.children[2]);
@@ -47,11 +36,6 @@ function getTemplate(htmlElement) {
   return htmlElement ? getTextContent(htmlElement) : null;
 }
 
-function param(name) {
-  return (
-    new URLSearchParams(window.location.href.split('?')[1]).get(name) || ''
-  );
-}
 
 export default function decorate(block) {
   if (block.children.length > 3) {
@@ -81,10 +65,7 @@ export default function decorate(block) {
       }));
     };
 
-    const searchClient = algoliasearch(
-      appId,
-      apiKey,
-    );
+    const searchClient = createAlgoliaClient(appId, apiKey);
 
     const recentSearchesPlugin = createLocalStorageRecentSearchesPlugin({
       key: 'navbar',
@@ -172,7 +153,7 @@ export default function decorate(block) {
         openOnFocus: true,
         plugins: [recentSearchesPlugin, querySuggestionsPlugin],
         initialState: {
-          query: param('search') || '',
+          query: getParamFromUrl('search') || '',
         },
         onSubmit({ state }) {
           setInstantSearchUiState({ query: state.query });

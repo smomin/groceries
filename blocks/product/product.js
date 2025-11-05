@@ -1,34 +1,10 @@
 import '../../scripts/lib-algoliasearch.js';
-import { createOptimizedPicture } from '../../scripts/aem.js';
-import { addToCart, updateCartBadge } from '../../scripts/cart.js';
-import { moveInstrumentation } from '../../scripts/scripts.js';
-
-function getTextContent(htmlElement) {
-  const textContent = htmlElement.textContent.trim();
-  htmlElement.textContent = '';
-  return textContent;
-}
-
-function getCredentials(htmlElement) {
-  const appId = getTextContent(htmlElement.children[0]);
-  const apiKey = getTextContent(htmlElement.children[1]);
-  return { appId, apiKey };
-}
-
-function getIndexName(htmlElement) {
-  const indexName = getTextContent(htmlElement.children[2]);
-  return indexName;
-}
-
-function getProductId() {
-  const urlParams = new URLSearchParams(window.location.search);
-  return urlParams.get('pid');
-}
+import { getTextContent, getCredentials, getIndexName, getParamFromUrl, createAlgoliaClient, fetchObjectById, createImageElement, formatPrice, handleAddToCart } from '../../scripts/blocks-utils.js';
 
 export default function decorate(block) {
   const { appId, apiKey } = getCredentials(block);
   const indexName = getIndexName(block);
-  const productId = getProductId();
+  const productId = getParamFromUrl('pid');
 
   const productContainer = document.createElement('div');
   productContainer.className = 'product-container';
@@ -85,21 +61,9 @@ export default function decorate(block) {
   }
 
   setTimeout(() => {
-    const { algoliasearch } = window;
-    const searchClient = algoliasearch(appId, apiKey);
-    const index = searchClient.initIndex(indexName);
+    const searchClient = createAlgoliaClient(appId, apiKey);
 
-    index.search('', {
-      filters: `objectID:${productId}`,
-      hitsPerPage: 1,
-    })
-      .then((result) => {
-        const product = result.hits && result.hits[0];
-        if (!product) {
-          throw new Error('Product not found');
-        }
-        return product;
-      })
+    fetchObjectById(searchClient, indexName, productId)
       .then((product) => {
         const loadingDiv = productContainer.querySelector('.product-loading');
         const errorDiv = productContainer.querySelector('.product-error');
@@ -145,56 +109,16 @@ export default function decorate(block) {
         // Set product price
         const priceElement = productContainer.querySelector('.product-price');
         const price = product.price || 0;
-        priceElement.textContent = new Intl.NumberFormat('en-US', {
-          style: 'currency',
-          currency: 'USD',
-        }).format(price);
+        priceElement.textContent = formatPrice(price);
 
         // Set product image
         const imageWrapper = productContainer.querySelector('.product-image-wrapper');
         if (product.image) {
           const imageUrl = product.image;
           const alt = product.name || 'Product image';
-          
-          // Check if image is from external domain (not same origin)
-          try {
-            const imageUrlObj = new URL(imageUrl, window.location.href);
-            const isExternal = imageUrlObj.origin !== window.location.origin;
-            
-            if (isExternal) {
-              // For external images, use simple img tag
-              const img = document.createElement('img');
-              img.src = imageUrl;
-              img.alt = alt;
-              img.loading = 'eager';
-              img.style.width = '100%';
-              img.style.height = 'auto';
-              img.style.objectFit = 'contain';
-              imageWrapper.innerHTML = '';
-              imageWrapper.appendChild(img);
-            } else {
-              // For same-domain images, use optimization
-              const img = document.createElement('img');
-              img.src = imageUrl;
-              img.alt = alt;
-              img.loading = 'eager';
-              const optimizedPic = createOptimizedPicture(imageUrl, alt, false, [{ width: '750' }]);
-              moveInstrumentation(img, optimizedPic.querySelector('img'));
-              imageWrapper.innerHTML = '';
-              imageWrapper.appendChild(optimizedPic);
-            }
-          } catch (error) {
-            // If URL parsing fails, use simple img tag
-            const img = document.createElement('img');
-            img.src = imageUrl;
-            img.alt = alt;
-            img.loading = 'eager';
-            img.style.width = '100%';
-            img.style.height = 'auto';
-            img.style.objectFit = 'contain';
-            imageWrapper.innerHTML = '';
-            imageWrapper.appendChild(img);
-          }
+          const imgElement = createImageElement(imageUrl, alt, true, [{ width: '750' }]);
+          imageWrapper.innerHTML = '';
+          imageWrapper.appendChild(imgElement);
         } else {
           imageWrapper.style.display = 'none';
         }
@@ -208,44 +132,21 @@ export default function decorate(block) {
 
         // Handle add to cart button click
         const addToCartBtn = productContainer.querySelector('.product-add-to-cart-btn');
+        const qtyInput = productContainer.querySelector('#product-qty');
+        const getQuantity = () => parseInt(qtyInput.value, 10) || 1;
+
+        const productData = {
+          objectID: product.objectID || productId,
+          name: product.name || 'Product',
+          price,
+          description,
+          image: product.image || '',
+        };
+
         addToCartBtn.addEventListener('click', (event) => {
           event.preventDefault();
           event.stopPropagation();
-
-          const qtyInput = productContainer.querySelector('#product-qty');
-          const quantity = parseInt(qtyInput.value, 10) || 1;
-
-          const productData = {
-            objectID: product.objectID || productId,
-            name: product.name || 'Product',
-            price: price,
-            description: description,
-            image: product.image || '',
-          };
-
-          const cartItem = addToCart(productData, quantity);
-          if (cartItem) {
-            // Visual feedback
-            const originalHTML = addToCartBtn.innerHTML;
-            const originalBgColor = addToCartBtn.style.backgroundColor;
-            const originalColor = addToCartBtn.style.color;
-
-            addToCartBtn.innerHTML = 'Added!';
-            addToCartBtn.style.backgroundColor = '#00b207';
-            addToCartBtn.style.color = '#ffffff';
-            addToCartBtn.disabled = true;
-
-            setTimeout(() => {
-              addToCartBtn.innerHTML = originalHTML;
-              addToCartBtn.style.backgroundColor = originalBgColor;
-              addToCartBtn.style.color = originalColor;
-              addToCartBtn.disabled = false;
-
-              requestAnimationFrame(() => {
-                updateCartBadge();
-              });
-            }, 1000);
-          }
+          handleAddToCart(addToCartBtn, productData, getQuantity());
         });
       })
       .catch((error) => {

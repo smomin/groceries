@@ -1,8 +1,8 @@
 import { moveInstrumentation } from '../../scripts/scripts.js';
+import { Carousel } from '../../scripts/blocks-utils.js';
 
 // Carousel State
-let currentSlide = 0;
-let autoSlideInterval;
+let carousel;
 const heroSlides = [];
 
 // Create individual slide
@@ -29,154 +29,27 @@ function createSlide(htmlElement) {
   return slide;
 }
 
-// Update carousel position and active states
-function updateCarousel() {
-  const track = document.getElementById('carouselTrack');
-  if (!track) return;
-
-  track.style.transform = `translateX(-${currentSlide * 100}%)`;
-
-  // Update dots
-  const dots = document.querySelectorAll('.carousel-dot');
-  dots.forEach((dot, index) => {
-    dot.classList.toggle('active', index === currentSlide);
-  });
-}
-
-// Move slide by direction (-1 for prev, 1 for next)
-function moveSlide(direction) {
-  currentSlide += direction;
-
-  // Loop around
-  if (currentSlide < 0) {
-    currentSlide = heroSlides.length - 1;
-  } else if (currentSlide >= heroSlides.length) {
-    currentSlide = 0;
-  }
-
-  updateCarousel();
-  resetAutoSlide();
-}
-
-// Auto-slide functionality
-function startAutoSlide() {
-  autoSlideInterval = setInterval(() => {
-    moveSlide(1);
-  }, 5000); // Change slide every 5 seconds
-}
-
-// Reset auto-slide timer
-function resetAutoSlide() {
-  clearInterval(autoSlideInterval);
-  startAutoSlide();
-}
-
-// Move to specific slide
-function goToSlide(slideIndex) {
-  currentSlide = slideIndex;
-  updateCarousel();
-  resetAutoSlide();
-}
-
-// Create navigation arrow
-function createArrow(direction, moveDirection) {
-  const arrow = document.createElement('button');
-  arrow.className = `carousel-arrow ${direction}`;
-  arrow.onclick = () => moveSlide(moveDirection);
-
-  const svg = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
-  svg.setAttribute('viewBox', '0 0 24 24');
-  svg.setAttribute('fill', 'none');
-  svg.setAttribute('stroke', 'currentColor');
-  svg.setAttribute('stroke-width', '2');
-
-  const path = document.createElementNS('http://www.w3.org/2000/svg', 'path');
-  if (direction === 'prev') {
-    path.setAttribute('d', 'M15 18l-6-6 6-6');
-  } else {
-    path.setAttribute('d', 'M9 18l6-6-6-6');
-  }
-
-  svg.appendChild(path);
-  arrow.appendChild(svg);
-
-  return arrow;
-}
-
-// Create navigation dots
-function createDots() {
-  const dotsContainer = document.getElementById('carouselDots');
-  dotsContainer.innerHTML = '';
-
-  for (let i = 0; i < heroSlides.length; i += 1) {
-    const dot = document.createElement('button');
-    dot.className = 'carousel-dot';
-    if (i === 0) dot.classList.add('active');
-    dot.addEventListener('click', () => goToSlide(i));
-    dotsContainer.appendChild(dot);
-  }
-}
-
-// Handle swipe gesture
-function handleSwipe(startX, endX) {
-  const swipeThreshold = 50;
-  const diff = startX - endX;
-
-  if (Math.abs(diff) > swipeThreshold) {
-    if (diff > 0) {
-      // Swipe left - next slide
-      moveSlide(1);
-    } else {
-      // Swipe right - previous slide
-      moveSlide(-1);
-    }
-  }
-}
-
-// Setup event listeners
-function setupEventListeners() {
-  const carouselContainer = document.querySelector('.carousel-container');
-
-  if (carouselContainer) {
-    // Pause auto-slide on hover
-    carouselContainer.addEventListener('mouseenter', () => {
-      clearInterval(autoSlideInterval);
-    });
-
-    carouselContainer.addEventListener('mouseleave', () => {
-      startAutoSlide();
-    });
-
-    // Touch/Swipe support for mobile
-    let touchStartX = 0;
-    let touchEndX = 0;
-
-    carouselContainer.addEventListener('touchstart', (e) => {
-      touchStartX = e.changedTouches[0].screenX;
-    });
-
-    carouselContainer.addEventListener('touchend', (e) => {
-      touchEndX = e.changedTouches[0].screenX;
-      handleSwipe(touchStartX, touchEndX);
-    });
-  }
-
-  // Keyboard navigation
-  document.addEventListener('keydown', (e) => {
-    if (e.key === 'ArrowLeft') {
-      moveSlide(-1);
-    } else if (e.key === 'ArrowRight') {
-      moveSlide(1);
-    }
-  });
-}
-
 // Initialize carousel functionality
 function initCarousel() {
-  createDots();
-  updateCarousel();
-  startAutoSlide();
-  setupEventListeners();
+  carousel = new Carousel({
+    trackSelector: '#carouselTrack',
+    dotsSelector: '#carouselDots',
+    containerSelector: '.carousel-container',
+    dotClass: 'carousel-dot',
+    arrowClass: 'carousel-arrow',
+    autoSlideInterval: 5000,
+  });
+  carousel.setSlides(heroSlides);
+  carousel.init();
+
+  // Create navigation arrows after carousel is initialized
+  const carouselContainer = document.querySelector('.carousel-container');
+  if (carouselContainer && heroSlides.length > 1) {
+    const prevArrow = carousel.createArrow('prev', -1);
+    const nextArrow = carousel.createArrow('next', 1);
+    carouselContainer.insertBefore(prevArrow, carouselContainer.firstChild.nextSibling);
+    carouselContainer.insertBefore(nextArrow, carouselContainer.firstChild.nextSibling);
+  }
 }
 
 // Render Hero Carousel
@@ -202,10 +75,6 @@ function generateHeroCarousel() {
     carouselTrack.appendChild(slideElement);
   });
 
-  // Create navigation arrows
-  const prevArrow = createArrow('prev', -1);
-  const nextArrow = createArrow('next', 1);
-
   // Create dots container
   const dotsContainer = document.createElement('div');
   dotsContainer.className = 'carousel-dots';
@@ -213,8 +82,6 @@ function generateHeroCarousel() {
 
   // Assemble carousel
   carouselContainer.appendChild(carouselTrack);
-  carouselContainer.appendChild(prevArrow);
-  carouselContainer.appendChild(nextArrow);
   carouselContainer.appendChild(dotsContainer);
   heroSection.appendChild(carouselContainer);
 

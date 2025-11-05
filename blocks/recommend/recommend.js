@@ -1,26 +1,7 @@
 import '../../scripts/lib-algoliasearch.js';
-import { createOptimizedPicture } from '../../scripts/aem.js';
-import { addToCart, updateCartBadge } from '../../scripts/cart.js';
-import { moveInstrumentation } from '../../scripts/scripts.js';
+import { getTextContent, getCredentials, getIndexName, getObjectIdFromUrl, createAlgoliaClient, createImageElement, formatPrice, handleAddToCart, Carousel } from '../../scripts/blocks-utils.js';
 
-function getTextContent(htmlElement) {
-  if (!htmlElement) return '';
-  const textContent = htmlElement.textContent?.trim() || '';
-  htmlElement.textContent = '';
-  return textContent;
-}
-
-function getCredentials(htmlElement) {
-  const appId = getTextContent(htmlElement.children?.[0]);
-  const apiKey = getTextContent(htmlElement.children?.[1]);
-  return { appId, apiKey };
-}
-
-function getIndexName(htmlElement) {
-  const indexName = getTextContent(htmlElement.children?.[2]);
-  return indexName;
-}
-
+// Helper functions
 function getModel(htmlElement) {
   const model = getTextContent(htmlElement.children?.[3]);
   return model || 'looking-similar';
@@ -36,15 +17,8 @@ function getTitle(htmlElement) {
   return title || 'Recommended for You';
 }
 
-function getObjectIdFromUrl() {
-  const urlParams = new URLSearchParams(window.location.search);
-  // Check for pid (product id) or rid (recipe id) query parameters
-  return urlParams.get('pid') || urlParams.get('rid');
-}
-
 // Carousel State
-let currentSlide = 0;
-let autoSlideInterval;
+let carousel;
 const recommendSlides = [];
 
 // Create individual product card
@@ -57,31 +31,8 @@ function createProductCard(product) {
   imageWrapper.className = 'recommend-card__image-wrapper';
   
   if (product.image) {
-    // Check if image URL is external (absolute URL)
-    const isExternalUrl = product.image.startsWith('http://') || product.image.startsWith('https://');
-    
-    if (isExternalUrl) {
-      // For external URLs (like Supabase), use the image directly
-      const img = document.createElement('img');
-      img.src = product.image;
-      img.alt = product.name || 'Product';
-      img.loading = 'lazy';
-      imageWrapper.appendChild(img);
-    } else {
-      // For internal URLs, use optimization
-      const img = document.createElement('img');
-      img.src = product.image;
-      img.alt = product.name || 'Product';
-      img.loading = 'lazy';
-      const optimizedPic = createOptimizedPicture(
-        img.src,
-        img.alt,
-        false,
-        [{ width: '300' }]
-      );
-      moveInstrumentation(img, optimizedPic.querySelector('img'));
-      imageWrapper.appendChild(optimizedPic);
-    }
+    const imgElement = createImageElement(product.image, product.name || 'Product', false, [{ width: '300' }]);
+    imageWrapper.appendChild(imgElement);
   }
 
   const category = document.createElement('div');
@@ -119,10 +70,7 @@ function createProductCard(product) {
     priceContainer.className = 'price-container';
     const price = document.createElement('span');
     price.className = 'current-price';
-    price.textContent = new Intl.NumberFormat('en-US', {
-      style: 'currency',
-      currency: 'USD',
-    }).format(product.price || 0);
+    price.textContent = formatPrice(product.price);
     priceContainer.appendChild(price);
 
     const addBtn = document.createElement('button');
@@ -146,28 +94,7 @@ function createProductCard(product) {
         image: product.image || '',
       };
 
-      const cartItem = addToCart(productData, 1);
-      if (cartItem) {
-        const originalHTML = addBtn.innerHTML;
-        const originalBgColor = addBtn.style.backgroundColor;
-        const originalColor = addBtn.style.color;
-
-        addBtn.innerHTML = 'Added!';
-        addBtn.style.backgroundColor = '#00b207';
-        addBtn.style.color = '#ffffff';
-        addBtn.disabled = true;
-
-        setTimeout(() => {
-          addBtn.innerHTML = originalHTML;
-          addBtn.style.backgroundColor = originalBgColor;
-          addBtn.style.color = originalColor;
-          addBtn.disabled = false;
-
-          requestAnimationFrame(() => {
-            updateCartBadge();
-          });
-        }, 1000);
-      }
+      handleAddToCart(addBtn, productData, 1);
     });
 
     footer.appendChild(priceContainer);
@@ -185,166 +112,30 @@ function createProductCard(product) {
   return card;
 }
 
-// Update carousel position and active states
-function updateCarousel() {
-  const track = document.querySelector('.recommend-carousel-track');
-  if (!track) return;
-
-  track.style.transform = `translateX(-${currentSlide * 100}%)`;
-
-  // Update dots
-  const dots = document.querySelectorAll('.recommend-carousel-dot');
-  dots.forEach((dot, index) => {
-    dot.classList.toggle('active', index === currentSlide);
-  });
-}
-
-// Move slide by direction (-1 for prev, 1 for next)
-function moveSlide(direction) {
-  if (recommendSlides.length === 0) return;
-
-  currentSlide += direction;
-
-  // Loop around
-  if (currentSlide < 0) {
-    currentSlide = recommendSlides.length - 1;
-  } else if (currentSlide >= recommendSlides.length) {
-    currentSlide = 0;
-  }
-
-  updateCarousel();
-  resetAutoSlide();
-}
-
-// Auto-slide functionality
-function startAutoSlide() {
-  if (recommendSlides.length <= 1) return;
-  
-  autoSlideInterval = setInterval(() => {
-    moveSlide(1);
-  }, 5000); // Change slide every 5 seconds
-}
-
-// Reset auto-slide timer
-function resetAutoSlide() {
-  clearInterval(autoSlideInterval);
-  startAutoSlide();
-}
-
-// Move to specific slide
-function goToSlide(slideIndex) {
-  if (recommendSlides.length === 0) return;
-  
-  currentSlide = slideIndex;
-  updateCarousel();
-  resetAutoSlide();
-}
-
-// Create navigation arrow
-function createArrow(direction, moveDirection) {
-  const arrow = document.createElement('button');
-  arrow.className = `recommend-carousel-arrow ${direction}`;
-  arrow.setAttribute('aria-label', direction === 'prev' ? 'Previous' : 'Next');
-  arrow.onclick = () => moveSlide(moveDirection);
-
-  const svg = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
-  svg.setAttribute('viewBox', '0 0 24 24');
-  svg.setAttribute('fill', 'none');
-  svg.setAttribute('stroke', 'currentColor');
-  svg.setAttribute('stroke-width', '2');
-
-  const path = document.createElementNS('http://www.w3.org/2000/svg', 'path');
-  if (direction === 'prev') {
-    path.setAttribute('d', 'M15 18l-6-6 6-6');
-  } else {
-    path.setAttribute('d', 'M9 18l6-6-6-6');
-  }
-
-  svg.appendChild(path);
-  arrow.appendChild(svg);
-
-  return arrow;
-}
-
-// Create navigation dots
-function createDots() {
-  const dotsContainer = document.querySelector('.recommend-carousel-dots');
-  if (!dotsContainer) return;
-  
-  dotsContainer.innerHTML = '';
-
-  for (let i = 0; i < recommendSlides.length; i += 1) {
-    const dot = document.createElement('button');
-    dot.className = 'recommend-carousel-dot';
-    if (i === 0) dot.classList.add('active');
-    dot.setAttribute('aria-label', `Go to slide ${i + 1}`);
-    dot.addEventListener('click', () => goToSlide(i));
-    dotsContainer.appendChild(dot);
-  }
-}
-
-// Handle swipe gesture
-function handleSwipe(startX, endX) {
-  const swipeThreshold = 50;
-  const diff = startX - endX;
-
-  if (Math.abs(diff) > swipeThreshold) {
-    if (diff > 0) {
-      // Swipe left - next slide
-      moveSlide(1);
-    } else {
-      // Swipe right - previous slide
-      moveSlide(-1);
-    }
-  }
-}
-
-// Setup event listeners
-function setupEventListeners() {
-  const carouselContainer = document.querySelector('.recommend-carousel-container');
-
-  if (carouselContainer) {
-    // Pause auto-slide on hover
-    carouselContainer.addEventListener('mouseenter', () => {
-      clearInterval(autoSlideInterval);
-    });
-
-    carouselContainer.addEventListener('mouseleave', () => {
-      startAutoSlide();
-    });
-
-    // Touch/Swipe support for mobile
-    let touchStartX = 0;
-    let touchEndX = 0;
-
-    carouselContainer.addEventListener('touchstart', (e) => {
-      touchStartX = e.changedTouches[0].screenX;
-    });
-
-    carouselContainer.addEventListener('touchend', (e) => {
-      touchEndX = e.changedTouches[0].screenX;
-      handleSwipe(touchStartX, touchEndX);
-    });
-
-    // Keyboard navigation
-    carouselContainer.addEventListener('keydown', (e) => {
-      if (e.key === 'ArrowLeft') {
-        moveSlide(-1);
-      } else if (e.key === 'ArrowRight') {
-        moveSlide(1);
-      }
-    });
-  }
-}
-
 // Initialize carousel functionality
 function initCarousel() {
   if (recommendSlides.length === 0) return;
-  
-  createDots();
-  updateCarousel();
-  startAutoSlide();
-  setupEventListeners();
+
+  carousel = new Carousel({
+    trackSelector: '.recommend-carousel-track',
+    dotsSelector: '.recommend-carousel-dots',
+    containerSelector: '.recommend-carousel-container',
+    dotClass: 'recommend-carousel-dot',
+    arrowClass: 'recommend-carousel-arrow',
+    autoSlideInterval: 5000,
+  });
+  carousel.setSlides(recommendSlides);
+  carousel.init();
+
+  // Create navigation arrows after carousel is initialized
+  const carouselContainer = document.querySelector('.recommend-carousel-container');
+  const arrowsContainer = document.querySelector('.recommend-carousel-arrows');
+  if (carouselContainer && arrowsContainer && recommendSlides.length > 1) {
+    const prevArrow = carousel.createArrow('prev', -1);
+    const nextArrow = carousel.createArrow('next', 1);
+    arrowsContainer.appendChild(prevArrow);
+    arrowsContainer.appendChild(nextArrow);
+  }
 }
 
 // Fetch recommendations from Algolia Recommend API
@@ -477,8 +268,7 @@ export default async function decorate(block) {
   titleElement.textContent = title;
 
   setTimeout(async () => {
-    const { algoliasearch } = window;
-    const searchClient = algoliasearch(appId, apiKey);
+    const searchClient = createAlgoliaClient(appId, apiKey);
 
     try {
       const recommendations = await fetchRecommendations(
@@ -535,16 +325,7 @@ export default async function decorate(block) {
         recommendSlides.push(slide);
       }
 
-      // Create navigation arrows if there's more than one slide
-      if (recommendSlides.length > 1) {
-        const prevArrow = createArrow('prev', -1);
-        const nextArrow = createArrow('next', 1);
-        arrowsContainer.appendChild(prevArrow);
-        arrowsContainer.appendChild(nextArrow);
-      }
-
-      // Initialize carousel
-      currentSlide = 0;
+      // Initialize carousel (will create arrows if needed)
       initCarousel();
     } catch (error) {
       const loadingDiv = recommendContainer.querySelector('.recommend-loading');

@@ -1,18 +1,6 @@
 import '../../scripts/lib-algoliasearch.js';
 import '../../scripts/lib-instantsearch.js';
-import { addToCart, updateCartBadge } from '../../scripts/cart.js';
-
-function getTextContent(htmlElement) {
-  const textContent = htmlElement.textContent.trim();
-  htmlElement.textContent = '';
-  return textContent;
-}
-
-function getCredentials(htmlElement) {
-  const appId = getTextContent(htmlElement.children[0]);
-  const apiKey = getTextContent(htmlElement.children[1]);
-  return { appId, apiKey };
-}
+import { getTextContent, getCredentials, getIndexName, createAlgoliaClient, formatPrice, handleAddToCart } from '../../scripts/blocks-utils.js';
 
 function getSearchBox(htmlElement) {
   const placeholder = getTextContent(htmlElement.children[2]);
@@ -51,10 +39,7 @@ export default function decorate(block) {
     const { connectSearchBox } = instantsearch.connectors;
     const { hits, pagination, configure } = instantsearch.widgets;
 
-    const searchClient = algoliasearch(
-      appId,
-      apiKey,
-    );
+    const searchClient = createAlgoliaClient(appId, apiKey);
 
     const search = instantsearch({
       searchClient,
@@ -79,12 +64,9 @@ export default function decorate(block) {
               </div>`
             : ''
           }
-          <div class="product-card__footer">
+            <div class="product-card__footer">
             <div class="price-container">
-              <span class="current-price">${new Intl.NumberFormat('en-US', {
-                style: 'currency',
-                currency: 'USD',
-              }).format(hit.price)}</span>
+              <span class="current-price">${formatPrice(hit.price)}</span>
             </div>
             <div class="product-card__actions">
               <a href="/products?pid=${hit.objectID}" class="view-product-btn">
@@ -188,30 +170,7 @@ export default function decorate(block) {
             image: addToCartButton.dataset.productImage,
           };
 
-          const cartItem = addToCart(productData);
-          if (cartItem) {
-            // Visual feedback - match agent experience
-            // Store the original HTML structure to preserve the cart-icon span
-            const originalHTML = addToCartButton.innerHTML;
-            const originalBgColor = addToCartButton.style.backgroundColor;
-            const originalColor = addToCartButton.style.color;
-            
-            addToCartButton.innerHTML = 'Added!';
-            addToCartButton.style.backgroundColor = '#00b207';
-            addToCartButton.style.color = '#ffffff';
-
-            setTimeout(() => {
-              addToCartButton.innerHTML = originalHTML;
-              addToCartButton.style.backgroundColor = originalBgColor;
-              addToCartButton.style.color = originalColor;
-              
-              // Ensure cart icon remains visible after button restoration
-              // Use requestAnimationFrame to ensure DOM is ready
-              requestAnimationFrame(() => {
-                updateCartBadge();
-              });
-            }, 1000);
-          }
+          handleAddToCart(addToCartButton, productData);
         }
       });
     }
