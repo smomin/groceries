@@ -125,6 +125,12 @@ function renderCartDropdown() {
 
   // Adjust position on scroll or resize
   const adjustPosition = () => {
+    // Check if cart icon item still exists
+    const currentCartIconItem = document.querySelector('.header__icon-item[data-icon="cart"]');
+    if (!currentCartIconItem) {
+      return;
+    }
+
     const isMobileCurrent = window.innerWidth <= 768;
     if (isMobileCurrent) {
       dropdown.style.top = '0';
@@ -132,7 +138,7 @@ function renderCartDropdown() {
       dropdown.style.left = '0';
       dropdown.style.bottom = '0';
     } else {
-      const newRect = cartIconItem.getBoundingClientRect();
+      const newRect = currentCartIconItem.getBoundingClientRect();
       dropdown.style.top = `${newRect.bottom + 10}px`;
       dropdown.style.right = `${window.innerWidth - newRect.right}px`;
     }

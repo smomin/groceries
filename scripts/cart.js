@@ -33,22 +33,65 @@ export function getCartTotalItems() {
  * Update cart badge count in the header
  */
 export function updateCartBadge() {
-  // Find the cart icon item and its badge
-  const cartIconItem = document.querySelector('.header__icon-item[data-icon="cart"]');
-  const cartBadge = cartIconItem?.querySelector('.header__badge');
+  // Use requestAnimationFrame to ensure DOM is ready
+  requestAnimationFrame(() => {
+    // Find the cart icon item and its badge
+    const cartIconItem = document.querySelector('.header__icon-item[data-icon="cart"]');
+    if (!cartIconItem) {
+      // Retry after a short delay if not found (header might still be loading)
+      setTimeout(() => {
+        const retryCartIconItem = document.querySelector('.header__icon-item[data-icon="cart"]');
+        if (retryCartIconItem) {
+          updateCartBadge();
+        }
+      }, 100);
+      return;
+    }
 
-  if (cartBadge) {
+    // Ensure cart icon item remains visible
+    cartIconItem.style.display = '';
+    cartIconItem.style.visibility = '';
+    cartIconItem.style.opacity = '';
+
+    // Ensure the cart icon image is visible and has a valid src
+    const cartIconImage = cartIconItem.querySelector('img');
+    if (cartIconImage) {
+      cartIconImage.style.display = '';
+      cartIconImage.style.visibility = '';
+      cartIconImage.style.opacity = '';
+      // Ensure image src is not empty
+      if (!cartIconImage.src || cartIconImage.src === window.location.href) {
+        cartIconImage.src = cartIconImage.getAttribute('src') || '/icons/cart.svg';
+      }
+    }
+
+    let cartBadge = cartIconItem.querySelector('.header__badge');
+    
+    // Create badge if it doesn't exist
+    if (!cartBadge) {
+      cartBadge = document.createElement('span');
+      cartBadge.className = 'header__badge header__badge--cart';
+      // Ensure the cart icon item is still in the DOM before appending
+      if (cartIconItem.parentNode) {
+        cartIconItem.appendChild(cartBadge);
+      } else {
+        // eslint-disable-next-line no-console
+        console.warn('Cart icon item is not in the DOM');
+        return;
+      }
+    }
+
     const totalItems = getCartTotalItems();
     cartBadge.textContent = totalItems;
     cartBadge.style.display = totalItems > 0 ? 'flex' : 'none';
-  }
 
-  // Refresh cart dropdown if it's open
-  const dropdown = document.querySelector('.cart-dropdown--open');
-  if (dropdown) {
-    // Dispatch a custom event to refresh the dropdown
-    document.dispatchEvent(new CustomEvent('cartUpdated'));
-  }
+    // Refresh cart dropdown if it's open
+    const dropdown = document.querySelector('.cart-dropdown--open');
+    if (dropdown) {
+      // Dispatch a custom event to refresh the dropdown
+      document.dispatchEvent(new CustomEvent('cartUpdated'));
+    }
+  });
 }
 
 /**

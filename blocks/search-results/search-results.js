@@ -1,6 +1,6 @@
 import '../../scripts/lib-algoliasearch.js';
 import '../../scripts/lib-instantsearch.js';
-import { addToCart } from '../../scripts/cart.js';
+import { addToCart, updateCartBadge } from '../../scripts/cart.js';
 
 function getTextContent(htmlElement) {
   const textContent = htmlElement.textContent.trim();
@@ -141,15 +141,25 @@ export default function decorate(block) {
         const cartItem = addToCart(productData);
         if (cartItem) {
           // Visual feedback - match agent experience
-          const originalText = addToCartButton.textContent;
-          addToCartButton.textContent = 'Added!';
+          // Store the original HTML structure to preserve the cart-icon span
+          const originalHTML = addToCartButton.innerHTML;
+          const originalBgColor = addToCartButton.style.backgroundColor;
+          const originalColor = addToCartButton.style.color;
+          
+          addToCartButton.innerHTML = 'Added!';
           addToCartButton.style.backgroundColor = '#00b207';
           addToCartButton.style.color = '#ffffff';
 
           setTimeout(() => {
-            addToCartButton.textContent = originalText;
-            addToCartButton.style.backgroundColor = '';
-            addToCartButton.style.color = '';
+            addToCartButton.innerHTML = originalHTML;
+            addToCartButton.style.backgroundColor = originalBgColor;
+            addToCartButton.style.color = originalColor;
+            
+            // Ensure cart icon remains visible after button restoration
+            // Use requestAnimationFrame to ensure DOM is ready
+            requestAnimationFrame(() => {
+              updateCartBadge();
+            });
           }, 1000);
         }
       }
