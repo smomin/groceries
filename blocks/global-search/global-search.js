@@ -60,7 +60,8 @@ export default function decorate(block) {
     const { createQuerySuggestionsPlugin } = window['@algolia/autocomplete-plugin-query-suggestions'];
     const { createLocalStorageRecentSearchesPlugin } = window['@algolia/autocomplete-plugin-recent-searches'];
 
-    const ingredientIndexName = 'ag_ingredients';
+    const recipesIndexName = 'ag_recipes';
+    const productsIndexName = 'ag_products';
 
     const { appId, apiKey } = getCredentials(block);
     getLayoutTemplate(block); // layoutTemplate not used
@@ -187,13 +188,13 @@ export default function decorate(block) {
         getSources({ query: searchQuery }) {
           return [
             {
-              sourceId: 'ingredients',
+              sourceId: 'recipes',
               getItems() {
                 return getAlgoliaResults({
                   searchClient,
                   queries: [
                     {
-                      indexName: ingredientIndexName,
+                      indexName: recipesIndexName,
                       params: {
                         query: searchQuery,
                         hitsPerPage: 9,
@@ -203,7 +204,7 @@ export default function decorate(block) {
                 });
               },
               getItemUrl({ item }) {
-                return `::ingredient:${item.objectID}`;
+                return `/recipes?rid=${item.objectID}`;
               },
               templates: {
                 header({ createElement }) {
@@ -215,7 +216,7 @@ export default function decorate(block) {
                       {
                         className: 'aa-SourceHeaderTitle',
                       },
-                      'Ingredients',
+                      'Recipes',
                     ),
                     createElement('div', {
                       className: 'aa-SourceHeaderLine',
@@ -223,21 +224,78 @@ export default function decorate(block) {
                   );
                 },
                 item({ item, components, html }) {
-                  return html`<div
-                    class="u-flex u-align"
-                    onClick="${() => openIngredient(item.objectID)}"
-                  >
-                    <img
-                      src="https://fxqklbpngldowtbkqezm.supabase.co/storage/v1/object/public/ingredient-images/img_ingredient_${item.objectID}.png"
-                      width="28px"
-                    />
-                    <h6>
-                      ${components.Highlight({
-    hit: item,
-    attribute: 'name',
-  })}
-                    </h6>
-                  </div>`;
+                  return html`<a
+                      href="/recipes?rid=${item.objectID}"
+                      class="u-flex u-align"
+                      style="text-decoration: none; color: inherit;"
+                    >
+                      <img
+                        src="${item.image}"
+                        width="28px"
+                      />
+                      <h6>
+                        ${components.Highlight({
+                    hit: item,
+                    attribute: 'name',
+                  })}
+                      </h6>
+                    </a>`;
+                },
+              },
+            },
+            {
+              sourceId: 'products',
+              getItems() {
+                return getAlgoliaResults({
+                  searchClient,
+                  queries: [
+                    {
+                      indexName: productsIndexName,
+                      params: {
+                        query: searchQuery,
+                        hitsPerPage: 9,
+                      },
+                    },
+                  ],
+                });
+              },
+              getItemUrl({ item }) {
+                return `/products?pid=${item.objectID}`;
+              },
+              templates: {
+                header({ createElement }) {
+                  return createElement(
+                    'div',
+                    {},
+                    createElement(
+                      'span',
+                      {
+                        className: 'aa-SourceHeaderTitle',
+                      },
+                      'Products',
+                    ),
+                    createElement('div', {
+                      className: 'aa-SourceHeaderLine',
+                    }),
+                  );
+                },
+                item({ item, components, html }) {
+                  return html`<a
+                      href="/products?pid=${item.objectID}"
+                      class="u-flex u-align"
+                      style="text-decoration: none; color: inherit;"
+                    >
+                      <img
+                        src="${item.image}"
+                        width="28px"
+                      />
+                      <h6>
+                        ${components.Highlight({
+                    hit: item,
+                    attribute: 'name',
+                  })}
+                      </h6>
+                    </a>`;
                 },
               },
             },
@@ -245,12 +303,6 @@ export default function decorate(block) {
         },
         navigator: {
           navigate({ itemUrl }) {
-            // if (itemUrl === "::assistant") openAssistant();
-            // else if (itemUrl === "::shopping_list")
-            //   addToShoppingList(uiState().query);
-            // else if (itemUrl.startsWith("::ingredient:")) {
-            //   openIngredient(itemUrl.split("::ingredient:")[1]);
-            // } else
             window.location.assign(itemUrl);
           },
           navigateNewTab({ itemUrl }) {
@@ -270,13 +322,16 @@ export default function decorate(block) {
             querySuggestionsPlugin: suggestionsPlugin,
           } = elements;
           render(
-            html`<div class="aa-PanelLayout aa-Panel--scollable">
-              <div class="ingredients-col">${elements.ingredients}</div>
+            html`
+            <div class="aa-PanelLayout aa-Panel--scollable">
+                <div class="recipes-col">${elements.recipes}</div>
+                <div class="products-col">${elements.products}</div>
               <div class="query-recent-col">
                   ${recentPlugin}
                   ${suggestionsPlugin}
               </div>  
-            </div>`,
+            </div>
+            `,
             root,
           );
         },

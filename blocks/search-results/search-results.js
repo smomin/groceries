@@ -43,6 +43,10 @@ export default function decorate(block) {
   getSearchBox(block);
   const { indexName } = getSearchIndex(block);
 
+  // Determine if this is a products or recipes index
+  const isRecipesIndex = indexName === 'ag_recipes';
+  const isProductsIndex = indexName === 'ag_products';
+
   setTimeout(() => {
     const { connectSearchBox } = instantsearch.connectors;
     const { hits, pagination, configure } = instantsearch.widgets;
@@ -62,6 +66,81 @@ export default function decorate(block) {
     // state parameter.
     const virtualSearchBox = connectSearchBox(() => {});
 
+    // Create product template
+    const productTemplate = (hit, { html, components }) => {
+      return html`
+        <div class="product-card">
+          <img class="product-card__image" src="${hit.image}" alt="${hit.name}" />
+          <div class="product-card__category">${hit.categories?.lvl0 || ''}</div>
+          <div class="product-card__name">${components.Highlight({ attribute: 'name', hit })}</div>
+          ${hit.brand
+            ? html`<div class="vendor">
+                <span class="vendor-label">By</span> <span style="color: #00b207;">${hit.brand}</span>
+              </div>`
+            : ''
+          }
+          <div class="product-card__footer">
+            <div class="price-container">
+              <span class="current-price">${new Intl.NumberFormat('en-US', {
+                style: 'currency',
+                currency: 'USD',
+              }).format(hit.price)}</span>
+            </div>
+            <div class="product-card__actions">
+              <a href="/products?pid=${hit.objectID}" class="view-product-btn">
+                View
+              </a>
+              <button class="add-btn" 
+                      data-product-id="${hit.objectID}"
+                      data-product-name="${hit.name}"
+                      data-product-price="${hit.price}"
+                      data-product-description="${hit.description || hit.name}"
+                      data-product-image="${hit.image}">
+                <span class="cart-icon"></span>
+                <span>Add</span>
+              </button>
+            </div>
+          </div>
+        </div>`;
+    };
+
+    // Create recipe template
+    const recipeTemplate = (hit, { html, components }) => {
+      const recipeName = hit.name || hit.title || 'Recipe';
+      const recipeImage = hit.image || hit.imageUrl || '';
+      const recipeCategory = hit.category || hit.cuisine || '';
+      const recipeDescription = hit.description || hit.summary || '';
+      const recipeTime = hit.cookingTime || hit.time || hit.prepTime || '';
+      const recipeServings = hit.servings || '';
+      const recipeUrl = `/recipes.html?rid=${hit.objectID}`;
+
+      // Try to highlight name attribute, fallback to title if name doesn't exist
+      const highlightAttribute = hit.name ? 'name' : (hit.title ? 'title' : null);
+      const recipeNameDisplay = highlightAttribute 
+        ? components.Highlight({ attribute: highlightAttribute, hit })
+        : recipeName;
+
+      return html`
+        <div class="recipe-card">
+          ${recipeImage ? html`<img class="recipe-card__image" src="${recipeImage}" alt="${recipeName}" />` : ''}
+          ${recipeCategory ? html`<div class="recipe-card__category">${recipeCategory}</div>` : ''}
+          <div class="recipe-card__name">${recipeNameDisplay}</div>
+          ${recipeDescription ? html`<div class="recipe-card__description">${recipeDescription.length > 100 ? recipeDescription.substring(0, 100) + '...' : recipeDescription}</div>` : ''}
+          <div class="recipe-card__meta">
+            ${recipeTime ? html`<div class="recipe-meta-item"><strong>Time:</strong> ${recipeTime}</div>` : ''}
+            ${recipeServings ? html`<div class="recipe-meta-item"><strong>Servings:</strong> ${recipeServings}</div>` : ''}
+          </div>
+          <div class="recipe-card__footer">
+            <a href="${recipeUrl}" class="recipe-view-btn">
+              <span>View Recipe</span>
+            </a>
+          </div>
+        </div>`;
+    };
+
+    // Select template based on index type
+    const itemTemplate = isRecipesIndex ? recipeTemplate : productTemplate;
+
     search.addWidgets([
       virtualSearchBox({}),
       configure({
@@ -74,37 +153,7 @@ export default function decorate(block) {
           root: 'container',
         },
         templates: {
-          item(hit, { html, components }) {
-            return html`
-                <div class="product-card">
-                  <img class="product-card__image" src="${hit.image}" alt="${hit.name}" />
-                  <div class="product-card__category">${hit.categories.lvl0}</div>
-                  <div class="product-card__name">${components.Highlight({ attribute: 'name', hit })}</div>
-                  ${hit.brand
-    ? html`<div class="vendor">
-                      <span class="vendor-label">By</span> <span style="color: #00b207;">${hit.brand}</span>
-                  </div>`
-    : ''
-}
-                  <div class="product-card__footer">
-                      <div class="price-container">
-                          <span class="current-price">${new Intl.NumberFormat('en-US', {
-    style: 'currency',
-    currency: 'USD',
-  }).format(hit.price)}</span>
-                      </div>
-                      <button class="add-btn" 
-                              data-product-id="${hit.objectID}"
-                              data-product-name="${hit.name}"
-                              data-product-price="${hit.price}"
-                              data-product-description="${hit.description || hit.name}"
-                              data-product-image="${hit.image}">
-                          <span class="cart-icon"></span>
-                          <span>Add</span>
-                      </button>
-                  </div>
-              </div>`;
-          },
+          item: itemTemplate,
         },
       }),
       pagination({
@@ -123,46 +172,48 @@ export default function decorate(block) {
 
     window.searchInstance = search;
 
-    // Handle "Add to cart" button clicks using event delegation
-    searchContainer.addEventListener('click', (event) => {
-      const addToCartButton = event.target.closest('.add-btn');
-      if (addToCartButton) {
-        event.preventDefault();
-        event.stopPropagation();
+    // Handle "Add to cart" button clicks using event delegation (only for products)
+    if (isProductsIndex) {
+      searchContainer.addEventListener('click', (event) => {
+        const addToCartButton = event.target.closest('.add-btn');
+        if (addToCartButton) {
+          event.preventDefault();
+          event.stopPropagation();
 
-        const productData = {
-          objectID: addToCartButton.dataset.productId,
-          name: addToCartButton.dataset.productName,
-          price: parseFloat(addToCartButton.dataset.productPrice) || 0,
-          description: addToCartButton.dataset.productDescription,
-          image: addToCartButton.dataset.productImage,
-        };
+          const productData = {
+            objectID: addToCartButton.dataset.productId,
+            name: addToCartButton.dataset.productName,
+            price: parseFloat(addToCartButton.dataset.productPrice) || 0,
+            description: addToCartButton.dataset.productDescription,
+            image: addToCartButton.dataset.productImage,
+          };
 
-        const cartItem = addToCart(productData);
-        if (cartItem) {
-          // Visual feedback - match agent experience
-          // Store the original HTML structure to preserve the cart-icon span
-          const originalHTML = addToCartButton.innerHTML;
-          const originalBgColor = addToCartButton.style.backgroundColor;
-          const originalColor = addToCartButton.style.color;
-          
-          addToCartButton.innerHTML = 'Added!';
-          addToCartButton.style.backgroundColor = '#00b207';
-          addToCartButton.style.color = '#ffffff';
-
-          setTimeout(() => {
-            addToCartButton.innerHTML = originalHTML;
-            addToCartButton.style.backgroundColor = originalBgColor;
-            addToCartButton.style.color = originalColor;
+          const cartItem = addToCart(productData);
+          if (cartItem) {
+            // Visual feedback - match agent experience
+            // Store the original HTML structure to preserve the cart-icon span
+            const originalHTML = addToCartButton.innerHTML;
+            const originalBgColor = addToCartButton.style.backgroundColor;
+            const originalColor = addToCartButton.style.color;
             
-            // Ensure cart icon remains visible after button restoration
-            // Use requestAnimationFrame to ensure DOM is ready
-            requestAnimationFrame(() => {
-              updateCartBadge();
-            });
-          }, 1000);
+            addToCartButton.innerHTML = 'Added!';
+            addToCartButton.style.backgroundColor = '#00b207';
+            addToCartButton.style.color = '#ffffff';
+
+            setTimeout(() => {
+              addToCartButton.innerHTML = originalHTML;
+              addToCartButton.style.backgroundColor = originalBgColor;
+              addToCartButton.style.color = originalColor;
+              
+              // Ensure cart icon remains visible after button restoration
+              // Use requestAnimationFrame to ensure DOM is ready
+              requestAnimationFrame(() => {
+                updateCartBadge();
+              });
+            }, 1000);
+          }
         }
-      }
-    });
+      });
+    }
   }, 500);
 }

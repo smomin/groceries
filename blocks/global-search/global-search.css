@@ -37,7 +37,7 @@
 
 .aa-PanelLayout {
     display: grid;
-    grid-template-columns: 65% 35%;
+    grid-template-columns: 40% 40% 20%;
     gap: 30px;
     padding: 15px 120px;
 }
@@ -51,26 +51,56 @@
     border-color: #3BB77E;
 }
 
-.ingredients-col .aa-List {
+.recipes-col .aa-List {
     display: grid;
     grid-template-columns: repeat(3, 1fr);
     gap: 15px 10px;
 }
 
-.ingredients-col .aa-Item>div {
+.recipes-col .aa-Item>div {
     display: flex;
     flex-wrap: wrap;
     align-items: start;
 }
 
-.ingredients-col .aa-Item img {
+.recipes-col .aa-Item img {
     width: 50px;
     border-radius: 4px;
     margin-right: 20px;
 }
 
-.ingredients-col .aa-Item h6 {
+.recipes-col .aa-Item h6 {
     font-size: 14px;
-    max-width: calc(100% - 70px);
+    max-width: calc(100% - 45%);
     margin-top: 6px;
+}
+
+.products-col .aa-List {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 15px 10px;
+}
+
+.products-col .aa-Item>div,
+.products-col .aa-Item>a {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: start;
+  cursor: pointer;
+}
+
+.products-col .aa-Item>a:hover {
+  opacity: 0.8;
+}
+
+.products-col .aa-Item img {
+  width: 50px;
+  border-radius: 4px;
+  margin-right: 20px;
+}
+
+.products-col .aa-Item h6 {
+  font-size: 14px;
+  max-width: calc(100% - 45%);
+  margin-top: 6px;
 }

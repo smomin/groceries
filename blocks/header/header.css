@@ -54,6 +54,13 @@ body {
   align-items: center;
   gap: 12px;
   transition: gap 0.3s ease;
+  text-decoration: none;
+  color: inherit;
+  cursor: pointer;
+}
+
+.header__logo-section:hover {
+  opacity: 0.8;
 }
 
 .header--minimized .header__logo-section {

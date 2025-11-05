@@ -300,14 +300,14 @@ function generateHeader(fragment) {
       <!-- Top Bar -->
       <div class="header__top-bar">
         <!-- Logo Section -->
-        <div class="header__logo-section">
+        <a href="/" class="header__logo-section" aria-label="Go to home page">
           <div class="header__logo-icon">
             <img src="/icons/logo.svg" alt="${headerData.logo.text}" />
           </div>
           <div class="header__logo-text">
             <h1>${headerData.logo.text}</h1>
           </div>
-        </div>
+        </a>
 
         <!-- Search Bar -->
         <div class="header__search-container">

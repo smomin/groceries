@@ -26,9 +26,18 @@ function getProductId() {
 }
 
 export default function decorate(block) {
+  const { appId, apiKey } = getCredentials(block);
+  const indexName = getIndexName(block);
+  const productId = getProductId();
+
   const productContainer = document.createElement('div');
   productContainer.className = 'product-container';
   productContainer.innerHTML = `
+    <nav class="product-breadcrumb" aria-label="Breadcrumb">
+      <a href="/" class="breadcrumb-link">Home</a>
+      <span class="breadcrumb-separator">/</span>
+      <span class="breadcrumb-current">Product</span>
+    </nav>
     <div class="product-loading">Loading product...</div>
     <div class="product-error" style="display: none;"></div>
     <div class="product-content" style="display: none;">
@@ -57,10 +66,6 @@ export default function decorate(block) {
   block.textContent = '';
   block.appendChild(productContainer);
 
-  const { appId, apiKey } = getCredentials(block);
-  const indexName = getIndexName(block);
-  const productId = getProductId();
-
   if (!productId) {
     const errorDiv = productContainer.querySelector('.product-error');
     const loadingDiv = productContainer.querySelector('.product-loading');
@@ -84,7 +89,17 @@ export default function decorate(block) {
     const searchClient = algoliasearch(appId, apiKey);
     const index = searchClient.initIndex(indexName);
 
-    index.getObject(productId)
+    index.search('', {
+      filters: `objectID:${productId}`,
+      hitsPerPage: 1,
+    })
+      .then((result) => {
+        const product = result.hits && result.hits[0];
+        if (!product) {
+          throw new Error('Product not found');
+        }
+        return product;
+      })
       .then((product) => {
         const loadingDiv = productContainer.querySelector('.product-loading');
         const errorDiv = productContainer.querySelector('.product-error');
@@ -97,6 +112,12 @@ export default function decorate(block) {
         // Set product name
         const nameElement = productContainer.querySelector('.product-name');
         nameElement.textContent = product.name || 'Product';
+
+        // Update breadcrumb with product name
+        const breadcrumbCurrent = productContainer.querySelector('.breadcrumb-current');
+        if (breadcrumbCurrent) {
+          breadcrumbCurrent.textContent = product.name || 'Product';
+        }
 
         // Set product category
         const categoryElement = productContainer.querySelector('.product-category');
@@ -131,15 +152,49 @@ export default function decorate(block) {
 
         // Set product image
         const imageWrapper = productContainer.querySelector('.product-image-wrapper');
-        const pictureElement = productContainer.querySelector('.product-image');
         if (product.image) {
-          const img = document.createElement('img');
-          img.src = product.image;
-          img.alt = product.name || 'Product image';
-          img.loading = 'eager';
-          const optimizedPic = createOptimizedPicture(img.src, img.alt, false, [{ width: '750' }]);
-          moveInstrumentation(img, optimizedPic.querySelector('img'));
-          pictureElement.replaceWith(optimizedPic);
+          const imageUrl = product.image;
+          const alt = product.name || 'Product image';
+          
+          // Check if image is from external domain (not same origin)
+          try {
+            const imageUrlObj = new URL(imageUrl, window.location.href);
+            const isExternal = imageUrlObj.origin !== window.location.origin;
+            
+            if (isExternal) {
+              // For external images, use simple img tag
+              const img = document.createElement('img');
+              img.src = imageUrl;
+              img.alt = alt;
+              img.loading = 'eager';
+              img.style.width = '100%';
+              img.style.height = 'auto';
+              img.style.objectFit = 'contain';
+              imageWrapper.innerHTML = '';
+              imageWrapper.appendChild(img);
+            } else {
+              // For same-domain images, use optimization
+              const img = document.createElement('img');
+              img.src = imageUrl;
+              img.alt = alt;
+              img.loading = 'eager';
+              const optimizedPic = createOptimizedPicture(imageUrl, alt, false, [{ width: '750' }]);
+              moveInstrumentation(img, optimizedPic.querySelector('img'));
+              imageWrapper.innerHTML = '';
+              imageWrapper.appendChild(optimizedPic);
+            }
+          } catch (error) {
+            // If URL parsing fails, use simple img tag
+            const img = document.createElement('img');
+            img.src = imageUrl;
+            img.alt = alt;
+            img.loading = 'eager';
+            img.style.width = '100%';
+            img.style.height = 'auto';
+            img.style.objectFit = 'contain';
+            imageWrapper.innerHTML = '';
+            imageWrapper.appendChild(img);
+          }
         } else {
           imageWrapper.style.display = 'none';
         }

@@ -4,34 +4,35 @@ import { addToCart, updateCartBadge } from '../../scripts/cart.js';
 import { moveInstrumentation } from '../../scripts/scripts.js';
 
 function getTextContent(htmlElement) {
-  const textContent = htmlElement.textContent.trim();
+  if (!htmlElement) return '';
+  const textContent = htmlElement.textContent?.trim() || '';
   htmlElement.textContent = '';
   return textContent;
 }
 
 function getCredentials(htmlElement) {
-  const appId = getTextContent(htmlElement.children[0]);
-  const apiKey = getTextContent(htmlElement.children[1]);
+  const appId = getTextContent(htmlElement.children?.[0]);
+  const apiKey = getTextContent(htmlElement.children?.[1]);
   return { appId, apiKey };
 }
 
 function getIndexName(htmlElement) {
-  const indexName = getTextContent(htmlElement.children[2]);
+  const indexName = getTextContent(htmlElement.children?.[2]);
   return indexName;
 }
 
 function getModel(htmlElement) {
-  const model = getTextContent(htmlElement.children[3]);
+  const model = getTextContent(htmlElement.children?.[3]);
   return model || 'looking-similar';
 }
 
 function getObjectId(htmlElement) {
-  const objectId = getTextContent(htmlElement.children[4]);
+  const objectId = getTextContent(htmlElement.children?.[4]);
   return objectId;
 }
 
 function getTitle(htmlElement) {
-  const title = getTextContent(htmlElement.children[5]);
+  const title = getTextContent(htmlElement.children?.[5]);
   return title || 'Recommended for You';
 }
 
@@ -56,18 +57,31 @@ function createProductCard(product) {
   imageWrapper.className = 'recommend-card__image-wrapper';
   
   if (product.image) {
-    const img = document.createElement('img');
-    img.src = product.image;
-    img.alt = product.name || 'Product';
-    img.loading = 'lazy';
-    const optimizedPic = createOptimizedPicture(
-      img.src,
-      img.alt,
-      false,
-      [{ width: '300' }]
-    );
-    moveInstrumentation(img, optimizedPic.querySelector('img'));
-    imageWrapper.appendChild(optimizedPic);
+    // Check if image URL is external (absolute URL)
+    const isExternalUrl = product.image.startsWith('http://') || product.image.startsWith('https://');
+    
+    if (isExternalUrl) {
+      // For external URLs (like Supabase), use the image directly
+      const img = document.createElement('img');
+      img.src = product.image;
+      img.alt = product.name || 'Product';
+      img.loading = 'lazy';
+      imageWrapper.appendChild(img);
+    } else {
+      // For internal URLs, use optimization
+      const img = document.createElement('img');
+      img.src = product.image;
+      img.alt = product.name || 'Product';
+      img.loading = 'lazy';
+      const optimizedPic = createOptimizedPicture(
+        img.src,
+        img.alt,
+        false,
+        [{ width: '300' }]
+      );
+      moveInstrumentation(img, optimizedPic.querySelector('img'));
+      imageWrapper.appendChild(optimizedPic);
+    }
   }
 
   const category = document.createElement('div');
@@ -89,63 +103,76 @@ function createProductCard(product) {
   const footer = document.createElement('div');
   footer.className = 'recommend-card__footer';
 
-  const priceContainer = document.createElement('div');
-  priceContainer.className = 'price-container';
-  const price = document.createElement('span');
-  price.className = 'current-price';
-  price.textContent = new Intl.NumberFormat('en-US', {
-    style: 'currency',
-    currency: 'USD',
-  }).format(product.price || 0);
-  priceContainer.appendChild(price);
+  // Check if this is a recipe (has steps field or no price field)
+  const isRecipe = product.steps || product.price === undefined || product.price === null;
 
-  const addBtn = document.createElement('button');
-  addBtn.className = 'add-btn';
-  addBtn.innerHTML = '<span class="cart-icon"></span><span>Add</span>';
-  addBtn.dataset.productId = product.objectID;
-  addBtn.dataset.productName = product.name || 'Product';
-  addBtn.dataset.productPrice = product.price || 0;
-  addBtn.dataset.productDescription = product.description || product.name || '';
-  addBtn.dataset.productImage = product.image || '';
+  if (isRecipe) {
+    // For recipes: show "View Recipe" link
+    const viewRecipeLink = document.createElement('a');
+    viewRecipeLink.href = `/recipes.html?rid=${product.objectID}`;
+    viewRecipeLink.className = 'recipe-view-btn';
+    viewRecipeLink.innerHTML = '<span>View Recipe</span>';
+    footer.appendChild(viewRecipeLink);
+  } else {
+    // For products: show price and add to cart button
+    const priceContainer = document.createElement('div');
+    priceContainer.className = 'price-container';
+    const price = document.createElement('span');
+    price.className = 'current-price';
+    price.textContent = new Intl.NumberFormat('en-US', {
+      style: 'currency',
+      currency: 'USD',
+    }).format(product.price || 0);
+    priceContainer.appendChild(price);
 
-  addBtn.addEventListener('click', (event) => {
-    event.preventDefault();
-    event.stopPropagation();
+    const addBtn = document.createElement('button');
+    addBtn.className = 'add-btn';
+    addBtn.innerHTML = '<span class="cart-icon"></span><span>Add</span>';
+    addBtn.dataset.productId = product.objectID;
+    addBtn.dataset.productName = product.name || 'Product';
+    addBtn.dataset.productPrice = product.price || 0;
+    addBtn.dataset.productDescription = product.description || product.name || '';
+    addBtn.dataset.productImage = product.image || '';
 
-    const productData = {
-      objectID: product.objectID,
-      name: product.name || 'Product',
-      price: product.price || 0,
-      description: product.description || product.name || '',
-      image: product.image || '',
-    };
+    addBtn.addEventListener('click', (event) => {
+      event.preventDefault();
+      event.stopPropagation();
 
-    const cartItem = addToCart(productData, 1);
-    if (cartItem) {
-      const originalHTML = addBtn.innerHTML;
-      const originalBgColor = addBtn.style.backgroundColor;
-      const originalColor = addBtn.style.color;
+      const productData = {
+        objectID: product.objectID,
+        name: product.name || 'Product',
+        price: product.price || 0,
+        description: product.description || product.name || '',
+        image: product.image || '',
+      };
 
-      addBtn.innerHTML = 'Added!';
-      addBtn.style.backgroundColor = '#00b207';
-      addBtn.style.color = '#ffffff';
-      addBtn.disabled = true;
+      const cartItem = addToCart(productData, 1);
+      if (cartItem) {
+        const originalHTML = addBtn.innerHTML;
+        const originalBgColor = addBtn.style.backgroundColor;
+        const originalColor = addBtn.style.color;
 
-      setTimeout(() => {
-        addBtn.innerHTML = originalHTML;
-        addBtn.style.backgroundColor = originalBgColor;
-        addBtn.style.color = originalColor;
-        addBtn.disabled = false;
+        addBtn.innerHTML = 'Added!';
+        addBtn.style.backgroundColor = '#00b207';
+        addBtn.style.color = '#ffffff';
+        addBtn.disabled = true;
 
-        requestAnimationFrame(() => {
-          updateCartBadge();
-        });
-      }, 1000);
-    }
-  });
+        setTimeout(() => {
+          addBtn.innerHTML = originalHTML;
+          addBtn.style.backgroundColor = originalBgColor;
+          addBtn.style.color = originalColor;
+          addBtn.disabled = false;
 
-  footer.appendChild(priceContainer);
-  footer.appendChild(addBtn);
+          requestAnimationFrame(() => {
+            updateCartBadge();
+          });
+        }, 1000);
+      }
+    });
+
+    footer.appendChild(priceContainer);
+    footer.appendChild(addBtn);
+  }
 
   card.appendChild(imageWrapper);
   card.appendChild(category);
@@ -410,6 +437,12 @@ async function fetchRecommendations(searchClient, appId, apiKey, indexName, mode
 }
 
 export default async function decorate(block) {
+  const { appId, apiKey } = getCredentials(block);
+  const indexName = getIndexName(block);
+  const model = getModel(block);
+  const objectIdParam = getObjectId(block);
+  const title = getTitle(block);
+
   const recommendContainer = document.createElement('div');
   recommendContainer.className = 'recommend-container';
   recommendContainer.innerHTML = `
@@ -426,12 +459,6 @@ export default async function decorate(block) {
   `;
   block.textContent = '';
   block.appendChild(recommendContainer);
-
-  const { appId, apiKey } = getCredentials(block);
-  const indexName = getIndexName(block);
-  const model = getModel(block);
-  const objectIdParam = getObjectId(block);
-  const title = getTitle(block);
 
   if (!appId || !apiKey || !indexName) {
     const errorDiv = recommendContainer.querySelector('.recommend-error');

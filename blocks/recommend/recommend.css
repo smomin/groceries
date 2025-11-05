@@ -132,6 +132,10 @@
   border-top: 1px solid rgb(173 173 173 / 25%);
 }
 
+.recommend-card__footer:has(.recipe-view-btn) {
+  justify-content: center;
+}
+
 .recommend-card__footer .price-container {
   display: flex;
   flex-direction: column;
@@ -176,6 +180,28 @@
   background-size: contain;
   background-repeat: no-repeat;
   background-position: center;
+}
+
+.recommend-card__footer .recipe-view-btn {
+  background-color: #00b207;
+  color: #ffffff;
+  border: none;
+  padding: 0.5rem 1rem;
+  border-radius: 24px;
+  font-size: 0.875rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background-color 0.3s ease;
+  text-decoration: none;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+}
+
+.recommend-card__footer .recipe-view-btn:hover {
+  background-color: #009606;
+  color: #ffffff;
 }
 
 /* Carousel Controls */
