@@ -178,7 +178,7 @@ export default function decorate(block) {
                       indexName: recipesIndexName,
                       params: {
                         query: searchQuery,
-                        hitsPerPage: 9,
+                        hitsPerPage: 4,
                       },
                     },
                   ],

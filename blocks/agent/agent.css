@@ -1100,6 +1100,7 @@
   display: -webkit-box;
   -webkit-box-orient: vertical;
   -webkit-line-clamp: 2;
+  margin-top: auto;
 }
 
 .ais-ChatMessage-message .ais-Carousel-hit-link::before {
@@ -1118,6 +1119,7 @@
   justify-content: center;
   border-radius: var(--ais-border-radius-md);
   overflow: hidden;
+  flex-shrink: 0;
 }
 
 @media (prefers-reduced-motion: no-preference) {
@@ -1143,7 +1145,9 @@
 
 .ais-ChatMessage-message .ais-Carousel-hit-title,
 .ais-ChatMessage-message .ais-Carousel-hit-price {
-  margin: 0;
+  margin-left: 0;
+  margin-right: 0;
+  margin-bottom: 0;
 }
 
 .ais-ChatMessage-message .ais-Carousel-hit-price {
@@ -1165,6 +1169,7 @@
   z-index: 1;
   position: relative;
   width: 100%;
+  flex-shrink: 0;
 }
 
 @media (hover: hover) {
@@ -1196,6 +1201,7 @@
   z-index: 1;
   position: relative;
   width: 100%;
+  flex-shrink: 0;
 }
 
 @media (hover: hover) {
