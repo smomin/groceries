@@ -177,7 +177,7 @@ export default function decorate(block) {
 
     setTimeout(function() {
       // Code to be executed after 3 seconds
-      const { setQuery } = autocomplete({
+      const autocompleteInstance = autocomplete({
         container: '#autocomplete',
         shouldPanelOpen: false,
         placeholder: placeholder,
@@ -253,47 +253,6 @@ export default function decorate(block) {
                 },
               },
             },
-            // {
-            //   sourceId: "shopping_list",
-            //   getItems() {
-            //     if (query.length) return [{}];
-            //     else return [];
-            //   },
-            //   getItemUrl({ item }) {
-            //     return "::shopping_list";
-            //   },
-            //   templates: {
-            //     item({ item, components, html }) {
-            //       return html`<div
-            //         onClick="${() => addToShoppingList(uiState().query)}"
-            //         class="u-flex u-align aa-shoppingList"
-            //       >
-            //         <span class="checklist-icon"></span>Add "${query}" to shopping
-            //         list
-            //       </div>`;
-            //     },
-            //   },
-            // },
-            // {
-            //   sourceId: "assistant",
-            //   getItems() {
-            //     if (query.length) return [{}];
-            //     else return [];
-            //   },
-            //   getItemUrl({ item }) {
-            //     return "::assistant";
-            //   },
-            //   templates: {
-            //     item({ item, components, html }) {
-            //       return html`<div
-            //         onClick="${() => openAssistant()}"
-            //         class="u-flex u-align aa-assistant"
-            //       >
-            //         <span class="ai-icon"></span>Open "${query}" in assistant
-            //       </div>`;
-            //     },
-            //   },
-            // },
           ];
         },
         navigator: {
@@ -335,8 +294,32 @@ export default function decorate(block) {
       // This keeps Autocomplete aware of state changes coming from routing
       // and updates its query accordingly
       window.addEventListener("popstate", () => {
-        setQuery(window['searchInstance'].helper?.state.query || "");
+        autocompleteInstance.setQuery(window['searchInstance'].helper?.state.query || "");
       });
+
+      // Close the autocomplete panel when scrolling
+      let scrollTimeout;
+      const handleScroll = () => {
+        // Clear any existing timeout
+        clearTimeout(scrollTimeout);
+        // Debounce to avoid excessive calls
+        scrollTimeout = setTimeout(() => {
+          // Try to close via setIsOpen if available
+          if (autocompleteInstance.setIsOpen) {
+            autocompleteInstance.setIsOpen(false);
+          }
+          // Also blur the input to ensure panel closes (since openOnFocus is true)
+          const autocompleteEl = document.querySelector('#autocomplete');
+          if (autocompleteEl) {
+            const input = autocompleteEl.querySelector('input');
+            if (input) {
+              input.blur();
+            }
+          }
+        }, 10);
+      };
+
+      window.addEventListener('scroll', handleScroll, { passive: true });
     }, 500);
   }
 }

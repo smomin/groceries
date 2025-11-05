@@ -2284,3 +2284,8 @@
   outline: 1px solid var(--base-color) !important;
   border-color: rgb(var(--base-color), var(--ais-primary-color-alpha)) !important;
 }
+
+.ais-ChatMessage-message ul {
+  margin: 0.5rem 0; 
+  padding-left: 1.5rem;
+}

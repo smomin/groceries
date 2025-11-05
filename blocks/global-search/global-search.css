@@ -32,6 +32,7 @@
     left: 0 !important;
     right: 0 !important;
     box-shadow: none;
+    z-index: 10001 !important;
 }
 
 .aa-PanelLayout {
