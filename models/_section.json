@@ -54,7 +54,10 @@
         "carousel",
         "features",
         "global-search",
-        "search-results"
+        "search-results",
+        "product",
+        "recipe",
+        "recommend"
       ]
     }
   ]
