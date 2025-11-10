@@ -234,7 +234,7 @@ export default function decorate(block) {
                       indexName: productsIndexName,
                       params: {
                         query: searchQuery,
-                        hitsPerPage: 9,
+                        hitsPerPage: 6,
                       },
                     },
                   ],
@@ -304,13 +304,13 @@ export default function decorate(block) {
           } = elements;
           render(
             html`
-            <div class="aa-PanelLayout aa-Panel--scollable">
+            <div class="aa-PanelLayout aa-Panel--scrollable">
                 <div class="recipes-col">${elements.recipes}</div>
                 <div class="products-col">${elements.products}</div>
-              <div class="query-recent-col">
-                  ${recentPlugin}
+                <div class="query-recent-col">
                   ${suggestionsPlugin}
-              </div>  
+                  ${recentPlugin}
+                </div>
             </div>
             `,
             root,

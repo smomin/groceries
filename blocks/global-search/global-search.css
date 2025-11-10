@@ -26,6 +26,8 @@
 
 .global-search.block {
     width: 100%;
+    max-width: 720px;
+    margin: 0 auto;
 }
 
 /* Green outline for search box to match theme */
@@ -39,22 +41,29 @@
 }
 
 .aa-Panel {
-    left: 0 !important;
-    right: 0 !important;
-    box-shadow: none;
+    left: 50% !important;
+    right: auto !important;
+    transform: translateX(-50%);
+    width: min(90vw, 1040px);
+    max-width: 1040px;
+    min-width: 720px;
+    border: 1px solid rgba(59, 183, 126, 0.4);
+    border-radius: 12px;
+    box-shadow: 0 18px 48px rgba(24, 39, 75, 0.18);
     z-index: 10001 !important;
-    border-bottom: 1px solid #3BB77E;
+    overflow: hidden;
 }
 
 .aa-PanelLayout {
     display: grid;
-    grid-template-columns: 40% 40% 20%;
-    gap: 30px;
-    padding: 15px 120px;
+    grid-template-columns: minmax(0, 1.1fr) minmax(0, 1.3fr) minmax(240px, 0.9fr);
+    gap: 28px;
+    padding: 28px 48px;
+    background: #ffffff;
 }
 
 .aa-SourceHeaderTitle {
-    font-size: 16px;
+    font-size: 14px;
     color: #3BB77E;
 }
 
@@ -64,8 +73,8 @@
 
 .recipes-col .aa-List {
     display: grid;
-    grid-template-columns: repeat(2, 1fr);
-    gap: 15px;
+    grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+    gap: 16px;
 }
 
 .recipes-col .aa-Item {
@@ -91,37 +100,86 @@
 }
 
 .recipes-col .aa-Item h6 {
-    font-size: 14px;
+    font-size: 13px;
     margin: 0;
     flex: 1;
 }
 
 .products-col .aa-List {
-  display: grid;
-  grid-template-columns: repeat(3, 1fr);
-  gap: 15px 10px;
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+    gap: 16px;
 }
 
 .products-col .aa-Item>div,
 .products-col .aa-Item>a {
-  display: flex;
-  flex-wrap: wrap;
-  align-items: start;
-  cursor: pointer;
+    display: flex;
+    flex-wrap: wrap;
+    align-items: flex-start;
+    cursor: pointer;
 }
 
 .products-col .aa-Item>a:hover {
-  opacity: 0.8;
+    opacity: 0.8;
 }
 
 .products-col .aa-Item img {
-  width: 50px;
-  border-radius: 4px;
-  margin-right: 20px;
+    width: 50px;
+    border-radius: 4px;
+    margin-right: 16px;
 }
 
 .products-col .aa-Item h6 {
-  font-size: 14px;
-  max-width: calc(100% - 45%);
-  margin-top: 6px;
+    font-size: 13px;
+    max-width: calc(100% - 45%);
+    margin-top: 6px;
+}
+
+.query-recent-col {
+    display: flex;
+    flex-direction: column;
+    gap: 24px;
+    padding: 0 12px;
+    border-left: 1px solid rgba(59, 183, 126, 0.12);
+}
+
+.query-recent-col .aa-List {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+}
+
+.query-recent-col .aa-Item {
+    padding: 10px 12px;
+    border-radius: 8px;
+    background: rgba(59, 183, 126, 0.06);
+}
+
+.query-recent-col .aa-Item[aria-selected="true"] {
+    background: rgba(59, 183, 126, 0.15);
+}
+
+@media (max-width: 900px) {
+    .global-search.block {
+        max-width: 100%;
+    }
+
+    .aa-Panel {
+        width: calc(100vw - 40px);
+        max-width: none;
+        min-width: auto;
+        left: 50% !important;
+        transform: translateX(-50%);
+    }
+
+    .aa-PanelLayout {
+        grid-template-columns: 1fr;
+        padding: 24px;
+        gap: 24px;
+    }
+
+    .query-recent-col {
+        border-left: 0;
+        padding: 0;
+    }
 }
