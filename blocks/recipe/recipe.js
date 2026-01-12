@@ -9,16 +9,25 @@ function extractIngredientsFromSteps(steps) {
   const ingredientsMap = new Map();
 
   steps.forEach((step) => {
-    if (step.ingredient && step.quantity && step.unit) {
-      const key = step.ingredient;
+    if (step.ingredient) {
+      const key = step.ingredient.toLowerCase().trim();
+      const quantity = step.quantity || '';
+      const unit = step.unit || '';
+      
       if (ingredientsMap.has(key)) {
         const existing = ingredientsMap.get(key);
-        existing.quantity += step.quantity;
+        // Only try to sum quantities if both have numeric values
+        if (quantity && !isNaN(parseFloat(quantity)) && existing.quantity && !isNaN(parseFloat(existing.quantity))) {
+          existing.quantity = (parseFloat(existing.quantity) + parseFloat(quantity)).toString();
+        } else if (quantity && !existing.quantity) {
+          existing.quantity = quantity;
+          existing.unit = unit;
+        }
       } else {
         ingredientsMap.set(key, {
           ingredient: step.ingredient,
-          quantity: step.quantity,
-          unit: step.unit,
+          quantity: quantity,
+          unit: unit,
         });
       }
     }
@@ -51,14 +60,11 @@ function formatInstructions(steps) {
     // Handle steps as array of objects with title and explanation
     return steps.map((step) => {
       if (typeof step === 'object' && step !== null) {
-        // If both title and explanation exist, combine them
-        if (step.title && step.explanation) {
-          return `${step.title}: ${step.explanation}`;
-        }
-        // Otherwise use whichever is available
+        // Use explanation field which contains HTML content
         if (step.explanation) {
           return step.explanation;
         }
+        // Fallback to title if explanation is not available
         if (step.title) {
           return step.title;
         }
@@ -209,7 +215,7 @@ export default function decorate(block) {
         // Set recipe description
         const descriptionElement = recipeContainer.querySelector('.recipe-description');
         const description = recipe.description || recipe.summary || recipe.name || 'No description available.';
-        descriptionElement.textContent = description;
+        descriptionElement.innerHTML = description;
 
         // Set recipe image
         const imageWrapper = recipeContainer.querySelector('.recipe-image-wrapper');
@@ -253,7 +259,7 @@ export default function decorate(block) {
         if (instructions.length > 0) {
           instructions.forEach((instruction) => {
             const li = document.createElement('li');
-            li.textContent = instruction;
+            li.innerHTML = instruction;
             instructionsList.appendChild(li);
           });
         } else {

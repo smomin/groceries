@@ -44,7 +44,7 @@ export default function decorate(block) {
     const { createQuerySuggestionsPlugin } = window['@algolia/autocomplete-plugin-query-suggestions'];
     const { createLocalStorageRecentSearchesPlugin } = window['@algolia/autocomplete-plugin-recent-searches'];
 
-    const recipesIndexName = 'ag_recipes';
+    const recipesIndexName = 'SW-Groceries-PROD-US-EN-Recipes';
     const productsIndexName = 'ag_products';
 
     const { appId, apiKey } = getCredentials(block);
