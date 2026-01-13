@@ -5,9 +5,10 @@
     "/content/sw-groceries/recipes.html:/recipes.html",
     "/content/sw-groceries/configuration:/.helix/config.json",
     "/content/sw-groceries/metadata:/metadata.json",
-    "/content/dam/sw-groceries/images/:/content/dam/sw-groceries/images/"
+    "/content/dam/sw-groceries/images/:/assets/images/"
   ],
   "includes": [
-    "/content/sw-groceries/"
+    "/content/sw-groceries/",
+    "/content/dam/sw-groceries/images/"
   ]
 }

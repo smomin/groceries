@@ -146,10 +146,14 @@ export default function decorate(block) {
   }
 
   setTimeout(() => {
+    // eslint-disable-next-line no-console
+    console.log('[Recipe] Starting recipe fetch:', { recipeId, indexName, appId: appId ? 'present' : 'missing', apiKey: apiKey ? 'present' : 'missing' });
     const searchClient = createAlgoliaClient(appId, apiKey);
 
     fetchObjectById(searchClient, indexName, recipeId)
       .then((recipe) => {
+        // eslint-disable-next-line no-console
+        console.log('[Recipe] Recipe fetched successfully:', { objectID: recipe?.objectID, name: recipe?.name || recipe?.title });
         const loadingDiv = recipeContainer.querySelector('.recipe-loading');
         const errorDiv = recipeContainer.querySelector('.recipe-error');
         const contentDiv = recipeContainer.querySelector('.recipe-content');
@@ -268,6 +272,8 @@ export default function decorate(block) {
         }
       })
       .catch((error) => {
+        // eslint-disable-next-line no-console
+        console.error('[Recipe] Error fetching recipe:', { error, errorMessage: error?.message, errorStatus: error?.status, errorName: error?.name, errorStack: error?.stack, recipeId });
         const loadingDiv = recipeContainer.querySelector('.recipe-loading');
         const errorDiv = recipeContainer.querySelector('.recipe-error');
         loadingDiv.style.display = 'none';

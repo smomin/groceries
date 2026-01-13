@@ -94,33 +94,70 @@ export function createAlgoliaClient(appId, apiKey) {
 export async function fetchObjectById(searchClient, indexName, objectId) {
   const index = searchClient.initIndex(indexName);
 
+  // eslint-disable-next-line no-console
+  console.log('[fetchObjectById] Fetching object:', { indexName, objectId, objectIdType: typeof objectId, objectIdLength: objectId?.length });
+
   // Try getObject first (primary method)
   if (typeof index.getObject === 'function') {
     try {
-      return await index.getObject(objectId);
+      // eslint-disable-next-line no-console
+      console.log('[fetchObjectById] Attempting getObject with objectId:', objectId);
+      const result = await index.getObject(objectId);
+      // eslint-disable-next-line no-console
+      console.log('[fetchObjectById] getObject succeeded, result:', { objectID: result?.objectID, name: result?.name || result?.title });
+      return result;
     } catch (error) {
+      // eslint-disable-next-line no-console
+      console.error('[fetchObjectById] getObject failed:', { error, errorMessage: error?.message, errorStatus: error?.status, errorName: error?.name });
       // Fallback to filter search if getObject fails
-      const result = await index.search('', {
-        filters: `objectID:${objectId}`,
-        hitsPerPage: 1,
-      });
-      const hit = result.hits && result.hits.length > 0 ? result.hits[0] : null;
-      if (hit && hit.objectID === objectId) {
-        return hit;
+      // Quote the objectID for filter syntax when it contains special characters
+      try {
+        const filterQuery = `objectID:"${objectId}"`;
+        // eslint-disable-next-line no-console
+        console.log('[fetchObjectById] Attempting filter search with filter:', filterQuery);
+        const result = await index.search('', {
+          filters: filterQuery,
+          hitsPerPage: 1,
+        });
+        // eslint-disable-next-line no-console
+        console.log('[fetchObjectById] Filter search result:', { hitsCount: result?.hits?.length, firstHitObjectID: result?.hits?.[0]?.objectID });
+        const hit = result.hits && result.hits.length > 0 ? result.hits[0] : null;
+        if (hit && hit.objectID === objectId) {
+          // eslint-disable-next-line no-console
+          console.log('[fetchObjectById] Filter search succeeded, matched objectID');
+          return hit;
+        }
+        // eslint-disable-next-line no-console
+        console.warn('[fetchObjectById] Filter search found hit but objectID mismatch:', { expected: objectId, actual: hit?.objectID });
+        throw new Error('Object not found');
+      } catch (filterError) {
+        // eslint-disable-next-line no-console
+        console.error('[fetchObjectById] Filter search also failed:', { filterError, filterErrorMessage: filterError?.message });
+        throw error; // Throw the original getObject error
       }
-      throw new Error('Object not found');
     }
   }
 
   // Fallback: Use filter search
+  // eslint-disable-next-line no-console
+  console.log('[fetchObjectById] getObject not available, using filter search only');
+  const filterQuery = `objectID:"${objectId}"`;
+  // eslint-disable-next-line no-console
+  console.log('[fetchObjectById] Attempting filter search with filter:', filterQuery);
   const result = await index.search('', {
-    filters: `objectID:${objectId}`,
+    filters: filterQuery,
     hitsPerPage: 1,
   });
+  // eslint-disable-next-line no-console
+  console.log('[fetchObjectById] Filter search result:', { hitsCount: result?.hits?.length, firstHitObjectID: result?.hits?.[0]?.objectID });
   const hit = result.hits && result.hits.length > 0 ? result.hits[0] : null;
   if (hit && hit.objectID === objectId) {
+    // eslint-disable-next-line no-console
+    console.log('[fetchObjectById] Filter search succeeded, matched objectID');
     return hit;
   }
+  // eslint-disable-next-line no-console
+  console.error('[fetchObjectById] Object not found after all attempts:', { objectId, hitObjectID: hit?.objectID });
   throw new Error('Object not found');
 }
 

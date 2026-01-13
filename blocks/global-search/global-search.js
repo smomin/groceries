@@ -2,7 +2,12 @@ import '../../scripts/lib-algoliasearch.js';
 import '../../scripts/lib-autocomplete.js';
 import '../../scripts/lib-autocomplete-plugin-query-suggestions.js';
 import '../../scripts/lib-autocomplete-plugin-recent-searches.js';
-import { getTextContent, getCredentials, createAlgoliaClient, getParamFromUrl } from '../../scripts/blocks-utils.js';
+import {
+  getTextContent,
+  getCredentials,
+  createAlgoliaClient,
+  getParamFromUrl,
+} from '../../scripts/blocks-utils.js';
 
 export const SearchEvents = {
   QUERY_CHANGE: 'search:query:change',
@@ -36,10 +41,8 @@ function getTemplate(htmlElement) {
   return htmlElement ? getTextContent(htmlElement) : null;
 }
 
-
 export default function decorate(block) {
   if (block.children.length > 3) {
-    const { algoliasearch } = window;
     const { autocomplete, getAlgoliaResults } = window['@algolia/autocomplete-js'];
     const { createQuerySuggestionsPlugin } = window['@algolia/autocomplete-plugin-query-suggestions'];
     const { createLocalStorageRecentSearchesPlugin } = window['@algolia/autocomplete-plugin-recent-searches'];
@@ -216,9 +219,9 @@ export default function decorate(block) {
                       />
                       <h6>
                         ${components.Highlight({
-                    hit: item,
-                    attribute: 'name',
-                  })}
+                          hit: item,
+                          attribute: 'name',
+                        })}
                       </h6>
                     </a>`;
                 },
@@ -272,9 +275,9 @@ export default function decorate(block) {
                       />
                       <h6>
                         ${components.Highlight({
-                    hit: item,
-                    attribute: 'name',
-                  })}
+                          hit: item,
+                          attribute: 'name',
+                        })}
                       </h6>
                     </a>`;
                 },
