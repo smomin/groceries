@@ -2,7 +2,9 @@
   "mappings": [
     "/content/sw-groceries/:/",
     "/content/sw-groceries/products.html:/products.html",
+    "/content/sw-groceries/shop.html:/shop.html",
     "/content/sw-groceries/recipes.html:/recipes.html",
+    "/content/sw-groceries/contact.html:/contact.html",
     "/content/sw-groceries/configuration:/.helix/config.json",
     "/content/sw-groceries/metadata:/metadata.json",
     "/content/dam/sw-groceries/images/:/assets/images/"
