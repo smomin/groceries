@@ -180,6 +180,29 @@ export function isExternalImage(imageUrl) {
 }
 
 /**
+ * Prepends the AEM host URL to recipe image paths from Algolia
+ * @param {string} imageUrl - Image URL from Algolia
+ * @returns {string} Full URL with host prefix
+ */
+export function transformRecipeImagePath(imageUrl) {
+  if (!imageUrl || typeof imageUrl !== 'string') {
+    return imageUrl;
+  }
+  
+  // If already a full URL, return as-is
+  if (imageUrl.startsWith('http://') || imageUrl.startsWith('https://')) {
+    return imageUrl;
+  }
+  
+  // If it's a relative path starting with /content/dam/sw-groceries/, prepend the host
+  if (imageUrl.startsWith('/content/dam/sw-groceries/')) {
+    return `https://publish-p28413-e1512521.adobeaemcloud.com${imageUrl}`;
+  }
+  
+  return imageUrl;
+}
+
+/**
  * Creates an optimized image element
  * @param {string} imageUrl - Image URL
  * @param {string} alt - Alt text

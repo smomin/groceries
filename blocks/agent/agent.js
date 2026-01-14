@@ -2,6 +2,7 @@ import '../../scripts/lib-algoliasearch.js';
 import '../../scripts/lib-instantsearch.js';
 import '../../scripts/lib-instantsearch-chat.js';
 import { addToCart } from '../../scripts/cart.js';
+import { transformRecipeImagePath } from '../../scripts/blocks-utils.js';
 
 export default function decorate(block) {
   // Add agent class for CSS scoping
@@ -28,11 +29,12 @@ export default function decorate(block) {
       item: (hit, { html }) => {
         if (hit && hit.objectID) {
           const isRecipe = !hit.price || hit.price === undefined || hit.price === null;
+          const imageUrl = isRecipe ? transformRecipeImagePath(hit.image) : hit.image;
 
           return html`
               <article class="ais-Carousel-hit">
                 <div class="ais-Carousel-hit-image">
-                  <img src="${hit.image}" alt="${hit.name}" />
+                  <img src="${imageUrl}" alt="${hit.name}" />
                 </div>
                 <h2 class="ais-Carousel-hit-title">
                   <a href="/products.html?pid=${hit.objectID}" class="ais-Carousel-hit-link">${hit.name}</a>

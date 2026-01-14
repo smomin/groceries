@@ -1,5 +1,5 @@
 import '../../scripts/lib-algoliasearch.js';
-import { getTextContent, getCredentials, getIndexName, getObjectIdFromUrl, createAlgoliaClient, createImageElement, formatPrice, handleAddToCart, Carousel } from '../../scripts/blocks-utils.js';
+import { getTextContent, getCredentials, getIndexName, getObjectIdFromUrl, createAlgoliaClient, createImageElement, formatPrice, handleAddToCart, Carousel, transformRecipeImagePath } from '../../scripts/blocks-utils.js';
 
 // Helper functions
 function getModel(htmlElement) {
@@ -30,8 +30,13 @@ function createProductCard(product) {
   const imageWrapper = document.createElement('div');
   imageWrapper.className = 'recommend-card__image-wrapper';
   
+  // Check if this is a recipe (has steps field or no price field)
+  const isRecipe = product.steps || product.price === undefined || product.price === null;
+  
   if (product.image) {
-    const imgElement = createImageElement(product.image, product.name || 'Product', false, [{ width: '300' }]);
+    // Transform image path for recipes
+    const imageUrl = isRecipe ? transformRecipeImagePath(product.image) : product.image;
+    const imgElement = createImageElement(imageUrl, product.name || 'Product', false, [{ width: '300' }]);
     imageWrapper.appendChild(imgElement);
   }
 
@@ -53,9 +58,6 @@ function createProductCard(product) {
 
   const footer = document.createElement('div');
   footer.className = 'recommend-card__footer';
-
-  // Check if this is a recipe (has steps field or no price field)
-  const isRecipe = product.steps || product.price === undefined || product.price === null;
 
   if (isRecipe) {
     // For recipes: show "View Recipe" link

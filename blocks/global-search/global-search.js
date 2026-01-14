@@ -7,6 +7,7 @@ import {
   getCredentials,
   createAlgoliaClient,
   getParamFromUrl,
+  transformRecipeImagePath,
 } from '../../scripts/blocks-utils.js';
 
 export const SearchEvents = {
@@ -57,15 +58,18 @@ export default function decorate(block) {
 
     // Set the InstantSearch index UI state from external events.
     const setInstantSearchUiState = (indexUiState) => {
-      window.searchInstance.setUiState((uiState) => ({
-        ...uiState,
-        [indexName]: {
-          ...uiState[indexName],
-          // We reset the page when the search state changes.
-          page: 1,
-          ...indexUiState,
-        },
-      }));
+      // Only update UI state if InstantSearch instance exists (e.g., on search results page)
+      if (window.searchInstance && typeof window.searchInstance.setUiState === 'function') {
+        window.searchInstance.setUiState((uiState) => ({
+          ...uiState,
+          [indexName]: {
+            ...uiState[indexName],
+            // We reset the page when the search state changes.
+            page: 1,
+            ...indexUiState,
+          },
+        }));
+      }
     };
 
     const searchClient = createAlgoliaClient(appId, apiKey);
@@ -116,7 +120,7 @@ export default function decorate(block) {
             // eslint-disable-next-line no-underscore-dangle
             if (item.__autocomplete_qsCategory) {
               // eslint-disable-next-line no-underscore-dangle
-              setUiState({ menu: { categories: item.__autocomplete_qsCategory } });
+              setInstantSearchUiState({ menu: { categories: item.__autocomplete_qsCategory } });
             }
           },
           templates: {
@@ -208,15 +212,17 @@ export default function decorate(block) {
                   );
                 },
                 item({ item, components, html }) {
+                  const recipeImage = item.image ? transformRecipeImagePath(item.image) : '';
                   return html`<a
                       href="/recipes?rid=${item.objectID}"
                       class="u-flex u-align"
                       style="text-decoration: none; color: inherit;"
                     >
-                      <img
-                        src="${item.image}"
+                      ${recipeImage ? html`<img
+                        src="${recipeImage}"
                         width="28px"
-                      />
+                        alt="${item.name || 'Recipe'}"
+                      />` : ''}
                       <h6>
                         ${components.Highlight({
                           hit: item,
@@ -324,7 +330,9 @@ export default function decorate(block) {
       // This keeps Autocomplete aware of state changes coming from routing
       // and updates its query accordingly
       window.addEventListener('popstate', () => {
-        autocompleteInstance.setQuery(window.searchInstance.helper?.state.query || '');
+        if (window.searchInstance?.helper?.state?.query) {
+          autocompleteInstance.setQuery(window.searchInstance.helper.state.query);
+        }
       });
 
       // Close the autocomplete panel when scrolling

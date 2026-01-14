@@ -1,6 +1,6 @@
 import '../../scripts/lib-algoliasearch.js';
 import '../../scripts/lib-instantsearch.js';
-import { getTextContent, getCredentials, getIndexName, createAlgoliaClient, formatPrice, handleAddToCart } from '../../scripts/blocks-utils.js';
+import { getTextContent, getCredentials, getIndexName, createAlgoliaClient, formatPrice, handleAddToCart, transformRecipeImagePath } from '../../scripts/blocks-utils.js';
 
 function getSearchBox(htmlElement) {
   const placeholder = getTextContent(htmlElement.children[2]);
@@ -89,7 +89,7 @@ export default function decorate(block) {
     // Create recipe template
     const recipeTemplate = (hit, { html, components }) => {
       const recipeName = hit.name || hit.title || 'Recipe';
-      const recipeImage = hit.image || hit.imageUrl || '';
+      const recipeImage = transformRecipeImagePath(hit.image || hit.imageUrl || '');
       const recipeCategory = hit.category || hit.cuisine || '';
       const recipeDescription = hit.description || hit.summary || '';
       const recipeTime = hit.cookingTime || hit.time || hit.prepTime || '';

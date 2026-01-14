@@ -1,5 +1,5 @@
 import '../../scripts/lib-algoliasearch.js';
-import { getTextContent, getCredentials, getIndexName, getParamFromUrl, createAlgoliaClient, fetchObjectById, createImageElement } from '../../scripts/blocks-utils.js';
+import { getTextContent, getCredentials, getIndexName, getParamFromUrl, createAlgoliaClient, fetchObjectById, createImageElement, transformRecipeImagePath } from '../../scripts/blocks-utils.js';
 
 function extractIngredientsFromSteps(steps) {
   if (!Array.isArray(steps)) {
@@ -225,7 +225,7 @@ export default function decorate(block) {
         const imageWrapper = recipeContainer.querySelector('.recipe-image-wrapper');
         const pictureElement = recipeContainer.querySelector('.recipe-image');
         if (recipe.image || recipe.imageUrl) {
-          const imageUrl = recipe.image || recipe.imageUrl;
+          const imageUrl = transformRecipeImagePath(recipe.image || recipe.imageUrl);
           const alt = recipe.name || recipe.title || 'Recipe image';
           const imgElement = createImageElement(imageUrl, alt, true, [{ width: '750' }]);
           pictureElement.replaceWith(imgElement);
