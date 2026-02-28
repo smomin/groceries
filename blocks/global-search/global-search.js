@@ -186,6 +186,9 @@ export default function decorate(block) {
                       params: {
                         query: searchQuery,
                         hitsPerPage: 4,
+                        analytics: true,
+                        enablePersonalization: true,
+                        clickAnalytics: true,
                       },
                     },
                   ],
@@ -214,8 +217,10 @@ export default function decorate(block) {
                 item({ item, components, html }) {
                   const recipeImage = item.image ? transformRecipeImagePath(item.image) : '';
                   return html`<a
+                      data-insights-query-id="${item.__autocomplete_queryID}" 
+                      data-insights-object-id="${item.objectID}" 
                       href="/recipes?rid=${item.objectID}"
-                      class="u-flex u-align"
+                      class="u-flex u-align algolia-analytics"
                       style="text-decoration: none; color: inherit;"
                     >
                       ${recipeImage ? html`<img
@@ -244,6 +249,9 @@ export default function decorate(block) {
                       params: {
                         query: searchQuery,
                         hitsPerPage: 6,
+                        analytics: true,
+                        enablePersonalization: true,
+                        clickAnalytics: true,
                       },
                     },
                   ],
@@ -271,8 +279,10 @@ export default function decorate(block) {
                 },
                 item({ item, components, html }) {
                   return html`<a
+                      data-insights-query-id="${item.__autocomplete_queryID}" 
+                      data-insights-object-id="${item.objectID}" 
                       href="/products?pid=${item.objectID}"
-                      class="u-flex u-align"
+                      class="u-flex u-align algolia-analytics"
                       style="text-decoration: none; color: inherit;"
                     >
                       <img
