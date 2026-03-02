@@ -28,24 +28,16 @@
           "value": ""
         },
         {
-          "component": "aem-content-fragment",
+          "component": "textarea",
           "name": "hitTemplate",
           "label": "Hit Template",
-          "valueType": "string",
-          "variationName": "contentFragmentVariation",
-          "validation": {
-              "rootPath": "/content/dam/sw-groceries"
-          }
+          "valueType": "string"
         },
         {
-          "component": "aem-content-fragment",
+          "component": "textarea",
           "name": "noResultsTemplate",
           "label": "No Results Template",
-          "valueType": "string",
-          "variationName": "contentFragmentVariation",
-          "validation": {
-              "rootPath": "/content/dam/sw-groceries"
-          }
+          "valueType": "string"
         }
       ]
     }

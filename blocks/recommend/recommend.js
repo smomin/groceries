@@ -1,5 +1,17 @@
 import '../../scripts/lib-algoliasearch.js';
-import { getTextContent, getCredentials, getIndexName, getObjectIdFromUrl, createAlgoliaClient, createImageElement, formatPrice, handleAddToCart, Carousel, transformRecipeImagePath } from '../../scripts/blocks-utils.js';
+import {
+  getTextContent,
+  getCredentials,
+  getIndexName,
+  getObjectIdFromUrl,
+  createAlgoliaClient,
+  createImageElement,
+  formatPrice,
+  handleAddToCart,
+  Carousel,
+  transformRecipeImagePath,
+  transformProductImagePath,
+} from '../../scripts/blocks-utils.js';
 
 // Helper functions
 function getModel(htmlElement) {
@@ -35,7 +47,7 @@ function createProductCard(product) {
   
   if (product.image) {
     // Transform image path for recipes
-    const imageUrl = isRecipe ? transformRecipeImagePath(product.image) : product.image;
+    const imageUrl = isRecipe ? transformRecipeImagePath(product.image) : transformProductImagePath(product.image);
     const imgElement = createImageElement(imageUrl, product.name || 'Product', false, [{ width: '300' }]);
     imageWrapper.appendChild(imgElement);
   }
@@ -82,7 +94,7 @@ function createProductCard(product) {
     addBtn.dataset.productName = product.name || 'Product';
     addBtn.dataset.productPrice = product.price || 0;
     addBtn.dataset.productDescription = product.description || product.name || '';
-    addBtn.dataset.productImage = product.image || '';
+    addBtn.dataset.productImage = transformProductImagePath(product.image) || '';
 
     addBtn.addEventListener('click', (event) => {
       event.preventDefault();
@@ -93,7 +105,7 @@ function createProductCard(product) {
         name: product.name || 'Product',
         price: product.price || 0,
         description: product.description || product.name || '',
-        image: product.image || '',
+        image: transformProductImagePath(product.image) || '',
       };
 
       handleAddToCart(addBtn, productData, 1);
