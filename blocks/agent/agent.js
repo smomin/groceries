@@ -2,7 +2,7 @@ import '../../scripts/lib-algoliasearch.js';
 import '../../scripts/lib-instantsearch.js';
 import '../../scripts/lib-instantsearch-chat.js';
 import { addToCart } from '../../scripts/cart.js';
-import { transformRecipeImagePath } from '../../scripts/blocks-utils.js';
+import { transformRecipeImagePath, transformProductImagePath } from '../../scripts/blocks-utils.js';
 
 export default function decorate(block) {
   // Add agent class for CSS scoping
@@ -29,7 +29,7 @@ export default function decorate(block) {
       item: (hit, { html }) => {
         if (hit && hit.objectID) {
           const isRecipe = !hit.price || hit.price === undefined || hit.price === null;
-          const imageUrl = isRecipe ? transformRecipeImagePath(hit.image) : hit.image;
+          const imageUrl = isRecipe ? transformRecipeImagePath(hit.image) : transformProductImagePath(hit.image);
 
           return html`
               <article class="ais-Carousel-hit">
@@ -50,7 +50,7 @@ export default function decorate(block) {
                           data-product-name="${hit.name || ''}"
                           data-product-price="${hit.price || 0}"
                           data-product-description="${hit.description || hit.name || ''}"
-                          data-product-image="${hit.image || ''}">
+                          data-product-image="${transformProductImagePath(hit.image) || ''}">
                     Add to cart
                   </button>
                 `}

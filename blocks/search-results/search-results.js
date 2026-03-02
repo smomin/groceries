@@ -1,6 +1,15 @@
 import '../../scripts/lib-algoliasearch.js';
 import '../../scripts/lib-instantsearch.js';
-import { getTextContent, getCredentials, getIndexName, createAlgoliaClient, formatPrice, handleAddToCart, transformRecipeImagePath } from '../../scripts/blocks-utils.js';
+import {
+  getTextContent,
+  getCredentials,
+  getIndexName,
+  createAlgoliaClient,
+  formatPrice,
+  handleAddToCart,
+  transformRecipeImagePath,
+  transformProductImagePath,
+} from '../../scripts/blocks-utils.js';
 
 function getSearchBox(htmlElement) {
   const placeholder = getTextContent(htmlElement.children[2]);
@@ -53,36 +62,35 @@ export default function decorate(block) {
 
     // Create product template
     const productTemplate = (hit, { html, components }) => {
+      const productImage = transformProductImagePath(hit.image);
       return html`
-        <div class="algolia-analytics" data-insights-query-id="${hit.__queryID}" data-insights-object-id="${hit.objectID}" data-insights-position="${hit.__position}">
-          <div class="product-card">
-            <img class="product-card__image" src="${hit.image}" alt="${hit.name}" />
-            <div class="product-card__category">${hit.categories?.lvl0 || ''}</div>
-            <div class="product-card__name">${components.Highlight({ attribute: 'name', hit })}</div>
-            ${hit.brand
-              ? html`<div class="vendor">
-                  <span class="vendor-label">By</span> <span style="color: #00b207;">${hit.brand}</span>
-                </div>`
-              : ''
-            }
-              <div class="product-card__footer">
-              <div class="price-container">
-                <span class="current-price">${formatPrice(hit.price)}</span>
-              </div>
-              <div class="product-card__actions">
-                <a href="/products?pid=${hit.objectID}" class="view-product-btn">
-                  View
-                </a>
-                <button class="add-btn" 
-                        data-product-id="${hit.objectID}"
-                        data-product-name="${hit.name}"
-                        data-product-price="${hit.price}"
-                        data-product-description="${hit.description || hit.name}"
-                        data-product-image="${hit.image}">
-                  <span class="cart-icon"></span>
-                  <span>Add</span>
-                </button>
-              </div>
+        <div class="product-card algolia-analytics" data-insights-query-id="${hit.__queryID}" data-insights-object-id="${hit.objectID}" data-insights-position="${hit.__position}">
+          <img class="product-card__image" src="${productImage}" alt="${hit.name}" />
+          <div class="product-card__category">${hit.categories?.lvl0 || ''}</div>
+          <div class="product-card__name">${components.Highlight({ attribute: 'name', hit })}</div>
+          ${hit.brand
+            ? html`<div class="vendor">
+                <span class="vendor-label">By</span> <span style="color: #00b207;">${hit.brand}</span>
+              </div>`
+            : ''
+          }
+            <div class="product-card__footer">
+            <div class="price-container">
+              <span class="current-price">${formatPrice(hit.price)}</span>
+            </div>
+            <div class="product-card__actions">
+              <a href="/products?pid=${hit.objectID}" class="view-product-btn">
+                View
+              </a>
+              <button class="add-btn" 
+                      data-product-id="${hit.objectID}"
+                      data-product-name="${hit.name}"
+                      data-product-price="${hit.price}"
+                      data-product-description="${hit.description || hit.name}"
+                      data-product-image="${productImage}">
+                <span class="cart-icon"></span>
+                <span>Add</span>
+              </button>
             </div>
           </div>
         </div>`;
@@ -105,21 +113,19 @@ export default function decorate(block) {
         : recipeName;
 
       return html`
-        <div class="algolia-analytics" data-insights-query-id="${hit.__queryID}" data-insights-object-id="${hit.objectID}" data-insights-position="${hit.__position}">
-          <div class="recipe-card">
-            ${recipeImage ? html`<img class="recipe-card__image" src="${recipeImage}" alt="${recipeName}" />` : ''}
-            ${recipeCategory ? html`<div class="recipe-card__category">${recipeCategory}</div>` : ''}
-            <div class="recipe-card__name">${recipeNameDisplay}</div>
-            ${recipeDescription ? html`<div class="recipe-card__description">${recipeDescription.length > 100 ? recipeDescription.substring(0, 100) + '...' : recipeDescription}</div>` : ''}
-            <div class="recipe-card__meta">
-              ${recipeTime ? html`<div class="recipe-meta-item"><strong>Time:</strong> ${recipeTime}</div>` : ''}
-              ${recipeServings ? html`<div class="recipe-meta-item"><strong>Servings:</strong> ${recipeServings}</div>` : ''}
-            </div>
-            <div class="recipe-card__footer">
-              <a href="${recipeUrl}" class="recipe-view-btn">
-                <span>View Recipe</span>
-              </a>
-            </div>
+        <div class="recipe-card algolia-analytics" data-insights-query-id="${hit.__queryID}" data-insights-object-id="${hit.objectID}" data-insights-position="${hit.__position}">
+          ${recipeImage ? html`<img class="recipe-card__image" src="${recipeImage}" alt="${recipeName}" />` : ''}
+          ${recipeCategory ? html`<div class="recipe-card__category">${recipeCategory}</div>` : ''}
+          <div class="recipe-card__name">${recipeNameDisplay}</div>
+          ${recipeDescription ? html`<div class="recipe-card__description">${recipeDescription.length > 100 ? recipeDescription.substring(0, 100) + '...' : recipeDescription}</div>` : ''}
+          <div class="recipe-card__meta">
+            ${recipeTime ? html`<div class="recipe-meta-item"><strong>Time:</strong> ${recipeTime}</div>` : ''}
+            ${recipeServings ? html`<div class="recipe-meta-item"><strong>Servings:</strong> ${recipeServings}</div>` : ''}
+          </div>
+          <div class="recipe-card__footer">
+            <a href="${recipeUrl}" class="recipe-view-btn">
+              <span>View Recipe</span>
+            </a>
           </div>
         </div>`;
     };

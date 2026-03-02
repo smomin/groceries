@@ -202,6 +202,30 @@ export function transformRecipeImagePath(imageUrl) {
   return imageUrl;
 }
 
+const PRODUCT_IMAGE_PREFIX = 'https://na1-static-sandbox.api.commerce.adobe.com/6JDDdawNQnwMLewACfuU4C/media/catalog/product';
+
+/**
+ * Prepends the Adobe Commerce media host to product image paths from Algolia
+ * @param {string} imageUrl - Image URL or relative path from Algolia
+ * @returns {string} Full product image URL
+ */
+export function transformProductImagePath(imageUrl) {
+  if (!imageUrl || typeof imageUrl !== 'string') {
+    return imageUrl;
+  }
+
+  // If already a full URL, return as-is
+  if (imageUrl.startsWith('http://') || imageUrl.startsWith('https://')) {
+    return imageUrl;
+  }
+
+  if (imageUrl.startsWith('/')) {
+    return `${PRODUCT_IMAGE_PREFIX}${imageUrl}`;
+  }
+
+  return `${PRODUCT_IMAGE_PREFIX}/${imageUrl}`;
+}
+
 /**
  * Creates an optimized image element
  * @param {string} imageUrl - Image URL

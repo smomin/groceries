@@ -8,6 +8,7 @@ import {
   createAlgoliaClient,
   getParamFromUrl,
   transformRecipeImagePath,
+  transformProductImagePath,
 } from '../../scripts/blocks-utils.js';
 
 export const SearchEvents = {
@@ -49,7 +50,7 @@ export default function decorate(block) {
     const { createLocalStorageRecentSearchesPlugin } = window['@algolia/autocomplete-plugin-recent-searches'];
 
     const recipesIndexName = 'SW-Groceries-PROD-US-EN-Recipes';
-    const productsIndexName = 'ag_products';
+    const productsIndexName = 'SW_Groceries_Products';
 
     const { appId, apiKey } = getCredentials(block);
     getLayoutTemplate(block); // layoutTemplate not used
@@ -278,6 +279,7 @@ export default function decorate(block) {
                   );
                 },
                 item({ item, components, html }) {
+                  const productImage = transformProductImagePath(item.image);
                   return html`<a
                       data-insights-query-id="${item.__autocomplete_queryID}" 
                       data-insights-object-id="${item.objectID}" 
@@ -286,8 +288,9 @@ export default function decorate(block) {
                       style="text-decoration: none; color: inherit;"
                     >
                       <img
-                        src="${item.image}"
+                        src="${productImage}"
                         width="28px"
+                        alt="${item.name || 'Product'}"
                       />
                       <h6>
                         ${components.Highlight({

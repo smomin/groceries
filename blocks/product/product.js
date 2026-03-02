@@ -1,5 +1,16 @@
 import '../../scripts/lib-algoliasearch.js';
-import { getTextContent, getCredentials, getIndexName, getParamFromUrl, createAlgoliaClient, fetchObjectById, createImageElement, formatPrice, handleAddToCart } from '../../scripts/blocks-utils.js';
+import {
+  getTextContent,
+  getCredentials,
+  getIndexName,
+  getParamFromUrl,
+  createAlgoliaClient,
+  fetchObjectById,
+  createImageElement,
+  formatPrice,
+  handleAddToCart,
+  transformProductImagePath,
+} from '../../scripts/blocks-utils.js';
 
 export default function decorate(block) {
   const { appId, apiKey } = getCredentials(block);
@@ -113,8 +124,9 @@ export default function decorate(block) {
 
         // Set product image
         const imageWrapper = productContainer.querySelector('.product-image-wrapper');
+        const productImage = transformProductImagePath(product.image);
         if (product.image) {
-          const imageUrl = product.image;
+          const imageUrl = productImage;
           const alt = product.name || 'Product image';
           const imgElement = createImageElement(imageUrl, alt, true, [{ width: '750' }]);
           imageWrapper.innerHTML = '';
@@ -128,7 +140,7 @@ export default function decorate(block) {
         contentDiv.dataset.productName = product.name || 'Product';
         contentDiv.dataset.productPrice = price;
         contentDiv.dataset.productDescription = description;
-        contentDiv.dataset.productImage = product.image || '';
+        contentDiv.dataset.productImage = productImage || '';
 
         // Handle add to cart button click
         const addToCartBtn = productContainer.querySelector('.product-add-to-cart-btn');
@@ -140,7 +152,7 @@ export default function decorate(block) {
           name: product.name || 'Product',
           price,
           description,
-          image: product.image || '',
+          image: productImage || '',
         };
 
         addToCartBtn.addEventListener('click', (event) => {
