@@ -36,12 +36,6 @@
           "label": "API Key",
           "value": "",
           "key-value": true
-        },
-        {
-          "component": "textarea",
-          "name": "layoutTemplate",
-          "label": "Layout Template",
-          "valueType": "string"
         }
       ]
     }

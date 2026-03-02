@@ -2,6 +2,7 @@ import '../../scripts/lib-algoliasearch.js';
 import '../../scripts/lib-instantsearch.js';
 import {
   getTextContent,
+  getHTMLContent,
   getCredentials,
   getIndexName,
   createAlgoliaClient,
@@ -20,7 +21,7 @@ function getSearchIndex(htmlElement) {
   const index = htmlElement.children[3];
   const indexName = getTextContent(index.children[0]);
   const hitTemplate = getTextContent(index.children[1]);
-  const noResultsTemplate = getTextContent(index.children[2]);
+  const noResultsTemplate = getHTMLContent(index.children[2]);
   return { indexName, hitTemplate, noResultsTemplate };
 }
 
@@ -38,13 +39,9 @@ export default function decorate(block) {
 
   const { appId, apiKey } = getCredentials(block);
   getSearchBox(block);
-  const { indexName } = getSearchIndex(block);
+  const { indexName, hitTemplate, noResultsTemplate } = getSearchIndex(block);
 
-  // Determine if this is a products or recipes index
-  const isRecipesIndex = indexName === 'ag_recipes';
-  const isProductsIndex = indexName === 'ag_products';
-
-  setTimeout(() => {
+  setTimeout(async () => {
     const { connectSearchBox } = instantsearch.connectors;
     const { hits, pagination, configure } = instantsearch.widgets;
 
@@ -54,84 +51,22 @@ export default function decorate(block) {
       searchClient,
       indexName,
       stateMapping: instantsearch.stateMappings.singleIndex(indexName),
+      onStateChange({ state }) {
+        // Custom code reacting to state changes
+        console.log("The InstantSearch state has changed:", state);
+      },
     });
 
     // Mount a virtual search box to manipulate InstantSearch's `query` UI
     // state parameter.
     const virtualSearchBox = connectSearchBox(() => {});
 
-    // Create product template
-    const productTemplate = (hit, { html, components }) => {
-      const productImage = transformProductImagePath(hit.image);
-      return html`
-        <div class="product-card algolia-analytics" data-insights-query-id="${hit.__queryID}" data-insights-object-id="${hit.objectID}" data-insights-position="${hit.__position}">
-          <img class="product-card__image" src="${productImage}" alt="${hit.name}" />
-          <div class="product-card__category">${hit.categories?.lvl0 || ''}</div>
-          <div class="product-card__name">${components.Highlight({ attribute: 'name', hit })}</div>
-          ${hit.brand
-            ? html`<div class="vendor">
-                <span class="vendor-label">By</span> <span style="color: #00b207;">${hit.brand}</span>
-              </div>`
-            : ''
-          }
-            <div class="product-card__footer">
-            <div class="price-container">
-              <span class="current-price">${formatPrice(hit.price)}</span>
-            </div>
-            <div class="product-card__actions">
-              <a href="/products?pid=${hit.objectID}" class="view-product-btn">
-                View
-              </a>
-              <button class="add-btn" 
-                      data-product-id="${hit.objectID}"
-                      data-product-name="${hit.name}"
-                      data-product-price="${hit.price}"
-                      data-product-description="${hit.description || hit.name}"
-                      data-product-image="${productImage}">
-                <span class="cart-icon"></span>
-                <span>Add</span>
-              </button>
-            </div>
-          </div>
-        </div>`;
-    };
-
-    // Create recipe template
-    const recipeTemplate = (hit, { html, components }) => {
-      const recipeName = hit.name || hit.title || 'Recipe';
-      const recipeImage = transformRecipeImagePath(hit.image || hit.imageUrl || '');
-      const recipeCategory = hit.category || hit.cuisine || '';
-      const recipeDescription = hit.description || hit.summary || '';
-      const recipeTime = hit.cookingTime || hit.time || hit.prepTime || '';
-      const recipeServings = hit.servings || '';
-      const recipeUrl = `/recipes.html?rid=${hit.objectID}`;
-
-      // Try to highlight name attribute, fallback to title if name doesn't exist
-      const highlightAttribute = hit.name ? 'name' : (hit.title ? 'title' : null);
-      const recipeNameDisplay = highlightAttribute 
-        ? components.Highlight({ attribute: highlightAttribute, hit })
-        : recipeName;
-
-      return html`
-        <div class="recipe-card algolia-analytics" data-insights-query-id="${hit.__queryID}" data-insights-object-id="${hit.objectID}" data-insights-position="${hit.__position}">
-          ${recipeImage ? html`<img class="recipe-card__image" src="${recipeImage}" alt="${recipeName}" />` : ''}
-          ${recipeCategory ? html`<div class="recipe-card__category">${recipeCategory}</div>` : ''}
-          <div class="recipe-card__name">${recipeNameDisplay}</div>
-          ${recipeDescription ? html`<div class="recipe-card__description">${recipeDescription.length > 100 ? recipeDescription.substring(0, 100) + '...' : recipeDescription}</div>` : ''}
-          <div class="recipe-card__meta">
-            ${recipeTime ? html`<div class="recipe-meta-item"><strong>Time:</strong> ${recipeTime}</div>` : ''}
-            ${recipeServings ? html`<div class="recipe-meta-item"><strong>Servings:</strong> ${recipeServings}</div>` : ''}
-          </div>
-          <div class="recipe-card__footer">
-            <a href="${recipeUrl}" class="recipe-view-btn">
-              <span>View Recipe</span>
-            </a>
-          </div>
-        </div>`;
-    };
-
-    // Select template based on index type
-    const itemTemplate = isRecipesIndex ? recipeTemplate : productTemplate;
+    const { itemTemplateFunction } = await import(`./templates/${hitTemplate}.js`);
+    const itemTemplate = (hit, { html, components, sendEvent }) => itemTemplateFunction(hit, {
+      html,
+      components,
+      sendEvent,
+    });
 
     search.addWidgets([
       virtualSearchBox({}),

@@ -288,12 +288,6 @@
         "label": "API Key",
         "value": "",
         "key-value": true
-      },
-      {
-        "component": "textarea",
-        "name": "layoutTemplate",
-        "label": "Layout Template",
-        "valueType": "string"
       }
     ]
   },
@@ -464,10 +458,20 @@
         "value": ""
       },
       {
-        "component": "textarea",
+        "component": "select",
         "name": "hitTemplate",
         "label": "Hit Template",
-        "valueType": "string"
+        "valueType": "string",
+        "options": [
+          {
+            "label": "Product",
+            "value": "productTemplate"
+          },
+          {
+            "label": "Recipe",
+            "value": "recipeTemplate"
+          }
+        ]
       },
       {
         "component": "textarea",

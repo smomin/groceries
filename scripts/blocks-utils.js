@@ -23,6 +23,13 @@ export function getTextContent(htmlElement) {
   return textContent;
 }
 
+export function getHTMLContent(htmlElement) {
+  if (!htmlElement) return '';
+  const htmlContent = htmlElement.innerHTML || '';
+  htmlElement.innerHTML = '';
+  return htmlContent;
+}
+
 /**
  * Extracts Algolia credentials from block children
  * @param {HTMLElement} htmlElement - The block element
