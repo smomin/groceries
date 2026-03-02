@@ -464,11 +464,11 @@
         "valueType": "string",
         "options": [
           {
-            "label": "Product",
+            "name": "Product",
             "value": "productTemplate"
           },
           {
-            "label": "Recipe",
+            "name": "Recipe",
             "value": "recipeTemplate"
           }
         ]
