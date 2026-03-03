@@ -1,6 +1,6 @@
-import { transformRecipeImagePath } from '../../../scripts/blocks-utils.js';
+import { transformRecipeImagePath } from '../../../../scripts/blocks-utils.js';
 
-export function recipeTemplate(hit, { html, components }) {    
+export function itemTemplateFunction(hit, { html, components }) {    
   const recipeName = hit.name || hit.title || 'Recipe';
   const recipeImage = transformRecipeImagePath(hit.image || hit.imageUrl || '');
   const recipeCategory = hit.category || hit.cuisine || '';

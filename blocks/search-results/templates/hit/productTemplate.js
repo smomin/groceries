@@ -1,6 +1,6 @@
-import { transformProductImagePath, formatPrice } from '../../../scripts/blocks-utils.js';
+import { transformProductImagePath, formatPrice } from '../../../../scripts/blocks-utils.js';
 
-export function productTemplate(hit, { html, components }) {
+export function itemTemplateFunction(hit, { html, components }) {
   const productImage = transformProductImagePath(hit.image);
   return html`
     <div class="product-card algolia-analytics" data-insights-query-id="${hit.__queryID}" data-insights-object-id="${hit.objectID}" data-insights-position="${hit.__position}">

@@ -288,6 +288,34 @@
         "label": "API Key",
         "value": "",
         "key-value": true
+      },
+      {
+        "component": "select",
+        "name": "layoutTemplate",
+        "label": "Layout Template",
+        "valueType": "string",
+        "options": [
+          {
+            "name": "Main",
+            "value": "mainTemplate"
+          }
+        ]
+      },
+      {
+        "component": "multiselect",
+        "name": "sources",
+        "label": "Sources",
+        "valueType": "string",
+        "options": [
+          {
+            "name": "Product",
+            "value": "product"
+          },
+          {
+            "name": "Recipe",
+            "value": "recipe"
+          }
+        ]
       }
     ]
   },
@@ -474,10 +502,20 @@
         ]
       },
       {
-        "component": "textarea",
+        "component": "select",
         "name": "noResultsTemplate",
         "label": "No Results Template",
-        "valueType": "string"
+        "valueType": "string",
+        "options": [
+          {
+            "name": "Product",
+            "value": "productTemplate"
+          },
+          {
+            "name": "Recipe",
+            "value": "recipeTemplate"
+          }
+        ]
       }
     ]
   },

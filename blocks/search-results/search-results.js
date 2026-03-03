@@ -61,7 +61,7 @@ export default function decorate(block) {
     // state parameter.
     const virtualSearchBox = connectSearchBox(() => {});
 
-    const { itemTemplateFunction } = await import(`./templates/${hitTemplate}.js`);
+    const { itemTemplateFunction } = await import(`./templates/hit/${hitTemplate}.js`);
     const itemTemplate = (hit, { html, components, sendEvent }) => itemTemplateFunction(hit, {
       html,
       components,
@@ -103,24 +103,22 @@ export default function decorate(block) {
     window.searchInstance = search;
 
     // Handle "Add to cart" button clicks using event delegation (only for products)
-    if (isProductsIndex) {
-      searchContainer.addEventListener('click', (event) => {
-        const addToCartButton = event.target.closest('.add-btn');
-        if (addToCartButton) {
-          event.preventDefault();
-          event.stopPropagation();
+    searchContainer.addEventListener('click', (event) => {
+      const addToCartButton = event.target.closest('.add-btn');
+      if (addToCartButton) {
+        event.preventDefault();
+        event.stopPropagation();
 
-          const productData = {
-            objectID: addToCartButton.dataset.productId,
-            name: addToCartButton.dataset.productName,
-            price: parseFloat(addToCartButton.dataset.productPrice) || 0,
-            description: addToCartButton.dataset.productDescription,
-            image: addToCartButton.dataset.productImage,
-          };
+        const productData = {
+          objectID: addToCartButton.dataset.productId,
+          name: addToCartButton.dataset.productName,
+          price: parseFloat(addToCartButton.dataset.productPrice) || 0,
+          description: addToCartButton.dataset.productDescription,
+          image: addToCartButton.dataset.productImage,
+        };
 
-          handleAddToCart(addToCartButton, productData);
-        }
-      });
-    }
+        handleAddToCart(addToCartButton, productData);
+      }
+    });
   }, 500);
 }

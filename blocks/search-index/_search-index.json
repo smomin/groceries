@@ -44,10 +44,20 @@
           ]
         },
         {
-          "component": "textarea",
+          "component": "select",
           "name": "noResultsTemplate",
           "label": "No Results Template",
-          "valueType": "string"
+          "valueType": "string",
+          "options": [
+            {
+              "name": "Product",
+              "value": "productTemplate"
+            },
+            {
+              "name": "Recipe",
+              "value": "recipeTemplate"
+            }
+          ]
         }
       ]
     }
