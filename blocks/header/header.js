@@ -481,11 +481,11 @@ const headerData = {
       </svg>`,
     },
     links: [
-      { text: 'Home', href: '#', active: true },
-      { text: 'Shop', href: '#', active: false },
-      { text: 'Recipes', href: '#', active: false },
-      { text: 'Blogs', href: '#', active: false },
-      { text: 'Contact', href: '#', active: false },
+      { text: 'Home', href: '/', active: true },
+      { text: 'Shop', href: '/shop', active: false },
+      { text: 'Recipes', href: '/recipes', active: false },
+      { text: 'Blog', href: '/blog', active: false },
+      { text: 'Contact', href: '/contact', active: false },
     ],
   },
   contact: {
@@ -640,18 +640,12 @@ function attachEventListeners() {
   // Navigation link handlers
   const navLinks = document.querySelectorAll('.navigation__link');
   navLinks.forEach((link) => {
-    link.addEventListener('click', (e) => {
-      e.preventDefault();
-
+    link.addEventListener('click', () => {
       // Remove active class from all links
       navLinks.forEach((l) => l.classList.remove('navigation__link--active'));
 
       // Add active class to clicked link
       link.classList.add('navigation__link--active');
-
-      // Add your navigation logic here
-      // eslint-disable-next-line no-console
-      console.log('Navigation to:', link.textContent);
     });
   });
 

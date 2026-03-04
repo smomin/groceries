@@ -1,5 +1,5 @@
 import '../../scripts/lib-algoliasearch.js';
-import { getTextContent, getCredentials, getIndexName, getParamFromUrl, createAlgoliaClient, fetchObjectById, createImageElement, transformRecipeImagePath } from '../../scripts/blocks-utils.js';
+import { getTextContent, getCredentials, getIndexName, getParamFromUrl, createAlgoliaClient, fetchObjectById, createImageElement, setMetaTag, transformRecipeImagePath } from '../../scripts/blocks-utils.js';
 
 function extractIngredientsFromSteps(steps) {
   if (!Array.isArray(steps)) {
@@ -88,7 +88,13 @@ function formatInstructions(steps) {
 export default function decorate(block) {
   const { appId, apiKey } = getCredentials(block);
   const indexName = getIndexName(block);
-  const recipeId = getParamFromUrl('rid');
+  const recipeId = getParamFromUrl('recipeId') || getParamFromUrl('rid');
+
+  // Only render recipe details when a recipe id is provided in query params.
+  if (!recipeId) {
+    block.textContent = '';
+    return;
+  }
 
   const recipeContainer = document.createElement('div');
   recipeContainer.className = 'recipe-container';
@@ -126,15 +132,6 @@ export default function decorate(block) {
   `;
   block.textContent = '';
   block.appendChild(recipeContainer);
-
-  if (!recipeId) {
-    const errorDiv = recipeContainer.querySelector('.recipe-error');
-    const loadingDiv = recipeContainer.querySelector('.recipe-loading');
-    loadingDiv.style.display = 'none';
-    errorDiv.style.display = 'block';
-    errorDiv.textContent = 'Recipe ID (rid) parameter is required in the URL.';
-    return;
-  }
 
   if (!appId || !apiKey || !indexName) {
     const errorDiv = recipeContainer.querySelector('.recipe-error');
@@ -220,6 +217,11 @@ export default function decorate(block) {
         const descriptionElement = recipeContainer.querySelector('.recipe-description');
         const description = recipe.description || recipe.summary || recipe.name || 'No description available.';
         descriptionElement.innerHTML = description;
+
+        // Set page metadata for recipe detail pages
+        const recipeName = recipe.name || recipe.title || 'Recipe';
+        document.title = recipeName;
+        setMetaTag('description', recipe.description || recipe.summary || recipeName);
 
         // Set recipe image
         const imageWrapper = recipeContainer.querySelector('.recipe-image-wrapper');
