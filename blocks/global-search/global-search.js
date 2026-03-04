@@ -37,8 +37,13 @@ function getSourceNames(htmlElement) {
   return { sourceNames };
 }
 
-function getSearchBox(htmlElement) {
-  const placeholder = getTextContent(htmlElement.children[4]);
+function getQuerySuggestionsIndexName(htmlElement) {
+  const querySuggestionsIndexName = getTextContent(htmlElement.children[4]);
+  return { querySuggestionsIndexName };
+}
+
+function getPlaceholder(htmlElement) {
+  const placeholder = getTextContent(htmlElement.children[5]);
   return { placeholder };
 }
 
@@ -49,16 +54,17 @@ export default async function decorate(block) {
     const { createLocalStorageRecentSearchesPlugin } = window['@algolia/autocomplete-plugin-recent-searches'];
 
     const { appId, apiKey } = getCredentials(block);
-    const { placeholder } = getSearchBox(block);
+    const { placeholder } = getPlaceholder(block);
     const { layoutTemplate } = getLayoutTemplate(block);
 
     const searchClient = createAlgoliaClient(appId, apiKey);
     const { layoutTemplateFunction } = await import(`./templates/layout/${layoutTemplate}.js`);
     const { sourceNames } = getSourceNames(block);
+    const { querySuggestionsIndexName } = getQuerySuggestionsIndexName(block);
 
     const sources = await Promise.all(sourceNames.split(',').map(async (sourceName, index) => {
       const { source } = await import(`./sources/${sourceName}.js`);
-      const { indexName, hitTemplate, noResultsTemplate } = getSearchIndex(block, index + 5);
+      const { indexName, hitTemplate, noResultsTemplate } = getSearchIndex(block, index + 6);
 
       const { itemTemplateFunction } = await import(`./templates/hit/${hitTemplate}.js`);
       const { noResultsTemplateFunction } = await import(`./templates/noresults/${noResultsTemplate}.js`);
@@ -88,6 +94,7 @@ export default async function decorate(block) {
       }
     };
 
+    const plugins = [];
     const recentSearchesPlugin = createLocalStorageRecentSearchesPlugin({
       key: 'navbar',
       limit: 3,
@@ -116,49 +123,53 @@ export default async function decorate(block) {
         };
       },
     });
+    plugins.push(recentSearchesPlugin);
 
-    // const querySuggestionsPlugin = createQuerySuggestionsPlugin({
-    //   searchClient,
-    //   indexName: `${querySuggestionsIndexName}`,
-    //   categoryAttribute: ['facets', 'exact_matches', 'categories'],
-    //   getSearchParams() {
-    //     return {
-    //       hitsPerPage: 3,
-    //     };
-    //   },
-    //   transformSource({ source }) {
-    //     return {
-    //       ...source,
-    //       // eslint-disable-next-line no-unused-vars, no-underscore-dangle
-    //       onSelect({ item, setQuery: _setQuery }) {
-    //         // eslint-disable-next-line no-underscore-dangle
-    //         if (item.__autocomplete_qsCategory) {
-    //           // eslint-disable-next-line no-underscore-dangle
-    //           setInstantSearchUiState({ menu: { categories: item.__autocomplete_qsCategory } });
-    //         }
-    //       },
-    //       templates: {
-    //         ...source.templates,
-    //         header({ createElement }) {
-    //           return createElement(
-    //             'div',
-    //             {},
-    //             createElement(
-    //               'span',
-    //               {
-    //                 className: 'aa-SourceHeaderTitle',
-    //               },
-    //               'Suggestions',
-    //             ),
-    //             createElement('div', {
-    //               className: 'aa-SourceHeaderLine',
-    //             }),
-    //           );
-    //         },
-    //       },
-    //     };
-    //   },
-    // });
+    if (querySuggestionsIndexName) {
+      const querySuggestionsPlugin = createQuerySuggestionsPlugin({
+        searchClient,
+        indexName: querySuggestionsIndexName,
+        categoryAttribute: ['facets', 'exact_matches', 'categories'],
+        getSearchParams() {
+          return {
+            hitsPerPage: 3,
+          };
+        },
+        transformSource({ source }) {
+          return {
+            ...source,
+            // eslint-disable-next-line no-unused-vars, no-underscore-dangle
+            onSelect({ item, setQuery: _setQuery }) {
+              // eslint-disable-next-line no-underscore-dangle
+              if (item.__autocomplete_qsCategory) {
+                // eslint-disable-next-line no-underscore-dangle
+                setInstantSearchUiState({ menu: { categories: item.__autocomplete_qsCategory } });
+              }
+            },
+            templates: {
+              ...source.templates,
+              header({ createElement }) {
+                return createElement(
+                  'div',
+                  {},
+                  createElement(
+                    'span',
+                    {
+                      className: 'aa-SourceHeaderTitle',
+                    },
+                    'Suggestions',
+                  ),
+                  createElement('div', {
+                    className: 'aa-SourceHeaderLine',
+                  }),
+                );
+              },
+            },
+          };
+        },
+      });
+      plugins.push(querySuggestionsPlugin);
+    }
 
     setTimeout(async () => {
       // Code to be executed after 3 seconds
@@ -167,7 +178,7 @@ export default async function decorate(block) {
         shouldPanelOpen: false,
         placeholder,
         openOnFocus: true,
-        plugins: [recentSearchesPlugin],
+        plugins,
         initialState: {
           query: getParamFromUrl('search') || '',
         },
