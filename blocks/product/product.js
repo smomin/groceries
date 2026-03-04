@@ -9,8 +9,37 @@ import {
   createImageElement,
   formatPrice,
   handleAddToCart,
+  setMetaTag,
   transformProductImagePath,
 } from '../../scripts/blocks-utils.js';
+
+function getCategoryKeywords(categories) {
+  if (!categories) return '';
+
+  const keywordSet = new Set();
+  const addKeyword = (value) => {
+    if (!value) return;
+    if (Array.isArray(value)) {
+      value.forEach(addKeyword);
+      return;
+    }
+    if (typeof value === 'string') {
+      value
+        .split('>')
+        .map((part) => part.trim())
+        .filter(Boolean)
+        .forEach((part) => keywordSet.add(part));
+    }
+  };
+
+  if (typeof categories === 'string' || Array.isArray(categories)) {
+    addKeyword(categories);
+  } else if (typeof categories === 'object') {
+    Object.values(categories).forEach(addKeyword);
+  }
+
+  return [...keywordSet].join(', ');
+}
 
 export default function decorate(block) {
   const { appId, apiKey } = getCredentials(block);
@@ -116,6 +145,11 @@ export default function decorate(block) {
         const descriptionElement = productContainer.querySelector('.product-description');
         const description = product.description || product.name || 'No description available.';
         descriptionElement.textContent = description;
+
+        // Set page metadata for product detail pages
+        document.title = product.name || 'Product';
+        setMetaTag('description', description);
+        setMetaTag('keywords', getCategoryKeywords(product.categories));
 
         // Set product price
         const priceElement = productContainer.querySelector('.product-price');
