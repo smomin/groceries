@@ -19,7 +19,7 @@ import { moveInstrumentation } from './scripts.js';
 export function getTextContent(htmlElement) {
   if (!htmlElement) return '';
   const textContent = htmlElement.textContent?.trim() || '';
-  htmlElement.textContent = '';
+  htmlElement.innerHTML = '';
   return textContent;
 }
 

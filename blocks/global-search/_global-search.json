@@ -64,6 +64,13 @@
               "value": "recipe"
             }
           ]
+        },
+        {
+          "component": "text",
+          "valueType": "string",
+          "name": "querySuggestionsIndexName",
+          "label": "Query Suggestions Index Name",
+          "value": ""
         }
       ]
     }

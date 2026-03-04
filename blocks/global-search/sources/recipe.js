@@ -1,5 +1,5 @@
-export function source(itemTemplate, noResultsTemplate) {
-  return ({ searchClient, indexName, searchQuery }) => {
+export function source(searchClient, getAlgoliaResults, indexName, itemTemplate, noResultsTemplate) {
+  return ({ searchQuery }) => {
     return {
       sourceId: 'recipes',
       getItems() {

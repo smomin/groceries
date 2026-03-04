@@ -21,11 +21,16 @@ function getSearchIndex(htmlElement) {
   const index = htmlElement.children[3];
   const indexName = getTextContent(index.children[0]);
   const hitTemplate = getTextContent(index.children[1]);
-  const noResultsTemplate = getHTMLContent(index.children[2]);
+  const noResultsTemplate = getTextContent(index.children[2]);
   return { indexName, hitTemplate, noResultsTemplate };
 }
 
 export default function decorate(block) {
+  const { appId, apiKey } = getCredentials(block);
+  getSearchBox(block);
+  const { indexName, hitTemplate, noResultsTemplate } = getSearchIndex(block);
+
+  // block.innerHTML = '';
   const searchContainer = document.createElement('div');
   searchContainer.innerHTML = `
     <div class="products-grid">
@@ -37,24 +42,15 @@ export default function decorate(block) {
   `;
   block.appendChild(searchContainer);
 
-  const { appId, apiKey } = getCredentials(block);
-  getSearchBox(block);
-  const { indexName, hitTemplate, noResultsTemplate } = getSearchIndex(block);
-
   setTimeout(async () => {
     const { connectSearchBox } = instantsearch.connectors;
     const { hits, pagination, configure } = instantsearch.widgets;
 
     const searchClient = createAlgoliaClient(appId, apiKey);
-
     const search = instantsearch({
       searchClient,
       indexName,
-      stateMapping: instantsearch.stateMappings.singleIndex(indexName),
-      onStateChange({ state }) {
-        // Custom code reacting to state changes
-        console.log("The InstantSearch state has changed:", state);
-      },
+      stateMapping: instantsearch.stateMappings.singleIndex(indexName)
     });
 
     // Mount a virtual search box to manipulate InstantSearch's `query` UI
@@ -62,11 +58,7 @@ export default function decorate(block) {
     const virtualSearchBox = connectSearchBox(() => {});
 
     const { itemTemplateFunction } = await import(`./templates/hit/${hitTemplate}.js`);
-    const itemTemplate = (hit, { html, components, sendEvent }) => itemTemplateFunction(hit, {
-      html,
-      components,
-      sendEvent,
-    });
+    const { noResultsTemplateFunction } = await import(`./templates/noresults/${noResultsTemplate}.js`);
 
     search.addWidgets([
       virtualSearchBox({}),
@@ -83,7 +75,8 @@ export default function decorate(block) {
           root: 'container',
         },
         templates: {
-          item: itemTemplate,
+          item: itemTemplateFunction,
+          noResults: noResultsTemplateFunction,
         },
       }),
       pagination({

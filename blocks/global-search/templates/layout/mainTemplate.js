@@ -1,4 +1,4 @@
-export function render({ elements, render, html }, root) {
+export function layoutTemplateFunction({ elements, render, html }, root) {
   const {
     recentSearchesPlugin: recentPlugin,
     querySuggestionsPlugin: suggestionsPlugin,

@@ -1,6 +1,6 @@
 import { transformProductImagePath, formatPrice } from '../../../../scripts/blocks-utils.js';
 
-export function itemTemplateFunction(item, { components, html }) {
+export function itemTemplateFunction({ item, html, components, state }) {
   const productImage = transformProductImagePath(item.image);
   return html`<a
       data-insights-query-id="${item.__autocomplete_queryID}" 

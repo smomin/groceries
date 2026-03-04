@@ -1,6 +1,6 @@
 import { transformRecipeImagePath } from '../../../../scripts/blocks-utils.js';
 
-export function itemTemplateFunction(hit, { html, components }) {    
+export function itemTemplateFunction({ item, html, components, state }) {    
   const recipeImage = item.image ? transformRecipeImagePath(item.image) : '';
     return html`<a
         data-insights-query-id="${item.__autocomplete_queryID}" 
