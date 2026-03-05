@@ -33,7 +33,7 @@ export default function decorate(block) {
   // block.innerHTML = '';
   const searchContainer = document.createElement('div');
   searchContainer.innerHTML = `
-    <div class="products-grid">
+    <div class="products-grid" data-indexname="${indexName}">
       <div>
         <div id="hits"></div>
         <div id="pagination"></div>
@@ -44,12 +44,11 @@ export default function decorate(block) {
 
   setTimeout(async () => {
     const { connectSearchBox } = instantsearch.connectors;
-    const { hits, pagination, configure } = instantsearch.widgets;
+    const { hits, pagination, configure, index } = instantsearch.widgets;
 
     const searchClient = createAlgoliaClient(appId, apiKey);
     const search = instantsearch({
       searchClient,
-      indexName,
       stateMapping: instantsearch.stateMappings.singleIndex(indexName)
     });
 
@@ -68,17 +67,19 @@ export default function decorate(block) {
         enablePersonalization: true,
         clickAnalytics: true,
       }),
-      hits({
-        container: '#hits',
-        cssClasses: {
-          list: 'products-grid',
-          root: 'container',
-        },
-        templates: {
-          item: itemTemplateFunction,
-          noResults: noResultsTemplateFunction,
-        },
-      }),
+      index({ indexName }).addWidgets([
+        hits({
+          container: '#hits',
+          cssClasses: {
+            list: 'products-grid',
+            root: 'container',
+          },
+          templates: {
+            item: itemTemplateFunction,
+            noResults: noResultsTemplateFunction,
+          },
+        }),
+      ]),
       pagination({
         container: '#pagination',
         showFirst: false,

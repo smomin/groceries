@@ -2,7 +2,7 @@ import { transformRecipeImagePath } from '../../../../scripts/blocks-utils.js';
 
 export function itemTemplateFunction({ item, html, components, state }) {    
   const recipeImage = item.image ? transformRecipeImagePath(item.image) : '';
-    return html`<a
+    return html`<div data-indexname="${item.__autocomplete_indexName}"><a
         data-insights-query-id="${item.__autocomplete_queryID}" 
         data-insights-object-id="${item.objectID}" 
         href="/recipes?rid=${item.objectID}"
@@ -20,5 +20,5 @@ export function itemTemplateFunction({ item, html, components, state }) {
             attribute: 'name',
           })}
         </h6>
-      </a>`;
+      </a></div>`;
 }

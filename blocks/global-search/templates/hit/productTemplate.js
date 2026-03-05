@@ -2,7 +2,7 @@ import { transformProductImagePath, formatPrice } from '../../../../scripts/bloc
 
 export function itemTemplateFunction({ item, html, components, state }) {
   const productImage = transformProductImagePath(item.image);
-  return html`<a
+  return html`<div data-indexname="${item.__autocomplete_indexName}"><a
       data-insights-query-id="${item.__autocomplete_queryID}" 
       data-insights-object-id="${item.objectID}" 
       href="/products?pid=${item.objectID}"
@@ -20,5 +20,5 @@ export function itemTemplateFunction({ item, html, components, state }) {
           attribute: 'name',
         })}
       </h6>
-    </a>`;
+    </a></div>`;
 }
