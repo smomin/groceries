@@ -66,7 +66,7 @@ export function updateCartBadge() {
     }
 
     let cartBadge = cartIconItem.querySelector('.header__badge');
-    
+
     // Create badge if it doesn't exist
     if (!cartBadge) {
       cartBadge = document.createElement('span');

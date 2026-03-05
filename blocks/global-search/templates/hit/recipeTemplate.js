@@ -1,10 +1,16 @@
 import { transformRecipeImagePath } from '../../../../scripts/blocks-utils.js';
 
-export function itemTemplateFunction({ item, html, components, state }) {    
+export default function itemTemplateFunction({
+  item, html, components,
+}) {
   const recipeImage = item.image ? transformRecipeImagePath(item.image) : '';
-    return html`<div data-indexname="${item.__autocomplete_indexName}"><a
-        data-insights-query-id="${item.__autocomplete_queryID}" 
-        data-insights-object-id="${item.objectID}" 
+  // eslint-disable-next-line no-underscore-dangle
+  const autocompleteIndexName = item.__autocomplete_indexName;
+  // eslint-disable-next-line no-underscore-dangle
+  const autocompleteQueryId = item.__autocomplete_queryID;
+  return html`<div data-indexname="${autocompleteIndexName}"><a
+        data-insights-query-id="${autocompleteQueryId}"
+        data-insights-object-id="${item.objectID}"
         href="/recipes?rid=${item.objectID}"
         class="u-flex u-align algolia-analytics"
         style="text-decoration: none; color: inherit;"
@@ -16,9 +22,9 @@ export function itemTemplateFunction({ item, html, components, state }) {
         />` : ''}
         <h6>
           ${components.Highlight({
-            hit: item,
-            attribute: 'name',
-          })}
+    hit: item,
+    attribute: 'name',
+  })}
         </h6>
       </a></div>`;
 }

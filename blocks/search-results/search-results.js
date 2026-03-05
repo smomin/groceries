@@ -2,14 +2,9 @@ import '../../scripts/lib-algoliasearch.js';
 import '../../scripts/lib-instantsearch.js';
 import {
   getTextContent,
-  getHTMLContent,
   getCredentials,
-  getIndexName,
   createAlgoliaClient,
-  formatPrice,
   handleAddToCart,
-  transformRecipeImagePath,
-  transformProductImagePath,
 } from '../../scripts/blocks-utils.js';
 
 function getSearchBox(htmlElement) {
@@ -44,20 +39,22 @@ export default function decorate(block) {
 
   setTimeout(async () => {
     const { connectSearchBox } = instantsearch.connectors;
-    const { hits, pagination, configure, index } = instantsearch.widgets;
+    const {
+      hits, pagination, configure, index,
+    } = instantsearch.widgets;
 
     const searchClient = createAlgoliaClient(appId, apiKey);
     const search = instantsearch({
       searchClient,
-      stateMapping: instantsearch.stateMappings.singleIndex(indexName)
+      stateMapping: instantsearch.stateMappings.singleIndex(indexName),
     });
 
     // Mount a virtual search box to manipulate InstantSearch's `query` UI
     // state parameter.
     const virtualSearchBox = connectSearchBox(() => {});
 
-    const { itemTemplateFunction } = await import(`./templates/hit/${hitTemplate}.js`);
-    const { noResultsTemplateFunction } = await import(`./templates/noresults/${noResultsTemplate}.js`);
+    const { default: itemTemplateFunction } = await import(`./templates/hit/${hitTemplate}.js`);
+    const { default: noResultsTemplateFunction } = await import(`./templates/noresults/${noResultsTemplate}.js`);
 
     search.addWidgets([
       virtualSearchBox({}),

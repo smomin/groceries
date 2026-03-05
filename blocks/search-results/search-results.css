@@ -190,7 +190,7 @@
 }
 
 .view-product-btn {
-	background-color: #ffffff;
+	background-color: #fff;
 	color: #00b207;
 	border: 1px solid #00b207;
 	padding: 12px 24px;
@@ -207,7 +207,7 @@
 
 .view-product-btn:hover {
 	background-color: #00b207;
-	color: #ffffff;
+	color: #fff;
 }
 
 .ais-Pagination {
@@ -350,7 +350,7 @@
 
 .recipe-view-btn {
 	background-color: #00b207;
-	color: #ffffff;
+	color: #fff;
 	border: none;
 	padding: 12px 24px;
 	border-radius: 24px;
@@ -367,5 +367,5 @@
 
 .recipe-view-btn:hover {
 	background-color: #009606;
-	color: #ffffff;
+	color: #fff;
 }

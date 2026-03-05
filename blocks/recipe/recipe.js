@@ -1,5 +1,14 @@
 import '../../scripts/lib-algoliasearch.js';
-import { getTextContent, getCredentials, getIndexName, getParamFromUrl, createAlgoliaClient, fetchObjectById, createImageElement, setMetaTag, transformRecipeImagePath } from '../../scripts/blocks-utils.js';
+import {
+  getCredentials,
+  getIndexName,
+  getParamFromUrl,
+  createAlgoliaClient,
+  fetchObjectById,
+  createImageElement,
+  setMetaTag,
+  transformRecipeImagePath,
+} from '../../scripts/blocks-utils.js';
 
 function extractIngredientsFromSteps(steps) {
   if (!Array.isArray(steps)) {
@@ -13,12 +22,19 @@ function extractIngredientsFromSteps(steps) {
       const key = step.ingredient.toLowerCase().trim();
       const quantity = step.quantity || '';
       const unit = step.unit || '';
-      
+      const parsedQuantity = parseFloat(quantity);
+
       if (ingredientsMap.has(key)) {
         const existing = ingredientsMap.get(key);
+        const parsedExistingQuantity = parseFloat(existing.quantity);
         // Only try to sum quantities if both have numeric values
-        if (quantity && !isNaN(parseFloat(quantity)) && existing.quantity && !isNaN(parseFloat(existing.quantity))) {
-          existing.quantity = (parseFloat(existing.quantity) + parseFloat(quantity)).toString();
+        if (
+          quantity
+          && !Number.isNaN(parsedQuantity)
+          && existing.quantity
+          && !Number.isNaN(parsedExistingQuantity)
+        ) {
+          existing.quantity = (parsedExistingQuantity + parsedQuantity).toString();
         } else if (quantity && !existing.quantity) {
           existing.quantity = quantity;
           existing.unit = unit;
@@ -26,8 +42,8 @@ function extractIngredientsFromSteps(steps) {
       } else {
         ingredientsMap.set(key, {
           ingredient: step.ingredient,
-          quantity: quantity,
-          unit: unit,
+          quantity,
+          unit,
         });
       }
     }
@@ -49,7 +65,7 @@ function formatIngredients(ingredients, steps) {
 
   // Fallback to string parsing
   if (typeof ingredients === 'string') {
-    return ingredients.split(',').map(item => item.trim()).filter(item => item);
+    return ingredients.split(',').map((item) => item.trim()).filter((item) => item);
   }
 
   return [];
@@ -74,12 +90,12 @@ function formatInstructions(steps) {
         return step;
       }
       return '';
-    }).filter(item => item);
+    }).filter((item) => item);
   }
 
   // Fallback to string parsing
   if (typeof steps === 'string') {
-    return steps.split(/\n+/).map(item => item.trim()).filter(item => item);
+    return steps.split(/\n+/).map((item) => item.trim()).filter((item) => item);
   }
 
   return [];
@@ -144,13 +160,21 @@ export default function decorate(block) {
 
   setTimeout(() => {
     // eslint-disable-next-line no-console
-    console.log('[Recipe] Starting recipe fetch:', { recipeId, indexName, appId: appId ? 'present' : 'missing', apiKey: apiKey ? 'present' : 'missing' });
+    console.log('[Recipe] Starting recipe fetch:', {
+      recipeId,
+      indexName,
+      appId: appId ? 'present' : 'missing',
+      apiKey: apiKey ? 'present' : 'missing',
+    });
     const searchClient = createAlgoliaClient(appId, apiKey);
 
     fetchObjectById(searchClient, indexName, recipeId)
       .then((recipe) => {
         // eslint-disable-next-line no-console
-        console.log('[Recipe] Recipe fetched successfully:', { objectID: recipe?.objectID, name: recipe?.name || recipe?.title });
+        console.log('[Recipe] Recipe fetched successfully:', {
+          objectID: recipe?.objectID,
+          name: recipe?.name || recipe?.title,
+        });
         const loadingDiv = recipeContainer.querySelector('.recipe-loading');
         const errorDiv = recipeContainer.querySelector('.recipe-error');
         const contentDiv = recipeContainer.querySelector('.recipe-content');
@@ -237,7 +261,10 @@ export default function decorate(block) {
 
         // Set ingredients
         const ingredientsList = recipeContainer.querySelector('.recipe-ingredients-list');
-        const ingredients = formatIngredients(recipe.ingredients || recipe.ingredient || [], recipe.steps);
+        const ingredients = formatIngredients(
+          recipe.ingredients || recipe.ingredient || [],
+          recipe.steps,
+        );
         if (ingredients.length > 0) {
           ingredients.forEach((ingredient) => {
             const li = document.createElement('li');
@@ -261,7 +288,9 @@ export default function decorate(block) {
 
         // Set instructions
         const instructionsList = recipeContainer.querySelector('.recipe-instructions-list');
-        const instructions = formatInstructions(recipe.steps || recipe.instructions || recipe.directions || []);
+        const instructions = formatInstructions(
+          recipe.steps || recipe.instructions || recipe.directions || [],
+        );
         if (instructions.length > 0) {
           instructions.forEach((instruction) => {
             const li = document.createElement('li');
@@ -275,7 +304,14 @@ export default function decorate(block) {
       })
       .catch((error) => {
         // eslint-disable-next-line no-console
-        console.error('[Recipe] Error fetching recipe:', { error, errorMessage: error?.message, errorStatus: error?.status, errorName: error?.name, errorStack: error?.stack, recipeId });
+        console.error('[Recipe] Error fetching recipe:', {
+          error,
+          errorMessage: error?.message,
+          errorStatus: error?.status,
+          errorName: error?.name,
+          errorStack: error?.stack,
+          recipeId,
+        });
         const loadingDiv = recipeContainer.querySelector('.recipe-loading');
         const errorDiv = recipeContainer.querySelector('.recipe-error');
         loadingDiv.style.display = 'none';
@@ -294,4 +330,3 @@ export default function decorate(block) {
       });
   }, 500);
 }
-

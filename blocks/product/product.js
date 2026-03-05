@@ -1,6 +1,5 @@
 import '../../scripts/lib-algoliasearch.js';
 import {
-  getTextContent,
   getCredentials,
   getIndexName,
   getParamFromUrl,
@@ -206,4 +205,3 @@ export default function decorate(block) {
       });
   }, 500);
 }
-

@@ -1,6 +1,7 @@
 /**
  * Shared utilities for blocks
- * Consolidates common functionality used across search, product, recipe, carousel, and recommend blocks
+ * Consolidates common functionality used across search, product, recipe,
+ * carousel, and recommend blocks
  */
 
 import { createOptimizedPicture } from './aem.js';
@@ -119,7 +120,9 @@ export async function fetchObjectById(searchClient, indexName, objectId) {
   const index = searchClient.initIndex(indexName);
 
   // eslint-disable-next-line no-console
-  console.log('[fetchObjectById] Fetching object:', { indexName, objectId, objectIdType: typeof objectId, objectIdLength: objectId?.length });
+  console.log('[fetchObjectById] Fetching object:', {
+    indexName, objectId, objectIdType: typeof objectId, objectIdLength: objectId?.length,
+  });
 
   // Try getObject first (primary method)
   if (typeof index.getObject === 'function') {
@@ -132,7 +135,9 @@ export async function fetchObjectById(searchClient, indexName, objectId) {
       return result;
     } catch (error) {
       // eslint-disable-next-line no-console
-      console.error('[fetchObjectById] getObject failed:', { error, errorMessage: error?.message, errorStatus: error?.status, errorName: error?.name });
+      console.error('[fetchObjectById] getObject failed:', {
+        error, errorMessage: error?.message, errorStatus: error?.status, errorName: error?.name,
+      });
       // Fallback to filter search if getObject fails
       // Quote the objectID for filter syntax when it contains special characters
       try {
@@ -212,17 +217,17 @@ export function transformRecipeImagePath(imageUrl) {
   if (!imageUrl || typeof imageUrl !== 'string') {
     return imageUrl;
   }
-  
+
   // If already a full URL, return as-is
   if (imageUrl.startsWith('http://') || imageUrl.startsWith('https://')) {
     return imageUrl;
   }
-  
+
   // If it's a relative path starting with /content/dam/sw-groceries/, prepend the host
   if (imageUrl.startsWith('/content/dam/sw-groceries/')) {
     return `https://publish-p28413-e1512521.adobeaemcloud.com${imageUrl}`;
   }
-  
+
   return imageUrl;
 }
 
@@ -597,4 +602,3 @@ export function formatPrice(price, currency = 'USD', locale = 'en-US') {
     currency,
   }).format(price || 0);
 }
-

@@ -184,7 +184,7 @@
 
 .recommend-card__footer .recipe-view-btn {
   background-color: #00b207;
-  color: #ffffff;
+  color: #fff;
   border: none;
   padding: 0.5rem 1rem;
   border-radius: 24px;
@@ -201,7 +201,7 @@
 
 .recommend-card__footer .recipe-view-btn:hover {
   background-color: #009606;
-  color: #ffffff;
+  color: #fff;
 }
 
 /* Carousel Controls */

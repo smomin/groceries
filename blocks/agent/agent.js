@@ -29,7 +29,9 @@ export default function decorate(block) {
       item: (hit, { html }) => {
         if (hit && hit.objectID) {
           const isRecipe = !hit.price || hit.price === undefined || hit.price === null;
-          const imageUrl = isRecipe ? transformRecipeImagePath(hit.image) : transformProductImagePath(hit.image);
+          const imageUrl = isRecipe
+            ? transformRecipeImagePath(hit.image)
+            : transformProductImagePath(hit.image);
 
           return html`
               <article class="ais-Carousel-hit">

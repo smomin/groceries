@@ -41,13 +41,15 @@ function createProductCard(product) {
 
   const imageWrapper = document.createElement('div');
   imageWrapper.className = 'recommend-card__image-wrapper';
-  
+
   // Check if this is a recipe (has steps field or no price field)
   const isRecipe = product.steps || product.price === undefined || product.price === null;
-  
+
   if (product.image) {
     // Transform image path for recipes
-    const imageUrl = isRecipe ? transformRecipeImagePath(product.image) : transformProductImagePath(product.image);
+    const imageUrl = isRecipe
+      ? transformRecipeImagePath(product.image)
+      : transformProductImagePath(product.image);
     const imgElement = createImageElement(imageUrl, product.name || 'Product', false, [{ width: '300' }]);
     imageWrapper.appendChild(imgElement);
   }
@@ -153,7 +155,15 @@ function initCarousel() {
 }
 
 // Fetch recommendations from Algolia Recommend API
-async function fetchRecommendations(searchClient, appId, apiKey, indexName, model, objectId, fallbackIndexName) {
+async function fetchRecommendations(
+  searchClient,
+  appId,
+  apiKey,
+  indexName,
+  model,
+  objectId,
+  fallbackIndexName,
+) {
   try {
     const requests = [];
 
@@ -195,7 +205,7 @@ async function fetchRecommendations(searchClient, appId, apiKey, indexName, mode
     if (requests.length > 0) {
       // Use Algolia Recommend REST API
       const response = await fetch(
-        `https://recommend.us.algolia.com/1/indexes/*/recommendations`,
+        'https://recommend.us.algolia.com/1/indexes/*/recommendations',
         {
           method: 'POST',
           headers: {
@@ -204,7 +214,7 @@ async function fetchRecommendations(searchClient, appId, apiKey, indexName, mode
             'X-Algolia-API-Key': apiKey,
           },
           body: JSON.stringify({ requests }),
-        }
+        },
       );
 
       if (!response.ok) {
@@ -292,7 +302,7 @@ export default async function decorate(block) {
         indexName,
         model,
         objectId,
-        indexName
+        indexName,
       );
 
       if (!recommendations || recommendations.length === 0) {
@@ -308,8 +318,6 @@ export default async function decorate(block) {
       const errorDiv = recommendContainer.querySelector('.recommend-error');
       const contentDiv = recommendContainer.querySelector('.recommend-content');
       const track = recommendContainer.querySelector('.recommend-carousel-track');
-      const arrowsContainer = recommendContainer.querySelector('.recommend-carousel-arrows');
-
       loadingDiv.style.display = 'none';
       errorDiv.style.display = 'none';
       contentDiv.style.display = 'block';
@@ -352,4 +360,3 @@ export default async function decorate(block) {
     }
   }, 500);
 }
-

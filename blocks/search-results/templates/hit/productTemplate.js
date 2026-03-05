@@ -1,18 +1,22 @@
 import { transformProductImagePath, formatPrice } from '../../../../scripts/blocks-utils.js';
 
-export function itemTemplateFunction(hit, { html, components }) {
+export default function itemTemplateFunction(hit, { html, components }) {
   const productImage = transformProductImagePath(hit.image);
+  // eslint-disable-next-line no-underscore-dangle
+  const queryId = hit.__queryID;
+  // eslint-disable-next-line no-underscore-dangle
+  const position = hit.__position;
   return html`
-    <div class="product-card algolia-analytics" data-insights-query-id="${hit.__queryID}" data-insights-object-id="${hit.objectID}" data-insights-position="${hit.__position}">
+    <div class="product-card algolia-analytics" data-insights-query-id="${queryId}" data-insights-object-id="${hit.objectID}" data-insights-position="${position}">
       <img class="product-card__image" src="${productImage}" alt="${hit.name}" />
       <div class="product-card__category">${hit.categories?.lvl0 || ''}</div>
       <div class="product-card__name">${components.Highlight({ attribute: 'name', hit })}</div>
       ${hit.brand
-        ? html`<div class="vendor">
+    ? html`<div class="vendor">
             <span class="vendor-label">By</span> <span style="color: #00b207;">${hit.brand}</span>
           </div>`
-        : ''
-      }
+    : ''
+}
         <div class="product-card__footer">
         <div class="price-container">
           <span class="current-price">${formatPrice(hit.price)}</span>

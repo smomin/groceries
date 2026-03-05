@@ -6,7 +6,7 @@ import {
   getTextContent,
   getCredentials,
   createAlgoliaClient,
-  getParamFromUrl
+  getParamFromUrl,
 } from '../../scripts/blocks-utils.js';
 
 export const SearchEvents = {
@@ -58,17 +58,23 @@ export default async function decorate(block) {
     const { layoutTemplate } = getLayoutTemplate(block);
 
     const searchClient = createAlgoliaClient(appId, apiKey);
-    const { layoutTemplateFunction } = await import(`./templates/layout/${layoutTemplate}.js`);
+    const { default: layoutTemplateFunction } = await import(`./templates/layout/${layoutTemplate}.js`);
     const { sourceNames } = getSourceNames(block);
     const { querySuggestionsIndexName } = getQuerySuggestionsIndexName(block);
 
     const sources = await Promise.all(sourceNames.split(',').map(async (sourceName, index) => {
-      const { source } = await import(`./sources/${sourceName}.js`);
+      const { default: source } = await import(`./sources/${sourceName}.js`);
       const { indexName, hitTemplate, noResultsTemplate } = getSearchIndex(block, index + 6);
 
-      const { itemTemplateFunction } = await import(`./templates/hit/${hitTemplate}.js`);
-      const { noResultsTemplateFunction } = await import(`./templates/noresults/${noResultsTemplate}.js`);
-      const sourceFunction = source(searchClient, getAlgoliaResults, indexName, itemTemplateFunction, noResultsTemplateFunction);
+      const { default: itemTemplateFunction } = await import(`./templates/hit/${hitTemplate}.js`);
+      const { default: noResultsTemplateFunction } = await import(`./templates/noresults/${noResultsTemplate}.js`);
+      const sourceFunction = source(
+        searchClient,
+        getAlgoliaResults,
+        indexName,
+        itemTemplateFunction,
+        noResultsTemplateFunction,
+      );
       return { source: sourceFunction, indexName };
     })) || [];
 
@@ -82,7 +88,7 @@ export default async function decorate(block) {
       // Only update UI state if InstantSearch instance exists (e.g., on search results page)
       if (window.searchInstance && typeof window.searchInstance.setUiState === 'function') {
         window.searchInstance.setUiState((uiState) => {
-          sources.forEach(source => {
+          sources.forEach((source) => {
             uiState[source.indexName] = {
               ...uiState[source.indexName],
               page: 1,
@@ -195,7 +201,7 @@ export default async function decorate(block) {
         },
         getSources({ query: searchQuery }) {
           return [
-            ...sources.map(source => source.source({ searchQuery })),
+            ...sources.map((source) => source.source({ searchQuery })),
           ];
         },
         navigator: {
@@ -213,7 +219,7 @@ export default async function decorate(block) {
             window.open(itemUrl, '_blank', 'noopener');
           },
         },
-        render: layoutTemplateFunction
+        render: layoutTemplateFunction,
       });
 
       // This keeps Autocomplete aware of state changes coming from routing

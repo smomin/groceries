@@ -25,6 +25,14 @@ module.exports = {
     'scripts/lib-*.js',
     'scripts/dompurify.min.js',
   ],
+  overrides: [
+    {
+      files: ['component-models.json'],
+      rules: {
+        'xwalk/max-cells': 'off',
+      },
+    },
+  ],
   rules: {
     'import/extensions': ['error', { js: 'always' }], // require js file extensions in imports
     'linebreak-style': ['error', 'unix'], // enforce unix linebreaks
