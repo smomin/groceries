@@ -8,8 +8,13 @@ import {
 } from '../../scripts/blocks-utils.js';
 
 function getSearchBox(htmlElement) {
+  const { searchBox } = instantsearch.widgets;
+  const { connectSearchBox } = instantsearch.connectors;
   const placeholder = getTextContent(htmlElement.children[2]);
-  return { placeholder };
+  return (placeholder) ? searchBox({ 
+    container: '#searchbox', 
+    placeholder 
+  }) : connectSearchBox(() => {})({});
 }
 
 function getSearchIndex(htmlElement) {
@@ -22,7 +27,6 @@ function getSearchIndex(htmlElement) {
 
 export default function decorate(block) {
   const { appId, apiKey } = getCredentials(block);
-  getSearchBox(block);
   const { indexName, hitTemplate, noResultsTemplate } = getSearchIndex(block);
 
   // block.innerHTML = '';
@@ -30,6 +34,7 @@ export default function decorate(block) {
   searchContainer.innerHTML = `
     <div class="products-grid" data-indexname="${indexName}">
       <div>
+        <div id="searchbox"></div>
         <div id="hits"></div>
         <div id="pagination"></div>
       </div>
@@ -38,7 +43,6 @@ export default function decorate(block) {
   block.appendChild(searchContainer);
 
   setTimeout(async () => {
-    const { connectSearchBox } = instantsearch.connectors;
     const {
       hits, pagination, configure, index,
     } = instantsearch.widgets;
@@ -46,37 +50,33 @@ export default function decorate(block) {
     const searchClient = createAlgoliaClient(appId, apiKey);
     const search = instantsearch({
       searchClient,
+      indexName,
       stateMapping: instantsearch.stateMappings.singleIndex(indexName),
     });
 
-    // Mount a virtual search box to manipulate InstantSearch's `query` UI
-    // state parameter.
-    const virtualSearchBox = connectSearchBox(() => {});
-
+    const searchBox = getSearchBox(block);
     const { default: itemTemplateFunction } = await import(`./templates/hit/${hitTemplate}.js`);
     const { default: noResultsTemplateFunction } = await import(`./templates/noresults/${noResultsTemplate}.js`);
 
     search.addWidgets([
-      virtualSearchBox({}),
+      searchBox,
       configure({
         hitsPerPage: 12,
         analytics: true,
         enablePersonalization: true,
         clickAnalytics: true,
       }),
-      index({ indexName }).addWidgets([
-        hits({
-          container: '#hits',
-          cssClasses: {
-            list: 'products-grid',
-            root: 'container',
-          },
-          templates: {
-            item: itemTemplateFunction,
-            noResults: noResultsTemplateFunction,
-          },
-        }),
-      ]),
+      hits({
+        container: '#hits',
+        cssClasses: {
+          list: 'products-grid',
+          root: 'container',
+        },
+        templates: {
+          item: itemTemplateFunction,
+          noResults: noResultsTemplateFunction,
+        },
+      }),
       pagination({
         container: '#pagination',
         showFirst: false,
