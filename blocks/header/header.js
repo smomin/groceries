@@ -1,6 +1,8 @@
 import { getMetadata } from '../../scripts/aem.js';
 import { loadFragment } from '../fragment/fragment.js';
 import { moveInstrumentation } from '../../scripts/scripts.js';
+import '../../scripts/lib-algoliasearch.js';
+import { createAlgoliaClient } from '../../scripts/blocks-utils.js';
 import {
   initCartBadge, getCartItems, clearCart, getCartTotalPrice,
 } from '../../scripts/cart.js';
@@ -19,6 +21,215 @@ function truncateText(text, maxLength = 50) {
 
 // Store position adjustment cleanup function
 let positionCleanup = null;
+let categoriesOverlayCleanup = null;
+
+const ALGOLIA_CONFIG = {
+  appId: '0EXRPAXB56',
+  apiKey: '4350d61521979144d2012720315f5fc6',
+  indexName: 'SW_Groceries_Products',
+  facetName: 'categories.lvl1',
+};
+
+const categoriesState = {
+  loaded: false,
+  loadingPromise: null,
+  categories: [],
+  error: null,
+};
+
+function normalizeCategoryLabel(categoryPath = '') {
+  const label = categoryPath.split(' > ').pop()?.trim() || categoryPath;
+  return label;
+}
+
+function sortAndNormalizeCategories(categories = []) {
+  return categories
+    .filter((category) => category.path)
+    .map((category) => ({
+      label: normalizeCategoryLabel(category.path),
+      path: category.path,
+      count: category.count || 0,
+    }))
+    .sort((a, b) => a.label.localeCompare(b.label));
+}
+
+async function fetchProductCategories() {
+  if (categoriesState.loaded) {
+    return categoriesState.categories;
+  }
+
+  if (categoriesState.loadingPromise) {
+    return categoriesState.loadingPromise;
+  }
+
+  categoriesState.loadingPromise = (async () => {
+    const searchClient = createAlgoliaClient(ALGOLIA_CONFIG.appId, ALGOLIA_CONFIG.apiKey);
+    const index = searchClient.initIndex(ALGOLIA_CONFIG.indexName);
+
+    let categories = [];
+
+    try {
+      const { facetHits = [] } = await index.searchForFacetValues(ALGOLIA_CONFIG.facetName, '', {
+        maxFacetHits: 100,
+      });
+
+      categories = sortAndNormalizeCategories(
+        facetHits.map((hit) => ({
+          path: hit.value,
+          count: hit.count,
+        })),
+      );
+    } catch (error) {
+      const isSearchableFacetError = error?.message?.includes('searchable(');
+      if (!isSearchableFacetError) {
+        throw error;
+      }
+
+      // Fallback when facet isn't configured as searchable(...)
+      const facetResult = await index.search('', {
+        hitsPerPage: 0,
+        facets: [ALGOLIA_CONFIG.facetName],
+        maxValuesPerFacet: 200,
+      });
+
+      const rawFacetValues = facetResult?.facets?.[ALGOLIA_CONFIG.facetName] || {};
+      categories = sortAndNormalizeCategories(
+        Object.entries(rawFacetValues).map(([path, count]) => ({ path, count })),
+      );
+    }
+
+    categoriesState.categories = categories;
+    categoriesState.loaded = true;
+    categoriesState.error = null;
+    categoriesState.loadingPromise = null;
+    return categories;
+  })().catch((error) => {
+    categoriesState.error = error;
+    categoriesState.loadingPromise = null;
+    throw error;
+  });
+
+  return categoriesState.loadingPromise;
+}
+
+function closeCategoriesOverlay() {
+  const overlay = document.querySelector('.categories-overlay');
+  if (!overlay) return;
+
+  overlay.classList.remove('categories-overlay--open');
+  document.body.classList.remove('categories-overlay-open');
+
+  if (categoriesOverlayCleanup) {
+    categoriesOverlayCleanup();
+    categoriesOverlayCleanup = null;
+  }
+
+  setTimeout(() => {
+    overlay.remove();
+  }, 220);
+}
+
+function renderCategoriesMarkup(categories = []) {
+  if (!categories.length) {
+    return `
+      <p class="categories-overlay__empty">
+        No categories found.
+      </p>
+    `;
+  }
+
+  return `
+    <ul class="categories-overlay__list">
+      ${categories.map((category) => `
+        <li class="categories-overlay__item">
+          <a
+            class="categories-overlay__link"
+            href="/search?category=${encodeURIComponent(category.path)}"
+            data-category-path="${category.path}"
+          >
+            <span class="categories-overlay__name">${category.label}</span>
+            <span class="categories-overlay__count">${category.count}</span>
+          </a>
+        </li>
+      `).join('')}
+    </ul>
+  `;
+}
+
+function buildCategoriesOverlay() {
+  const overlay = document.createElement('div');
+  overlay.className = 'categories-overlay';
+  overlay.setAttribute('role', 'dialog');
+  overlay.setAttribute('aria-modal', 'true');
+  overlay.setAttribute('aria-label', 'Product categories');
+  overlay.innerHTML = `
+    <div class="categories-overlay__backdrop"></div>
+    <div class="categories-overlay__panel">
+      <div class="categories-overlay__header">
+        <h3 class="categories-overlay__title">Browse Categories</h3>
+        <button class="categories-overlay__close" type="button" aria-label="Close categories">
+          <svg width="20" height="20" viewBox="0 0 20 20" fill="none">
+            <path d="M15 5L5 15M5 5L15 15" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+          </svg>
+        </button>
+      </div>
+      <div class="categories-overlay__body">
+        <p class="categories-overlay__status">Loading categories...</p>
+      </div>
+    </div>
+  `;
+  return overlay;
+}
+
+async function openCategoriesOverlay() {
+  // Prevent duplicate overlays
+  if (document.querySelector('.categories-overlay')) return;
+
+  const overlay = buildCategoriesOverlay();
+  document.body.appendChild(overlay);
+  document.body.classList.add('categories-overlay-open');
+
+  const panel = overlay.querySelector('.categories-overlay__panel');
+  const closeButton = overlay.querySelector('.categories-overlay__close');
+  const body = overlay.querySelector('.categories-overlay__body');
+
+  const onClose = () => closeCategoriesOverlay();
+  const onEscape = (event) => {
+    if (event.key === 'Escape') {
+      closeCategoriesOverlay();
+    }
+  };
+  const onOverlayClick = (event) => {
+    if (!panel.contains(event.target)) {
+      closeCategoriesOverlay();
+    }
+  };
+
+  overlay.addEventListener('click', onOverlayClick);
+  closeButton.addEventListener('click', onClose);
+  document.addEventListener('keydown', onEscape);
+
+  categoriesOverlayCleanup = () => {
+    overlay.removeEventListener('click', onOverlayClick);
+    closeButton.removeEventListener('click', onClose);
+    document.removeEventListener('keydown', onEscape);
+  };
+
+  requestAnimationFrame(() => {
+    overlay.classList.add('categories-overlay--open');
+  });
+
+  try {
+    const categories = await fetchProductCategories();
+    body.innerHTML = renderCategoriesMarkup(categories);
+  } catch (error) {
+    body.innerHTML = `
+      <p class="categories-overlay__status categories-overlay__status--error">
+        Failed to load categories. Please try again.
+      </p>
+    `;
+  }
+}
 
 /**
  * Render cart dropdown content
@@ -270,12 +481,11 @@ const headerData = {
       </svg>`,
     },
     links: [
-      { text: 'Home', href: '#', active: true },
-      { text: 'Shop', href: '#', active: false },
-      { text: 'Fruits & Vegetables', href: '#', active: false },
-      { text: 'Beverages', href: '#', active: false },
-      { text: 'Blog', href: '#', active: false },
-      { text: 'Contact', href: '#', active: false },
+      { text: 'Home', href: '/', active: true },
+      { text: 'Shop', href: '/shop', active: false },
+      { text: 'Recipes', href: '/recipes', active: false },
+      { text: 'Blog', href: '/blog', active: false },
+      { text: 'Contact', href: '/contact', active: false },
     ],
   },
   contact: {
@@ -430,18 +640,12 @@ function attachEventListeners() {
   // Navigation link handlers
   const navLinks = document.querySelectorAll('.navigation__link');
   navLinks.forEach((link) => {
-    link.addEventListener('click', (e) => {
-      e.preventDefault();
-
+    link.addEventListener('click', () => {
       // Remove active class from all links
       navLinks.forEach((l) => l.classList.remove('navigation__link--active'));
 
       // Add active class to clicked link
       link.classList.add('navigation__link--active');
-
-      // Add your navigation logic here
-      // eslint-disable-next-line no-console
-      console.log('Navigation to:', link.textContent);
     });
   });
 
@@ -449,9 +653,7 @@ function attachEventListeners() {
   const browseBtn = document.querySelector('.navigation__browse-btn');
   if (browseBtn) {
     browseBtn.addEventListener('click', () => {
-      // Add your browse categories logic here
-      // eslint-disable-next-line no-console
-      console.log('Browse all categories clicked');
+      openCategoriesOverlay();
     });
   }
 }

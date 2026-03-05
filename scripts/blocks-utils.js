@@ -31,6 +31,23 @@ export function getHTMLContent(htmlElement) {
 }
 
 /**
+ * Sets or creates a meta tag by name
+ * @param {string} name - Meta tag name attribute
+ * @param {string} content - Meta tag content value
+ */
+export function setMetaTag(name, content) {
+  if (!content) return;
+
+  let metaTag = document.head.querySelector(`meta[name="${name}"]`);
+  if (!metaTag) {
+    metaTag = document.createElement('meta');
+    metaTag.setAttribute('name', name);
+    document.head.appendChild(metaTag);
+  }
+  metaTag.setAttribute('content', content);
+}
+
+/**
  * Extracts Algolia credentials from block children
  * @param {HTMLElement} htmlElement - The block element
  * @returns {{appId: string, apiKey: string}} Algolia credentials
