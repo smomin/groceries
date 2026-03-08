@@ -43,7 +43,8 @@
       "id": "search-results",
       "components": [
         "search-box",
-        "search-index"
+        "search-index",
+        "search-facet"
       ]
     }
   ]

@@ -6,11 +6,16 @@ import {
   createAlgoliaClient,
   handleAddToCart,
 } from '../../scripts/blocks-utils.js';
+import { loadBlock, decorateBlock } from '../../scripts/aem.js';
+
+const SUPPORTED_FACET_WIDGETS = ['refinementList', 'menu', 'menuSelect'];
 
 function getSearchBox(htmlElement) {
   const { searchBox } = instantsearch.widgets;
   const { connectSearchBox } = instantsearch.connectors;
-  const placeholder = getTextContent(htmlElement.children[2]);
+  const searchBoxBlock = Array.from(htmlElement.children)
+    .find((child) => child.classList?.contains('search-box'));
+  const placeholder = getTextContent(searchBoxBlock?.children?.[0] || htmlElement.children[2]);
   return (placeholder) ? searchBox({ 
     container: '#searchbox', 
     placeholder 
@@ -18,25 +23,82 @@ function getSearchBox(htmlElement) {
 }
 
 function getSearchIndex(htmlElement) {
-  const index = htmlElement.children[3];
+  const index = Array.from(htmlElement.children)
+    .find((child) => child.classList?.contains('search-index')) || htmlElement.children[3];
   const indexName = getTextContent(index.children[0]);
   const hitTemplate = getTextContent(index.children[1]);
   const noResultsTemplate = getTextContent(index.children[2]);
   return { indexName, hitTemplate, noResultsTemplate };
 }
 
+function getFacetConfig(facetBlock) {
+  const widgetType = getTextContent(facetBlock.children[0]);
+  const facetTitle = getTextContent(facetBlock.children[1]);
+  const facetName = getTextContent(facetBlock.children[2]);
+
+  if (!widgetType || !facetName || !SUPPORTED_FACET_WIDGETS.includes(widgetType)) {
+    return null;
+  }
+
+  return { widgetType, facetTitle, facetName };
+}
+
+function getFacetConfigs(htmlElement) {
+  return Array.from(htmlElement.children)
+    .filter((child) => child.classList?.contains('search-facet'))
+    .map((facetBlock) => getFacetConfig(facetBlock))
+    .filter(Boolean);
+}
+
+function createFacetWidget(widgets, facetConfig, container) {
+  const {
+    panel, refinementList, menu, menuSelect,
+  } = widgets;
+
+  const widgetFactories = {
+    refinementList,
+    menu,
+    menuSelect,
+  };
+
+  const widgetFactory = widgetFactories[facetConfig.widgetType];
+  if (!widgetFactory) return null;
+
+  const widget = widgetFactory({
+    container,
+    attribute: facetConfig.facetName,
+  });
+
+  if (!facetConfig.facetTitle) {
+    return widget;
+  }
+
+  return panel({
+    templates: {
+      header: facetConfig.facetTitle,
+    },
+  })(widget);
+}
+
 export default function decorate(block) {
+  decorateBlock(block);
+  loadBlock(block);
   const { appId, apiKey } = getCredentials(block);
   const { indexName, hitTemplate, noResultsTemplate } = getSearchIndex(block);
+  const facetConfigs = getFacetConfigs(block);
+  const hasFacets = facetConfigs.length > 0;
 
   // block.innerHTML = '';
   const searchContainer = document.createElement('div');
   searchContainer.innerHTML = `
-    <div class="products-grid" data-indexname="${indexName}">
-      <div>
-        <div id="searchbox"></div>
-        <div id="hits"></div>
-        <div id="pagination"></div>
+    <div class="search-container" data-indexname="${indexName}">
+      <div class="search-panel">
+        ${hasFacets ? '<aside id="facets" class="search-panel__filters"></aside>' : ''}
+        <div class="search-panel__results">
+          <div id="searchbox"></div>
+          <div id="hits"></div>
+          <div id="pagination"></div>
+        </div>
       </div>
     </div>
   `;
@@ -57,6 +119,27 @@ export default function decorate(block) {
     const searchBox = getSearchBox(block);
     const { default: itemTemplateFunction } = await import(`./templates/hit/${hitTemplate}.js`);
     const { default: noResultsTemplateFunction } = await import(`./templates/noresults/${noResultsTemplate}.js`);
+    const facetsContainer = searchContainer.querySelector('#facets');
+    const facetWidgets = [];
+
+    if (facetsContainer) {
+      facetConfigs.forEach((facetConfig, index) => {
+        const facetContainer = document.createElement('div');
+        facetContainer.id = `search-facet-${index}`;
+        facetContainer.classList.add('search-facet-widget');
+        facetsContainer.appendChild(facetContainer);
+
+        const widget = createFacetWidget(
+          instantsearch.widgets,
+          facetConfig,
+          `#${facetContainer.id}`,
+        );
+
+        if (widget) {
+          facetWidgets.push(widget);
+        }
+      });
+    }
 
     search.addWidgets([
       searchBox,
@@ -66,6 +149,7 @@ export default function decorate(block) {
         enablePersonalization: true,
         clickAnalytics: true,
       }),
+      ...facetWidgets,
       hits({
         container: '#hits',
         cssClasses: {

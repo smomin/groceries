@@ -8,8 +8,8 @@ export default function layoutTemplateFunction({ elements, render, html }, root)
   render(
     html`
       <div class="aa-PanelLayout aa-Panel--scrollable">
-          <div class="recipes-col">${recipes}</div>
           <div class="products-col">${products}</div>
+          <div class="recipes-col">${recipes}</div>
           <div class="query-recent-col">
             ${suggestionsPlugin}
             ${recentPlugin}

@@ -483,6 +483,45 @@
     ]
   },
   {
+    "id": "search-facet",
+    "fields": [
+      {
+        "component": "select",
+        "name": "widgetType",
+        "label": "Refinement Type",
+        "valueType": "string",
+        "options": [
+          {
+            "name": "Refinement List",
+            "value": "refinementList"
+          },
+          {
+            "name": "Menu",
+            "value": "menu"
+          },
+          {
+            "name": "Menu Select",
+            "value": "menuSelect"
+          }
+        ]
+      },
+      {
+        "component": "text",
+        "valueType": "string",
+        "name": "facetTitle",
+        "label": "Title",
+        "value": ""
+      },
+      {
+        "component": "text",
+        "valueType": "string",
+        "name": "facetName",
+        "label": "Name",
+        "value": ""
+      }
+    ]
+  },
+  {
     "id": "search-index",
     "fields": [
       {
