@@ -22,7 +22,7 @@ export default function itemTemplateFunction(hit, { html, components }) {
           <span class="current-price">${formatPrice(hit.price)}</span>
         </div>
         <div class="product-card__actions">
-          <a href="/products?pid=${hit.objectID}" class="view-product-btn">
+          <a href="/products?pid=${hit.objectID}" class="view-product-btn product-click">
             View
           </a>
           <button class="add-btn" 

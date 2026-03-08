@@ -35,7 +35,7 @@ export default function itemTemplateFunction(hit, { html, components }) {
         ${recipeServings ? html`<div class="recipe-meta-item"><strong>Servings:</strong> ${recipeServings}</div>` : ''}
       </div>
       <div class="recipe-card__footer">
-        <a href="${recipeUrl}" class="recipe-view-btn">
+        <a href="${recipeUrl}" class="recipe-view-btn recipe-click">
           <span>View Recipe</span>
         </a>
       </div>
