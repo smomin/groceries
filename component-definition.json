@@ -311,6 +311,21 @@
           }
         },
         {
+          "title": "Search Facet",
+          "id": "search-facet",
+          "plugins": {
+            "xwalk": {
+              "page": {
+                "resourceType": "core/franklin/components/block/v1/block/item",
+                "template": {
+                  "name": "Search Facet",
+                  "model": "search-facet"
+                }
+              }
+            }
+          }
+        },
+        {
           "title": "Search Index",
           "id": "search-index",
           "plugins": {
