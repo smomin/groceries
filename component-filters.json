@@ -66,6 +66,10 @@
     ]
   },
   {
+    "id": "search-index",
+    "components": []
+  },
+  {
     "id": "search-results",
     "components": [
       "search-box",
