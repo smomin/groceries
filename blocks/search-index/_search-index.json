@@ -10,6 +10,7 @@
             "template": {
               "name": "Search Index",
               "model": "search-index",
+              "key-value": true,
               "filter": "search-index"
             }
           }

@@ -10,6 +10,7 @@
             "template": {
               "name": "Search Results",
               "model": "search-results",
+              "key-value": true,
               "filter": "search-results"
             }
           }

@@ -10,6 +10,7 @@
             "template": {
               "name": "Global Search",
               "model": "global-search",
+              "key-value": true,
               "filter": "global-search"
             }
           }

@@ -229,6 +229,7 @@
                 "template": {
                   "name": "Global Search",
                   "model": "global-search",
+                  "key-value": true,
                   "filter": "global-search"
                 }
               }
@@ -335,6 +336,7 @@
                 "template": {
                   "name": "Search Index",
                   "model": "search-index",
+                  "key-value": true,
                   "filter": "search-index"
                 }
               }
@@ -351,6 +353,7 @@
                 "template": {
                   "name": "Search Results",
                   "model": "search-results",
+                  "key-value": true,
                   "filter": "search-results"
                 }
               }
