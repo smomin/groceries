@@ -22,6 +22,11 @@
       "id": "search-results",
       "fields": [
         {
+          "component": "tab",
+          "label": "Account",
+          "name": "account"
+        },
+        {
           "component": "text",
           "valueType": "string",
           "name": "appId",

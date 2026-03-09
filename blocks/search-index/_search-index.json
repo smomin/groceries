@@ -29,35 +29,44 @@
           "value": ""
         },
         {
-          "component": "select",
-          "name": "hitTemplate",
-          "label": "Hit Template",
+          "component": "container",
+          "label": "Templates",
+          "name": "templates",
           "valueType": "string",
-          "options": [
+          "collapsible": true,
+          "fields": [
             {
-              "name": "Product",
-              "value": "productTemplate"
+              "component": "select",
+              "name": "hitTemplate",
+              "label": "Hit Template",
+              "valueType": "string",
+              "options": [
+                {
+                  "name": "Product",
+                  "value": "productTemplate"
+                },
+                {
+                  "name": "Recipe",
+                  "value": "recipeTemplate"
+                }
+              ]
             },
             {
-              "name": "Recipe",
-              "value": "recipeTemplate"
-            }
-          ]
-        },
-        {
-          "component": "select",
-          "name": "noResultsTemplate",
-          "label": "No Results Template",
-          "valueType": "string",
-          "options": [
-            {
-              "name": "Product",
-              "value": "productTemplate"
-            },
-            {
-              "name": "Recipe",
-              "value": "recipeTemplate"
-            }
+              "component": "select",
+              "name": "noResultsTemplate",
+              "label": "No Results Template",
+              "valueType": "string",
+              "options": [
+                {
+                  "name": "Product",
+                  "value": "productTemplate"
+                },
+                {
+                  "name": "Recipe",
+                  "value": "recipeTemplate"
+                }
+              ]
+            } 
           ]
         }
       ]

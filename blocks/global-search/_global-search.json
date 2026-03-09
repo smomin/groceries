@@ -22,6 +22,11 @@
       "id": "global-search",
       "fields": [
         {
+          "component": "tab",
+          "label": "Account",
+          "name": "account"
+        },
+        {
           "component": "text",
           "valueType": "string",
           "name": "appId",
@@ -36,6 +41,11 @@
           "label": "API Key",
           "value": "",
           "key-value": true
+        },
+        {
+          "component": "tab",
+          "label": "Configuration",
+          "name": "configuration"
         },
         {
           "component": "select",

@@ -274,6 +274,11 @@
     "id": "global-search",
     "fields": [
       {
+        "component": "tab",
+        "label": "Account",
+        "name": "account"
+      },
+      {
         "component": "text",
         "valueType": "string",
         "name": "appId",
@@ -288,6 +293,11 @@
         "label": "API Key",
         "value": "",
         "key-value": true
+      },
+      {
+        "component": "tab",
+        "label": "Configuration",
+        "name": "configuration"
       },
       {
         "component": "select",
@@ -477,8 +487,7 @@
         "valueType": "string",
         "name": "placeholderText",
         "label": "PlaceHolder Text",
-        "value": "",
-        "key-value": true
+        "value": ""
       }
     ]
   },
@@ -532,34 +541,43 @@
         "value": ""
       },
       {
-        "component": "select",
-        "name": "hitTemplate",
-        "label": "Hit Template",
+        "component": "container",
+        "label": "Templates",
+        "name": "templates",
         "valueType": "string",
-        "options": [
+        "collapsible": true,
+        "fields": [
           {
-            "name": "Product",
-            "value": "productTemplate"
+            "component": "select",
+            "name": "hitTemplate",
+            "label": "Hit Template",
+            "valueType": "string",
+            "options": [
+              {
+                "name": "Product",
+                "value": "productTemplate"
+              },
+              {
+                "name": "Recipe",
+                "value": "recipeTemplate"
+              }
+            ]
           },
           {
-            "name": "Recipe",
-            "value": "recipeTemplate"
-          }
-        ]
-      },
-      {
-        "component": "select",
-        "name": "noResultsTemplate",
-        "label": "No Results Template",
-        "valueType": "string",
-        "options": [
-          {
-            "name": "Product",
-            "value": "productTemplate"
-          },
-          {
-            "name": "Recipe",
-            "value": "recipeTemplate"
+            "component": "select",
+            "name": "noResultsTemplate",
+            "label": "No Results Template",
+            "valueType": "string",
+            "options": [
+              {
+                "name": "Product",
+                "value": "productTemplate"
+              },
+              {
+                "name": "Recipe",
+                "value": "recipeTemplate"
+              }
+            ]
           }
         ]
       }
@@ -568,6 +586,11 @@
   {
     "id": "search-results",
     "fields": [
+      {
+        "component": "tab",
+        "label": "Account",
+        "name": "account"
+      },
       {
         "component": "text",
         "valueType": "string",
