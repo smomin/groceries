@@ -67,14 +67,15 @@
   },
   {
     "id": "search-index",
-    "components": []
+    "components": [
+      "search-facet"
+    ]
   },
   {
     "id": "search-results",
     "components": [
       "search-box",
-      "search-index",
-      "search-facet"
+      "search-index"
     ]
   }
 ]

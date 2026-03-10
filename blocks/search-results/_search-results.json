@@ -49,8 +49,7 @@
       "id": "search-results",
       "components": [
         "search-box",
-        "search-index",
-        "search-facet"
+        "search-index"
       ]
     }
   ]

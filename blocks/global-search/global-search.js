@@ -4,7 +4,6 @@ import '../../scripts/lib-autocomplete-plugin-query-suggestions.js';
 import '../../scripts/lib-autocomplete-plugin-recent-searches.js';
 import {
   getTextContent,
-  getCredentials,
   createAlgoliaClient,
   getParamFromUrl,
 } from '../../scripts/blocks-utils.js';
@@ -19,32 +18,63 @@ export const SearchEvents = {
   ERROR: 'search:error',
 };
 
-function getSearchIndex(htmlElement, count) {
-  const index = htmlElement.children[count];
-  const indexName = getTextContent(index.children[0]);
-  const hitTemplate = getTextContent(index.children[1]);
-  const noResultsTemplate = getTextContent(index.children[2]);
-  return { indexName, hitTemplate, noResultsTemplate };
+function parseSourceConfigsFromRows(rows) {
+  return rows
+    .map((row) => {
+      const cells = Array.from(row.children || []).map((cell) => getTextContent(cell));
+      if (cells.length < 3) return null;
+      const [indexName, hitTemplate, noResultsTemplate] = cells;
+      if (!indexName || !hitTemplate || !noResultsTemplate) return null;
+      return { indexName, hitTemplate, noResultsTemplate };
+    })
+    .filter(Boolean);
 }
 
-function getLayoutTemplate(htmlElement) {
-  const layoutTemplate = getTextContent(htmlElement.children[2]);
-  return { layoutTemplate };
-}
+function getGlobalSearchConfig(block) {
+  const config = {
+    appId: '',
+    apiKey: '',
+    layoutTemplate: '',
+    sourceNames: '',
+    querySuggestionsIndexName: '',
+    placeholder: '',
+    sourceConfigs: [],
+  };
 
-function getSourceNames(htmlElement) {
-  const sourceNames = getTextContent(htmlElement.children[3]);
-  return { sourceNames };
-}
+  const rows = Array.from(block.children || []);
+  const knownKeys = new Set([
+    'appId',
+    'apiKey',
+    'layoutTemplate',
+    'sources',
+    'querySuggestionsIndexName',
+  ]);
+  const sourceRows = [];
 
-function getQuerySuggestionsIndexName(htmlElement) {
-  const querySuggestionsIndexName = getTextContent(htmlElement.children[4]);
-  return { querySuggestionsIndexName };
-}
+  rows.forEach((row) => {
+    const cells = Array.from(row.children || []).map((cell) => getTextContent(cell));
+    if (!cells.length) return;
 
-function getPlaceholder(htmlElement) {
-  const placeholder = getTextContent(htmlElement.children[5]);
-  return { placeholder };
+    if (cells.length >= 2 && knownKeys.has(cells[0])) {
+      const [, value = ''] = cells;
+      if (cells[0] === 'sources') config.sourceNames = value;
+      else config[cells[0]] = value;
+      return;
+    }
+
+    if (cells.length === 1 && !config.placeholder) {
+      [config.placeholder] = cells;
+      return;
+    }
+
+    if (cells.length >= 3) {
+      sourceRows.push(row);
+    }
+  });
+
+  config.sourceConfigs = parseSourceConfigsFromRows(sourceRows);
+
+  return config;
 }
 
 export default async function decorate(block) {
@@ -53,18 +83,32 @@ export default async function decorate(block) {
     const { createQuerySuggestionsPlugin } = window['@algolia/autocomplete-plugin-query-suggestions'];
     const { createLocalStorageRecentSearchesPlugin } = window['@algolia/autocomplete-plugin-recent-searches'];
 
-    const { appId, apiKey } = getCredentials(block);
-    const { placeholder } = getPlaceholder(block);
-    const { layoutTemplate } = getLayoutTemplate(block);
+    const {
+      appId,
+      apiKey,
+      placeholder,
+      layoutTemplate,
+      sourceNames,
+      querySuggestionsIndexName,
+      sourceConfigs,
+    } = getGlobalSearchConfig(block);
 
     const searchClient = createAlgoliaClient(appId, apiKey);
     const { default: layoutTemplateFunction } = await import(`./templates/layout/${layoutTemplate}.js`);
-    const { sourceNames } = getSourceNames(block);
-    const { querySuggestionsIndexName } = getQuerySuggestionsIndexName(block);
 
-    const sources = await Promise.all(sourceNames.split(',').map(async (sourceName, index) => {
+    const normalizedSourceNames = sourceNames
+      .split(',')
+      .map((name) => name.trim())
+      .filter(Boolean);
+
+    if (!appId || !apiKey || !layoutTemplate || !normalizedSourceNames.length) {
+      return;
+    }
+
+    const sources = await Promise.all(normalizedSourceNames.map(async (sourceName, index) => {
       const { default: source } = await import(`./sources/${sourceName}.js`);
-      const { indexName, hitTemplate, noResultsTemplate } = getSearchIndex(block, index + 6);
+      const { indexName, hitTemplate, noResultsTemplate } = sourceConfigs[index] || {};
+      if (!indexName || !hitTemplate || !noResultsTemplate) return null;
 
       const { default: itemTemplateFunction } = await import(`./templates/hit/${hitTemplate}.js`);
       const { default: noResultsTemplateFunction } = await import(`./templates/noresults/${noResultsTemplate}.js`);
@@ -77,6 +121,7 @@ export default async function decorate(block) {
       );
       return { source: sourceFunction, indexName };
     })) || [];
+    const validSources = sources.filter(Boolean);
 
     const autocompleteContainer = document.createElement('div');
     autocompleteContainer.id = 'autocomplete';
@@ -88,7 +133,7 @@ export default async function decorate(block) {
       // Only update UI state if InstantSearch instance exists (e.g., on search results page)
       if (window.searchInstance && typeof window.searchInstance.setUiState === 'function') {
         window.searchInstance.setUiState((uiState) => {
-          sources.forEach((source) => {
+          validSources.forEach((source) => {
             uiState[source.indexName] = {
               ...uiState[source.indexName],
               page: 1,
@@ -201,7 +246,7 @@ export default async function decorate(block) {
         },
         getSources({ query: searchQuery }) {
           return [
-            ...sources.map((source) => source.source({ searchQuery })),
+            ...validSources.map((source) => source.source({ searchQuery })),
           ];
         },
         navigator: {
