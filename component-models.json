@@ -571,7 +571,7 @@
         "name": "searchIndices"
       },
       {
-        "component": "indicies",
+        "component": "container",
         "label": "Configuration",
         "name": "configuration",
         "multi": true,
