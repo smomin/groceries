@@ -18,7 +18,7 @@ function getSearchBox(htmlElement) {
   const placeholder = getTextContent(searchBoxBlock?.children?.[0] || htmlElement.children[2]);
   return (placeholder) ? searchBox({
     container: '#searchbox',
-    placeholder
+    placeholder,
   }) : connectSearchBox(() => {})({});
 }
 
@@ -106,7 +106,7 @@ export default function decorate(block) {
 
   setTimeout(async () => {
     const {
-      hits, pagination, configure, index,
+      hits, pagination, configure,
     } = instantsearch.widgets;
 
     const searchClient = createAlgoliaClient(appId, apiKey);
@@ -123,9 +123,9 @@ export default function decorate(block) {
     const facetWidgets = [];
 
     if (facetsContainer) {
-      facetConfigs.forEach((facetConfig, index) => {
+      facetConfigs.forEach((facetConfig, facetIndex) => {
         const facetContainer = document.createElement('div');
-        facetContainer.id = `search-facet-${index}`;
+        facetContainer.id = `search-facet-${facetIndex}`;
         facetContainer.classList.add('search-facet-widget');
         facetsContainer.appendChild(facetContainer);
 
