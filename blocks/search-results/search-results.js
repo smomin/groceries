@@ -16,9 +16,9 @@ function getSearchBox(htmlElement) {
   const searchBoxBlock = Array.from(htmlElement.children)
     .find((child) => child.classList?.contains('search-box'));
   const placeholder = getTextContent(searchBoxBlock?.children?.[0] || htmlElement.children[2]);
-  return (placeholder) ? searchBox({ 
-    container: '#searchbox', 
-    placeholder 
+  return (placeholder) ? searchBox({
+    container: '#searchbox',
+    placeholder
   }) : connectSearchBox(() => {})({});
 }
 
