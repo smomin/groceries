@@ -341,7 +341,8 @@
       },
       {
         "component": "indicies",
-        "name": "test",
+        "label": "Configuration",
+        "name": "configuration",
         "multi": true,
         "fields": [
           {
@@ -571,7 +572,8 @@
       },
       {
         "component": "indicies",
-        "name": "test",
+        "label": "Configuration",
+        "name": "configuration",
         "multi": true,
         "fields": [
           {
