@@ -333,6 +333,57 @@
         "name": "querySuggestionsIndexName",
         "label": "Query Suggestions Index Name",
         "value": ""
+      },
+      {
+        "component": "tab",
+        "label": "Search Indices",
+        "name": "searchIndices"
+      },
+      {
+        "component": "indicies",
+        "name": "test",
+        "multi": true,
+        "fields": [
+          {
+            "component": "text",
+            "valueType": "string",
+            "name": "indexName",
+            "label": "Index Name",
+            "value": ""
+          },
+          {
+            "component": "select",
+            "name": "hitTemplate",
+            "label": "Hit Template",
+            "valueType": "string",
+            "options": [
+              {
+                "name": "Product",
+                "value": "productTemplate"
+              },
+              {
+                "name": "Recipe",
+                "value": "recipeTemplate"
+              }
+            ]
+          },
+          {
+            "component": "select",
+            "name": "noResultsTemplate",
+            "label": "No Results Template",
+            "valueType": "string",
+            "options": [
+              {
+                "name": "Product",
+                "value": "productTemplate"
+              },
+              {
+                "name": "Recipe",
+                "value": "recipeTemplate"
+              }
+            ]
+          }
+        ]
       }
     ]
   },
