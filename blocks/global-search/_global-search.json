@@ -90,8 +90,6 @@
     {
       "id": "global-search",
       "components": [
-        "search-box",
-        "search-index"
       ]
     }
   ]

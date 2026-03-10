@@ -480,73 +480,56 @@
     ]
   },
   {
-    "id": "search-box",
+    "id": "search-results",
     "fields": [
+      {
+        "component": "tab",
+        "label": "Account",
+        "name": "account"
+      },
+      {
+        "component": "text",
+        "valueType": "string",
+        "name": "appId",
+        "label": "App Id",
+        "value": ""
+      },
+      {
+        "component": "text",
+        "valueType": "string",
+        "name": "apiKey",
+        "label": "API Key",
+        "value": ""
+      },
+      {
+        "component": "tab",
+        "label": "Search Box",
+        "name": "searchBox"
+      },
       {
         "component": "text",
         "valueType": "string",
         "name": "placeholderText",
         "label": "PlaceHolder Text",
         "value": ""
-      }
-    ]
-  },
-  {
-    "id": "search-facet",
-    "fields": [
-      {
-        "component": "select",
-        "name": "widgetType",
-        "label": "Refinement Type",
-        "valueType": "string",
-        "options": [
-          {
-            "name": "Refinement List",
-            "value": "refinementList"
-          },
-          {
-            "name": "Menu",
-            "value": "menu"
-          },
-          {
-            "name": "Menu Select",
-            "value": "menuSelect"
-          }
-        ]
       },
       {
-        "component": "text",
-        "valueType": "string",
-        "name": "facetTitle",
-        "label": "Title",
-        "value": ""
+        "component": "tab",
+        "label": "Search Indices",
+        "name": "searchIndices"
       },
       {
-        "component": "text",
-        "valueType": "string",
-        "name": "facetName",
-        "label": "Name",
-        "value": ""
-      }
-    ]
-  },
-  {
-    "id": "search-index",
-    "fields": [
-      {
-        "component": "text",
-        "valueType": "string",
-        "name": "indexName",
-        "label": "Index Name",
-        "value": ""
-      },
-      {
-        "component": "container",
-        "label": "Templates",
-        "name": "templates",
-        "valueType": "string",
-        "collapsible": true,
+        "component": "indicies",
+        "name": "test",
+        "multi": true,
         "fields": [
+          {
+            "component": "text",
+            "valueType": "string",
+            "name": "indexName",
+            "label": "Index Name",
+            "value": ""
+          },
           {
             "component": "select",
             "name": "hitTemplate",
@@ -580,30 +563,6 @@
             ]
           }
         ]
-      }
-    ]
-  },
-  {
-    "id": "search-results",
-    "fields": [
-      {
-        "component": "tab",
-        "label": "Account",
-        "name": "account"
-      },
-      {
-        "component": "text",
-        "valueType": "string",
-        "name": "appId",
-        "label": "App Id",
-        "value": ""
-      },
-      {
-        "component": "text",
-        "valueType": "string",
-        "name": "apiKey",
-        "label": "API Key",
-        "value": ""
       }
     ]
   }

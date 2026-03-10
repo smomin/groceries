@@ -60,22 +60,10 @@
   },
   {
     "id": "global-search",
-    "components": [
-      "search-box",
-      "search-index"
-    ]
-  },
-  {
-    "id": "search-index",
-    "components": [
-      "search-facet"
-    ]
+    "components": []
   },
   {
     "id": "search-results",
-    "components": [
-      "search-box",
-      "search-index"
-    ]
+    "components": []
   }
 ]
