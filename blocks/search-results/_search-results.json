@@ -43,8 +43,8 @@
         },
         {
           "component": "tab",
-          "label": "Search Box",
-          "name": "searchBox"
+          "label": "Configuration",
+          "name": "configuration"
         },
         {
           "component": "text",
@@ -69,11 +69,6 @@
               "value": "resultsOnlyTemplate"
             }
           ]
-        },
-        {
-          "component": "tab",
-          "label": "Search Indices",
-          "name": "searchIndices"
         },
         {
           "component": "select",
