@@ -187,8 +187,8 @@ export default function decorate(block) {
   decorateBlock(block);
   loadBlock(block);
   const config = getSearchResultsConfig(block);
-  const appId = config.appId;
-  const apiKey = config.apiKey;
+  const { appId } = config;
+  const { apiKey } = config;
   const layoutTemplate = config.layoutTemplate || getLayoutTemplate(block);
   const sourceName = config.sourceName || getSourceName(block);
   const fallbackSearchIndexConfig = getSearchIndex(block);

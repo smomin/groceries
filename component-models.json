@@ -297,7 +297,7 @@
       {
         "component": "tab",
         "label": "Configuration",
-        "name": "configuration"
+        "name": "configurationTab"
       },
       {
         "component": "select",
