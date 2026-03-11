@@ -300,6 +300,13 @@
         "name": "configuration"
       },
       {
+        "component": "text",
+        "valueType": "string",
+        "name": "placeholderText",
+        "label": "PlaceHolder Text",
+        "value": ""
+      },
+      {
         "component": "select",
         "name": "layoutTemplate",
         "label": "Layout Template",
@@ -499,23 +506,6 @@
       },
       {
         "component": "select",
-        "name": "layout",
-        "label": "Layout",
-        "valueType": "string",
-        "value": "mainTemplate",
-        "options": [
-          {
-            "name": "Main",
-            "value": "mainTemplate"
-          },
-          {
-            "name": "Results Only",
-            "value": "resultsOnlyTemplate"
-          }
-        ]
-      },
-      {
-        "component": "select",
         "name": "source",
         "label": "Source",
         "valueType": "string",
@@ -530,6 +520,30 @@
             "value": "recipe"
           }
         ]
+      },
+      {
+        "component": "select",
+        "name": "layoutTemplate",
+        "label": "Layout Template",
+        "valueType": "string",
+        "value": "mainTemplate",
+        "options": [
+          {
+            "name": "Main",
+            "value": "mainTemplate"
+          },
+          {
+            "name": "Results Only",
+            "value": "resultsOnlyTemplate"
+          }
+        ]
+      },
+      {
+        "component": "boolean",
+        "valueType": "boolean",
+        "name": "hasFacets",
+        "label": "Has Facets",
+        "value": false
       }
     ]
   }

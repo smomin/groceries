@@ -7,11 +7,12 @@ import {
 } from '../../scripts/blocks-utils.js';
 import { loadBlock, decorateBlock } from '../../scripts/aem.js';
 
-const SUPPORTED_FACET_WIDGETS = ['refinementList', 'menu', 'menuSelect'];
+const SUPPORTED_FACET_WIDGETS = ['refinementList', 'menu', 'menuSelect', 'hierarchicalMenu'];
 const DEFAULT_SOURCE_CONFIG = {
   indexName: 'SW_Groceries_Products',
   hitTemplate: 'productTemplate',
   noResultsTemplate: 'productTemplate',
+  facetConfigs: [],
 };
 
 function withDefaultSourceConfig(sourceConfig = {}) {
@@ -19,6 +20,9 @@ function withDefaultSourceConfig(sourceConfig = {}) {
     indexName: sourceConfig.indexName || DEFAULT_SOURCE_CONFIG.indexName,
     hitTemplate: sourceConfig.hitTemplate || DEFAULT_SOURCE_CONFIG.hitTemplate,
     noResultsTemplate: sourceConfig.noResultsTemplate || DEFAULT_SOURCE_CONFIG.noResultsTemplate,
+    facetConfigs: Array.isArray(sourceConfig.facetConfigs)
+      ? sourceConfig.facetConfigs
+      : DEFAULT_SOURCE_CONFIG.facetConfigs,
   };
 }
 
@@ -50,6 +54,7 @@ function getSearchResultsConfig(block) {
     placeholderText: '',
     layoutTemplate: 'mainTemplate',
     sourceName: '',
+    hasFacets: false,
   };
 
   const knownKeys = new Set([
@@ -58,6 +63,7 @@ function getSearchResultsConfig(block) {
     'placeholderText',
     'layoutTemplate',
     'sourceName',
+    'hasFacets',
   ]);
 
   const authoredContainer = block.querySelector('.search-results');
@@ -85,7 +91,7 @@ function getSearchResultsConfig(block) {
 
 function getLayoutTemplate(htmlElement) {
   const layoutBlock = Array.from(htmlElement.children)
-    .find((child) => child.classList?.contains('layout'));
+    .find((child) => child.classList?.contains('layoutTemplate'));
 
   if (layoutBlock?.children?.[0]) {
     return getTextContent(layoutBlock.children[0]);
@@ -94,7 +100,7 @@ function getLayoutTemplate(htmlElement) {
   const layoutRow = Array.from(htmlElement.children)
     .find((row) => {
       const cells = Array.from(row.children || []).map((cell) => getTextContent(cell));
-      return cells.length >= 2 && cells[0] === 'layout';
+      return cells.length >= 2 && cells[0] === 'layoutTemplate';
     });
 
   if (layoutRow) {
@@ -139,7 +145,15 @@ function getFacetConfig(facetBlock) {
   const facetTitle = getTextContent(facetBlock.children[1]);
   const facetName = getTextContent(facetBlock.children[2]);
 
-  if (!widgetType || !facetName || !SUPPORTED_FACET_WIDGETS.includes(widgetType)) {
+  if (!widgetType || !SUPPORTED_FACET_WIDGETS.includes(widgetType)) {
+    return null;
+  }
+
+  if (widgetType === 'hierarchicalMenu') {
+    return null;
+  }
+
+  if (!facetName) {
     return null;
   }
 
@@ -155,22 +169,34 @@ function getFacetConfigs(htmlElement) {
 
 function createFacetWidget(widgets, facetConfig, container) {
   const {
-    panel, refinementList, menu, menuSelect,
+    panel, refinementList, menu, menuSelect, hierarchicalMenu,
   } = widgets;
 
   const widgetFactories = {
     refinementList,
     menu,
     menuSelect,
+    hierarchicalMenu,
   };
 
   const widgetFactory = widgetFactories[facetConfig.widgetType];
   if (!widgetFactory) return null;
 
-  const widget = widgetFactory({
+  const widgetParams = {
     container,
-    attribute: facetConfig.facetName,
-  });
+  };
+
+  if (facetConfig.widgetType === 'hierarchicalMenu') {
+    if (!Array.isArray(facetConfig.attributes) || facetConfig.attributes.length === 0) {
+      return null;
+    }
+    widgetParams.attributes = facetConfig.attributes;
+  } else {
+    if (!facetConfig.facetName) return null;
+    widgetParams.attribute = facetConfig.facetName;
+  }
+
+  const widget = widgetFactory(widgetParams);
 
   if (!facetConfig.facetTitle) {
     return widget;
@@ -192,8 +218,7 @@ export default function decorate(block) {
   const layoutTemplate = config.layoutTemplate || getLayoutTemplate(block);
   const sourceName = config.sourceName || getSourceName(block);
   const fallbackSearchIndexConfig = getSearchIndex(block);
-  const facetConfigs = getFacetConfigs(block);
-  const hasFacets = facetConfigs.length > 0;
+  const authoredFacetConfigs = getFacetConfigs(block);
 
   setTimeout(async () => {
     let layoutTemplateFunction;
@@ -215,6 +240,7 @@ export default function decorate(block) {
           indexName: sourceModule.SOURCE_INDEX_NAME,
           hitTemplate: sourceModule.SOURCE_HIT_TEMPLATE,
           noResultsTemplate: sourceModule.SOURCE_NO_RESULTS_TEMPLATE,
+          facetConfigs: sourceModule.SOURCE_FACET_CONFIGS,
         };
       } catch {
         searchIndexConfig = fallbackSearchIndexConfig;
@@ -225,7 +251,10 @@ export default function decorate(block) {
       indexName,
       hitTemplate,
       noResultsTemplate,
+      facetConfigs: sourceFacetConfigs,
     } = withDefaultSourceConfig(searchIndexConfig);
+    const facetConfigs = sourceFacetConfigs.length > 0 ? sourceFacetConfigs : authoredFacetConfigs;
+    const hasFacets = facetConfigs.length > 0;
 
     const searchContainer = document.createElement('div');
     searchContainer.innerHTML = layoutTemplateFunction({

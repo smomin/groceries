@@ -2,10 +2,18 @@ import { transformRecipeImagePath } from '../../../scripts/blocks-utils.js';
 
 export const SOURCE_INDEX_NAME = 'SW-Groceries-PROD-US-EN-Recipes';
 
+function toPlainText(value = '') {
+  return String(value)
+    .replace(/<[^>]*>/g, ' ')
+    .replace(/\s+/g, ' ')
+    .trim();
+}
+
 function itemTemplate({
   item, html, components,
 }) {
   const recipeImage = item.image ? transformRecipeImagePath(item.image) : '';
+  const recipeDescription = toPlainText(item.description);
   // eslint-disable-next-line no-underscore-dangle
   const autocompleteIndexName = item.__autocomplete_indexName;
   // eslint-disable-next-line no-underscore-dangle
@@ -14,13 +22,18 @@ function itemTemplate({
       <div data-indexname="${autocompleteIndexName}"
            data-insights-query-id="${autocompleteQueryId}"
            data-insights-object-id="${item.objectID}"
-           class="algolia-analytics">
+           class="algolia-analytics search-hit search-hit--recipe">
         <a href="/recipes?rid=${item.objectID}"
-           class="u-flex u-align recipe-click"
-           style="text-decoration: none; color: inherit;">
-          <img src="${recipeImage}" width="28px" alt="${item.name || 'Recipe'}"
+           class="search-hit__link recipe-click">
+          <img
+            class="search-hit__thumb search-hit__thumb--recipe"
+            src="${recipeImage}"
+            alt="${item.name || 'Recipe'}"
           />
-          <h6>${components.Highlight({ hit: item, attribute: 'name' })}</h6>
+          <div class="search-hit__content">
+            <h6 class="search-hit__title">${components.Highlight({ hit: item, attribute: 'name' })}</h6>
+            ${recipeDescription ? html`<p class="search-hit__meta">${recipeDescription}</p>` : ''}
+          </div>
         </a>
       </div>`;
 }

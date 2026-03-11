@@ -49,6 +49,13 @@
           "name": "configuration"
         },
         {
+          "component": "text",
+          "valueType": "string",
+          "name": "placeholderText",
+          "label": "PlaceHolder Text",
+          "value": ""
+        },
+        {
           "component": "select",
           "name": "layoutTemplate",
           "label": "Layout Template",

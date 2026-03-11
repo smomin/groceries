@@ -5,6 +5,7 @@ import '../../scripts/lib-autocomplete-plugin-recent-searches.js';
 import {
   createAlgoliaClient,
   getParamFromUrl,
+  handleAddToCart,
 } from '../../scripts/blocks-utils.js';
 
 export const SearchEvents = {
@@ -354,5 +355,24 @@ export default async function decorate(block) {
     };
 
     window.addEventListener('scroll', handleScroll, { passive: true });
+
+    // Handle "Add" button clicks in product hits inside global search panel.
+    autocompleteContainer.addEventListener('click', (event) => {
+      const addToCartButton = event.target.closest('.search-hit__add-btn');
+      if (!addToCartButton) return;
+
+      event.preventDefault();
+      event.stopPropagation();
+
+      const productData = {
+        objectID: addToCartButton.dataset.productId,
+        name: addToCartButton.dataset.productName,
+        price: parseFloat(addToCartButton.dataset.productPrice) || 0,
+        description: addToCartButton.dataset.productDescription,
+        image: addToCartButton.dataset.productImage,
+      };
+
+      handleAddToCart(addToCartButton, productData);
+    });
   }, 500);
 }

@@ -18,12 +18,21 @@
     display: flex;
 }
 
+.search-results .search-container {
+	width: 100%;
+	max-width: none;
+	margin: 0;
+	display: block;
+	flex: none;
+}
+
 .search-panel__filters {
     flex: 1;
 }
 
 .search-panel__results {
     flex: 3;
+	min-width: 0;
 }
 
 .ais-Highlight-highlighted {
@@ -53,6 +62,12 @@
     display: grid;
     grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
     gap: 24px;
+}
+
+#hits .ais-Hits-list {
+	display: grid;
+	grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+	gap: 24px;
 }
 
 .products-grid .ais-Hits-item,

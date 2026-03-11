@@ -1,4 +1,4 @@
-import { transformProductImagePath } from '../../../scripts/blocks-utils.js';
+import { transformProductImagePath, formatPrice } from '../../../scripts/blocks-utils.js';
 
 export const SOURCE_INDEX_NAME = 'SW_Groceries_Products';
 
@@ -14,14 +14,35 @@ function itemTemplate({
     <div data-indexname="${autocompleteIndexName}"
          data-insights-query-id="${autocompleteQueryId}"
          data-insights-object-id="${item.objectID}"
-         class="algolia-analytics">
-      <a href="/products?pid=${item.objectID}"
-         class="u-flex u-align product-click"
-         style="text-decoration: none; color: inherit;">
-        <img src="${productImage}" width="28px" alt="${item.name || 'Product'}"
-        />
-        <h6>${components.Highlight({ hit: item, attribute: 'name' })}</h6>
-      </a>
+         class="algolia-analytics search-hit search-hit--product">
+      <div class="search-hit__row">
+        <a href="/products?pid=${item.objectID}"
+           class="search-hit__link product-click">
+          <img
+            class="search-hit__thumb search-hit__thumb--product"
+            src="${productImage}"
+            alt="${item.name || 'Product'}"
+          />
+          <div class="search-hit__content">
+            <h6 class="search-hit__title">${components.Highlight({ hit: item, attribute: 'name' })}</h6>
+            ${item.brand ? html`<p class="search-hit__meta">${item.brand}</p>` : ''}
+            <div class="search-hit__price-row">
+              <p class="search-hit__price">${formatPrice(item.price)}</p>
+            </div>
+          </div>
+        </a>
+        <button class="search-hit__add-btn"
+                type="button"
+                aria-label="Add to cart"
+                title="Add to cart"
+                data-product-id="${item.objectID}"
+                data-product-name="${item.name}"
+                data-product-price="${item.price}"
+                data-product-description="${item.description || item.name}"
+                data-product-image="${productImage}">
+          <span class="search-hit__cart-icon" aria-hidden="true"></span>
+        </button>
+      </div>
     </div>`;
 }
 
@@ -43,7 +64,7 @@ export default function source(
             indexName: SOURCE_INDEX_NAME,
             params: {
               query: searchQuery,
-              hitsPerPage: 6,
+              hitsPerPage: 4,
               analytics: true,
               enablePersonalization: true,
               clickAnalytics: true,
