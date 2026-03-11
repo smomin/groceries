@@ -297,7 +297,7 @@
       {
         "component": "tab",
         "label": "Configuration",
-        "name": "settingsConfiguration"
+        "name": "configuration"
       },
       {
         "component": "select",
@@ -308,22 +308,6 @@
           {
             "name": "Main",
             "value": "mainTemplate"
-          }
-        ]
-      },
-      {
-        "component": "multiselect",
-        "name": "sources",
-        "label": "Sources",
-        "valueType": "string",
-        "options": [
-          {
-            "name": "Product",
-            "value": "product"
-          },
-          {
-            "name": "Recipe",
-            "value": "recipe"
           }
         ]
       },
@@ -354,33 +338,17 @@
           },
           {
             "component": "select",
-            "name": "hitTemplate",
-            "label": "Hit Template",
+            "name": "source",
+            "label": "Source",
             "valueType": "string",
             "options": [
               {
                 "name": "Product",
-                "value": "productTemplate"
+                "value": "product"
               },
               {
                 "name": "Recipe",
-                "value": "recipeTemplate"
-              }
-            ]
-          },
-          {
-            "component": "select",
-            "name": "noResultsTemplate",
-            "label": "No Results Template",
-            "valueType": "string",
-            "options": [
-              {
-                "name": "Product",
-                "value": "productTemplate"
-              },
-              {
-                "name": "Recipe",
-                "value": "recipeTemplate"
+                "value": "recipe"
               }
             ]
           }
@@ -566,54 +534,41 @@
         "value": ""
       },
       {
+        "component": "select",
+        "name": "layout",
+        "label": "Layout",
+        "valueType": "string",
+        "value": "mainTemplate",
+        "options": [
+          {
+            "name": "Main",
+            "value": "mainTemplate"
+          },
+          {
+            "name": "Results Only",
+            "value": "resultsOnlyTemplate"
+          }
+        ]
+      },
+      {
         "component": "tab",
         "label": "Search Indices",
         "name": "searchIndices"
       },
       {
-        "component": "container",
-        "label": "Configuration",
-        "name": "configuration",
-        "multi": true,
-        "fields": [
+        "component": "select",
+        "name": "source",
+        "label": "Source",
+        "valueType": "string",
+        "value": "product",
+        "options": [
           {
-            "component": "text",
-            "valueType": "string",
-            "name": "indexName",
-            "label": "Index Name",
-            "value": ""
+            "name": "Product",
+            "value": "product"
           },
           {
-            "component": "select",
-            "name": "hitTemplate",
-            "label": "Hit Template",
-            "valueType": "string",
-            "options": [
-              {
-                "name": "Product",
-                "value": "productTemplate"
-              },
-              {
-                "name": "Recipe",
-                "value": "recipeTemplate"
-              }
-            ]
-          },
-          {
-            "component": "select",
-            "name": "noResultsTemplate",
-            "label": "No Results Template",
-            "valueType": "string",
-            "options": [
-              {
-                "name": "Product",
-                "value": "productTemplate"
-              },
-              {
-                "name": "Recipe",
-                "value": "recipeTemplate"
-              }
-            ]
+            "name": "Recipe",
+            "value": "recipe"
           }
         ]
       }

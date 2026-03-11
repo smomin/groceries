@@ -3,7 +3,6 @@ import '../../scripts/lib-autocomplete.js';
 import '../../scripts/lib-autocomplete-plugin-query-suggestions.js';
 import '../../scripts/lib-autocomplete-plugin-recent-searches.js';
 import {
-  getTextContent,
   createAlgoliaClient,
   getParamFromUrl,
 } from '../../scripts/blocks-utils.js';
@@ -21,13 +20,53 @@ export const SearchEvents = {
 function parseSourceConfigsFromRows(rows) {
   return rows
     .map((row) => {
-      const cells = Array.from(row.children || []).map((cell) => getTextContent(cell));
-      if (cells.length < 3) return null;
-      const [indexName, hitTemplate, noResultsTemplate] = cells;
-      if (!indexName || !hitTemplate || !noResultsTemplate) return null;
-      return { indexName, hitTemplate, noResultsTemplate };
+      const cells = Array.from(row.children || []).map((cell) => cell.textContent?.trim() || '');
+      if (!cells.length) return null;
+      const sourceName = cells[cells.length - 1];
+      if (!sourceName) return null;
+      return { sourceName };
     })
     .filter(Boolean);
+}
+
+function parseSourceList(sourcesValue = '') {
+  return sourcesValue
+    .split(',')
+    .map((sourceName) => sourceName.trim())
+    .filter(Boolean)
+    .map((sourceName) => ({ sourceName }));
+}
+
+function isLeafRow(row) {
+  const cells = Array.from(row.children || []);
+  return cells.length >= 1 && cells.every((cell) => (cell.children?.length || 0) === 0);
+}
+
+function getConfigRows(block) {
+  const authoredContainer = block.matches('.global-search') ? block : block.querySelector('.global-search');
+  const authoredRows = Array.from(authoredContainer?.children || []).filter((row) => (row.children?.length || 0) >= 2);
+  if (authoredRows.length) {
+    return authoredRows;
+  }
+
+  const directRows = Array.from(block.children || []).filter((row) => (row.children?.length || 0) >= 2);
+  if (directRows.length) {
+    return directRows;
+  }
+
+  return Array.from(block.querySelectorAll('div')).filter((row) => (row.children?.length || 0) >= 2 || isLeafRow(row));
+}
+
+function normalizeConfigKey(key = '') {
+  const normalized = key.trim().toLowerCase();
+  const keyMap = {
+    appid: 'appId',
+    apikey: 'apiKey',
+    layouttemplate: 'layoutTemplate',
+    querysuggestionsindexname: 'querySuggestionsIndexName',
+    sources: 'sources',
+  };
+  return keyMap[normalized] || '';
 }
 
 function getGlobalSearchConfig(block) {
@@ -35,93 +74,108 @@ function getGlobalSearchConfig(block) {
     appId: '',
     apiKey: '',
     layoutTemplate: '',
-    sourceNames: '',
     querySuggestionsIndexName: '',
     placeholder: '',
     sourceConfigs: [],
   };
 
-  const rows = Array.from(block.children || []);
+  const directChildren = Array.from(block.children || []);
   const knownKeys = new Set([
     'appId',
     'apiKey',
     'layoutTemplate',
-    'sources',
     'querySuggestionsIndexName',
+    'sources',
   ]);
-  const sourceRows = [];
+  const rows = getConfigRows(block);
+  const keyValueRows = rows.filter((row) => {
+    if ((row.children?.length || 0) < 2) return false;
+    const key = normalizeConfigKey(row.children[0].textContent || '');
+    return !!key && knownKeys.has(key);
+  });
 
-  rows.forEach((row) => {
-    const cells = Array.from(row.children || []).map((cell) => getTextContent(cell));
-    if (!cells.length) return;
-
-    if (cells.length >= 2 && knownKeys.has(cells[0])) {
-      const [, value = ''] = cells;
-      if (cells[0] === 'sources') config.sourceNames = value;
-      else config[cells[0]] = value;
-      return;
+  if (!config.placeholder) {
+    const standaloneTextRow = directChildren.find((child) => {
+      const hasNoElementChildren = (child.children?.length || 0) === 0;
+      const text = child.textContent?.trim() || '';
+      return hasNoElementChildren && !!text;
+    });
+    if (standaloneTextRow) {
+      config.placeholder = standaloneTextRow.textContent.trim();
     }
+  }
 
-    if (cells.length === 1 && !config.placeholder) {
-      [config.placeholder] = cells;
-      return;
-    }
+  let configuredSources = [];
 
-    if (cells.length >= 3) {
-      sourceRows.push(row);
+  keyValueRows.forEach((row) => {
+    const key = normalizeConfigKey(row.children[0].textContent || '');
+    const value = row.children[1].textContent?.trim() || '';
+    if (key === 'sources') {
+      configuredSources = parseSourceList(value);
+    } else if (key) {
+      config[key] = value;
     }
   });
 
-  config.sourceConfigs = parseSourceConfigsFromRows(sourceRows);
+  const sourceRows = rows.filter((row) => {
+    if ((row.children?.length || 0) < 2) return false;
+    const firstCell = normalizeConfigKey(row.children[0].textContent || '');
+    return !firstCell || !knownKeys.has(firstCell);
+  });
+
+  config.sourceConfigs = configuredSources.length
+    ? configuredSources
+    : parseSourceConfigsFromRows(sourceRows);
 
   return config;
 }
 
 export default async function decorate(block) {
-  if (block.children.length > 3) {
-    const { autocomplete, getAlgoliaResults } = window['@algolia/autocomplete-js'];
-    const { createQuerySuggestionsPlugin } = window['@algolia/autocomplete-plugin-query-suggestions'];
-    const { createLocalStorageRecentSearchesPlugin } = window['@algolia/autocomplete-plugin-recent-searches'];
+  const { autocomplete, getAlgoliaResults } = window['@algolia/autocomplete-js'];
+  const { createQuerySuggestionsPlugin } = window['@algolia/autocomplete-plugin-query-suggestions'];
+  const { createLocalStorageRecentSearchesPlugin } = window['@algolia/autocomplete-plugin-recent-searches'];
 
     const {
       appId,
       apiKey,
       placeholder,
       layoutTemplate,
-      sourceNames,
       querySuggestionsIndexName,
       sourceConfigs,
     } = getGlobalSearchConfig(block);
 
-    const searchClient = createAlgoliaClient(appId, apiKey);
-    const { default: layoutTemplateFunction } = await import(`./templates/layout/${layoutTemplate}.js`);
+  if (!appId || !apiKey || !sourceConfigs.length) {
+    return;
+  }
 
-    const normalizedSourceNames = sourceNames
-      .split(',')
-      .map((name) => name.trim())
-      .filter(Boolean);
+  const searchClient = createAlgoliaClient(appId, apiKey);
+  const resolvedLayoutTemplate = layoutTemplate || 'mainTemplate';
+  let layoutTemplateFunction;
+  try {
+    ({ default: layoutTemplateFunction } = await import(`./templates/layout/${resolvedLayoutTemplate}.js`));
+  } catch {
+    ({ default: layoutTemplateFunction } = await import('./templates/layout/mainTemplate.js'));
+  }
 
-    if (!appId || !apiKey || !layoutTemplate || !normalizedSourceNames.length) {
-      return;
-    }
+    const sources = await Promise.all(sourceConfigs.map(async (sourceConfig) => {
+      const { sourceName } = sourceConfig;
+      if (!sourceName) return null;
 
-    const sources = await Promise.all(normalizedSourceNames.map(async (sourceName, index) => {
-      const { default: source } = await import(`./sources/${sourceName}.js`);
-      const { indexName, hitTemplate, noResultsTemplate } = sourceConfigs[index] || {};
-      if (!indexName || !hitTemplate || !noResultsTemplate) return null;
-
-      const { default: itemTemplateFunction } = await import(`./templates/hit/${hitTemplate}.js`);
-      const { default: noResultsTemplateFunction } = await import(`./templates/noresults/${noResultsTemplate}.js`);
+    try {
+      const { default: source, SOURCE_INDEX_NAME: indexName } = await import(`./sources/${sourceName}.js`);
+      if (!indexName) return null;
       const sourceFunction = source(
         searchClient,
         getAlgoliaResults,
-        indexName,
-        itemTemplateFunction,
-        noResultsTemplateFunction,
       );
       return { source: sourceFunction, indexName };
-    })) || [];
+    } catch {
+      return null;
+    }
+  })) || [];
     const validSources = sources.filter(Boolean);
+
+  block.innerHTML = '';
 
     const autocompleteContainer = document.createElement('div');
     autocompleteContainer.id = 'autocomplete';
@@ -299,5 +353,4 @@ export default async function decorate(block) {
 
       window.addEventListener('scroll', handleScroll, { passive: true });
     }, 500);
-  }
 }

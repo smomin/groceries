@@ -61,22 +61,6 @@
           ]
         },
         {
-          "component": "multiselect",
-          "name": "sources",
-          "label": "Sources",
-          "valueType": "string",
-          "options": [
-            {
-              "name": "Product",
-              "value": "product"
-            },
-            {
-              "name": "Recipe",
-              "value": "recipe"
-            }
-          ]
-        },
-        {
           "component": "text",
           "valueType": "string",
           "name": "querySuggestionsIndexName",
@@ -103,33 +87,17 @@
             },
             {
               "component": "select",
-              "name": "hitTemplate",
-              "label": "Hit Template",
+              "name": "source",
+              "label": "Source",
               "valueType": "string",
               "options": [
                 {
                   "name": "Product",
-                  "value": "productTemplate"
+                  "value": "product"
                 },
                 {
                   "name": "Recipe",
-                  "value": "recipeTemplate"
-                }
-              ]
-            },
-            {
-              "component": "select",
-              "name": "noResultsTemplate",
-              "label": "No Results Template",
-              "valueType": "string",
-              "options": [
-                {
-                  "name": "Product",
-                  "value": "productTemplate"
-                },
-                {
-                  "name": "Recipe",
-                  "value": "recipeTemplate"
+                  "value": "recipe"
                 }
               ]
             } 
