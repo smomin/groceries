@@ -8,23 +8,6 @@ import {
 import { loadBlock, decorateBlock } from '../../scripts/aem.js';
 
 const SUPPORTED_FACET_WIDGETS = ['refinementList', 'menu', 'menuSelect', 'hierarchicalMenu'];
-const DEFAULT_SOURCE_CONFIG = {
-  indexName: 'SW_Groceries_Products',
-  hitTemplate: 'productTemplate',
-  noResultsTemplate: 'productTemplate',
-  facetConfigs: [],
-};
-
-function withDefaultSourceConfig(sourceConfig = {}) {
-  return {
-    indexName: sourceConfig.indexName || DEFAULT_SOURCE_CONFIG.indexName,
-    hitTemplate: sourceConfig.hitTemplate || DEFAULT_SOURCE_CONFIG.hitTemplate,
-    noResultsTemplate: sourceConfig.noResultsTemplate || DEFAULT_SOURCE_CONFIG.noResultsTemplate,
-    facetConfigs: Array.isArray(sourceConfig.facetConfigs)
-      ? sourceConfig.facetConfigs
-      : DEFAULT_SOURCE_CONFIG.facetConfigs,
-  };
-}
 
 function getSearchBox(placeholder) {
   const { searchBox } = instantsearch.widgets;
@@ -42,7 +25,8 @@ function normalizeConfigKey(key = '') {
     apikey: 'apiKey',
     placeholdertext: 'placeholderText',
     layout: 'layoutTemplate',
-    source: 'sourceName',
+    source: 'source',
+    hasFacets: 'hasFacets',
   };
   return keyMap[normalized] || '';
 }
@@ -52,8 +36,8 @@ function getSearchResultsConfig(block) {
     appId: '',
     apiKey: '',
     placeholderText: '',
-    layoutTemplate: 'mainTemplate',
-    sourceName: '',
+    layoutTemplate: '',
+    source: '',
     hasFacets: false,
   };
 
@@ -62,7 +46,7 @@ function getSearchResultsConfig(block) {
     'apiKey',
     'placeholderText',
     'layoutTemplate',
-    'sourceName',
+    'source',
     'hasFacets',
   ]);
 
@@ -87,57 +71,6 @@ function getSearchResultsConfig(block) {
   }
 
   return config;
-}
-
-function getLayoutTemplate(htmlElement) {
-  const layoutBlock = Array.from(htmlElement.children)
-    .find((child) => child.classList?.contains('layoutTemplate'));
-
-  if (layoutBlock?.children?.[0]) {
-    return getTextContent(layoutBlock.children[0]);
-  }
-
-  const layoutRow = Array.from(htmlElement.children)
-    .find((row) => {
-      const cells = Array.from(row.children || []).map((cell) => getTextContent(cell));
-      return cells.length >= 2 && cells[0] === 'layoutTemplate';
-    });
-
-  if (layoutRow) {
-    return getTextContent(layoutRow.children[1]);
-  }
-
-  return 'mainTemplate';
-}
-
-function getSearchIndex(htmlElement) {
-  const index = Array.from(htmlElement.children)
-    .find((child) => child.classList?.contains('search-index')) || htmlElement.children[3];
-  const indexName = getTextContent(index?.children?.[0]);
-  const hitTemplate = getTextContent(index?.children?.[1]);
-  const noResultsTemplate = getTextContent(index?.children?.[2]);
-  return { indexName, hitTemplate, noResultsTemplate };
-}
-
-function getSourceName(htmlElement) {
-  const sourceBlock = Array.from(htmlElement.children)
-    .find((child) => child.classList?.contains('source'));
-
-  if (sourceBlock?.children?.[0]) {
-    return getTextContent(sourceBlock.children[0]);
-  }
-
-  const sourceRow = Array.from(htmlElement.children)
-    .find((row) => {
-      const cells = Array.from(row.children || []).map((cell) => getTextContent(cell));
-      return cells.length >= 2 && cells[0] === 'source';
-    });
-
-  if (sourceRow) {
-    return getTextContent(sourceRow.children[1]);
-  }
-
-  return '';
 }
 
 function getFacetConfig(facetBlock) {
@@ -210,15 +143,9 @@ function createFacetWidget(widgets, facetConfig, container) {
 }
 
 export default function decorate(block) {
-  decorateBlock(block);
-  loadBlock(block);
   const config = getSearchResultsConfig(block);
-  const { appId } = config;
-  const { apiKey } = config;
-  const layoutTemplate = config.layoutTemplate || getLayoutTemplate(block);
-  const sourceName = config.sourceName || getSourceName(block);
-  const fallbackSearchIndexConfig = getSearchIndex(block);
-  const authoredFacetConfigs = getFacetConfigs(block);
+  const { appId, apiKey, layoutTemplate, source, hasFacets } = config;
+  
 
   setTimeout(async () => {
     let layoutTemplateFunction;
@@ -232,29 +159,20 @@ export default function decorate(block) {
       hits, pagination, configure,
     } = instantsearch.widgets;
 
-    let searchIndexConfig = fallbackSearchIndexConfig;
-    if (sourceName) {
-      try {
-        const sourceModule = await import(`./sources/${sourceName}.js`);
-        searchIndexConfig = {
-          indexName: sourceModule.SOURCE_INDEX_NAME,
-          hitTemplate: sourceModule.SOURCE_HIT_TEMPLATE,
-          noResultsTemplate: sourceModule.SOURCE_NO_RESULTS_TEMPLATE,
-          facetConfigs: sourceModule.SOURCE_FACET_CONFIGS,
-        };
-      } catch {
-        searchIndexConfig = fallbackSearchIndexConfig;
-      }
-    }
+    const sourceModule = await import(`./sources/${source}.js`);
+    const searchIndexConfig = {
+      indexName: sourceModule.SOURCE_INDEX_NAME,
+      hitTemplate: sourceModule.SOURCE_HIT_TEMPLATE,
+      noResultsTemplate: sourceModule.SOURCE_NO_RESULTS_TEMPLATE,
+      facetConfigs: sourceModule.SOURCE_FACET_CONFIGS,
+    };
 
     const {
       indexName,
       hitTemplate,
       noResultsTemplate,
-      facetConfigs: sourceFacetConfigs,
-    } = withDefaultSourceConfig(searchIndexConfig);
-    const facetConfigs = sourceFacetConfigs.length > 0 ? sourceFacetConfigs : authoredFacetConfigs;
-    const hasFacets = facetConfigs.length > 0;
+      facetConfigs,
+    } = searchIndexConfig;
 
     const searchContainer = document.createElement('div');
     searchContainer.innerHTML = layoutTemplateFunction({
@@ -271,18 +189,8 @@ export default function decorate(block) {
     });
 
     const searchBox = getSearchBox(config.placeholderText);
-    let itemTemplateFunction;
-    let noResultsTemplateFunction;
-    try {
-      ({ default: itemTemplateFunction } = await import(`./templates/hit/${hitTemplate}.js`));
-    } catch {
-      ({ default: itemTemplateFunction } = await import('./templates/hit/productTemplate.js'));
-    }
-    try {
-      ({ default: noResultsTemplateFunction } = await import(`./templates/noresults/${noResultsTemplate}.js`));
-    } catch {
-      ({ default: noResultsTemplateFunction } = await import('./templates/noresults/productTemplate.js'));
-    }
+    const { default: itemTemplateFunction } = await import(`./templates/hit/${hitTemplate}.js`);
+    const { default: noResultsTemplateFunction } = await import(`./templates/noresults/${noResultsTemplate}.js`);
     const facetsContainer = searchContainer.querySelector('#facets');
     const facetWidgets = [];
 

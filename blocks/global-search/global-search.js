@@ -18,6 +18,9 @@ export const SearchEvents = {
   ERROR: 'search:error',
 };
 
+/** Source names to load when the block has no sources configured (e.g. nav has no sources row). */
+const DEFAULT_SOURCE_NAMES = ['product', 'recipe'];
+
 function parseSourceConfigsFromRows(rows) {
   return rows
     .map((row) => {
@@ -65,6 +68,7 @@ function normalizeConfigKey(key = '') {
   const keyMap = {
     appid: 'appId',
     apikey: 'apiKey',
+    placeholdertext: 'placeholderText',
     layouttemplate: 'layoutTemplate',
     querysuggestionsindexname: 'querySuggestionsIndexName',
     sources: 'sources',
@@ -86,6 +90,7 @@ function getGlobalSearchConfig(block) {
   const knownKeys = new Set([
     'appId',
     'apiKey',
+    'placeholderText',
     'layoutTemplate',
     'querySuggestionsIndexName',
     'sources',
@@ -115,6 +120,8 @@ function getGlobalSearchConfig(block) {
     const value = row.children[1].textContent?.trim() || '';
     if (key === 'sources') {
       configuredSources = parseSourceList(value);
+    } else if (key === 'placeholderText') {
+      config.placeholder = value;
     } else if (key) {
       config[key] = value;
     }
@@ -144,12 +151,16 @@ export default async function decorate(block) {
     placeholder,
     layoutTemplate,
     querySuggestionsIndexName,
-    sourceConfigs,
+    sourceConfigs: rawSourceConfigs,
   } = getGlobalSearchConfig(block);
 
-  if (!appId || !apiKey || !sourceConfigs.length) {
+  if (!appId || !apiKey) {
     return;
   }
+
+  const sourceConfigs = rawSourceConfigs.length > 0
+    ? rawSourceConfigs
+    : DEFAULT_SOURCE_NAMES.map((sourceName) => ({ sourceName }));
 
   const searchClient = createAlgoliaClient(appId, apiKey);
   const resolvedLayoutTemplate = layoutTemplate || 'mainTemplate';
@@ -356,6 +367,18 @@ export default async function decorate(block) {
 
     window.addEventListener('scroll', handleScroll, { passive: true });
 
+    const shouldHandleAddToCartClick = (event) => event.target.closest('.search-hit__add-btn');
+
+    // Prevent Autocomplete item selection/blur behavior when clicking the cart button.
+    const interceptAddToCartPointerEvent = (event) => {
+      if (!shouldHandleAddToCartClick(event)) return;
+      event.preventDefault();
+      event.stopPropagation();
+    };
+
+    autocompleteContainer.addEventListener('pointerdown', interceptAddToCartPointerEvent, true);
+    autocompleteContainer.addEventListener('mousedown', interceptAddToCartPointerEvent, true);
+
     // Handle "Add" button clicks in product hits inside global search panel.
     autocompleteContainer.addEventListener('click', (event) => {
       const addToCartButton = event.target.closest('.search-hit__add-btn');
@@ -373,6 +396,15 @@ export default async function decorate(block) {
       };
 
       handleAddToCart(addToCartButton, productData);
+
+      // Keep focus in the search input so the panel stays open after adding.
+      const input = autocompleteContainer.querySelector('input');
+      if (input && document.activeElement !== input) {
+        input.focus();
+      }
+      if (autocompleteInstance.setIsOpen) {
+        autocompleteInstance.setIsOpen(true);
+      }
     });
   }, 500);
 }
