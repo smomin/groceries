@@ -94,10 +94,6 @@ function getFacetConfig(facetBlock) {
     return null;
   }
 
-  if (widgetType === 'hierarchicalMenu') {
-    return null;
-  }
-
   if (!facetName) {
     return null;
   }
