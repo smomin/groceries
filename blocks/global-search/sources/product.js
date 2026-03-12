@@ -15,33 +15,36 @@ function itemTemplate({
          data-insights-query-id="${autocompleteQueryId}"
          data-insights-object-id="${item.objectID}"
          class="algolia-analytics search-hit search-hit--product">
-      <div class="search-hit__row">
+      <a href="/products?pid=${item.objectID}"
+         class="search-hit__thumb-link product-click"
+         tabindex="-1"
+         aria-hidden="true">
+        <img
+          class="search-hit__thumb search-hit__thumb--product"
+          src="${productImage}"
+          alt=""
+        />
+      </a>
+      <div class="search-hit__body">
         <a href="/products?pid=${item.objectID}"
-           class="search-hit__link product-click">
-          <img
-            class="search-hit__thumb search-hit__thumb--product"
-            src="${productImage}"
-            alt="${item.name || 'Product'}"
-          />
-          <div class="search-hit__content">
-            <h6 class="search-hit__title">${components.Highlight({ hit: item, attribute: 'name' })}</h6>
-            ${item.brand ? html`<p class="search-hit__meta">${item.brand}</p>` : ''}
-            <div class="search-hit__price-row">
-              <p class="search-hit__price">${formatPrice(item.price)}</p>
-            </div>
-          </div>
+           class="search-hit__title-link product-click">
+          <h6 class="search-hit__title">${components.Highlight({ hit: item, attribute: 'name' })}</h6>
+          ${item.brand ? html`<p class="search-hit__meta">${item.brand}</p>` : ''}
         </a>
-        <button class="search-hit__add-btn"
-                type="button"
-                aria-label="Add to cart"
-                title="Add to cart"
-                data-product-id="${item.objectID}"
-                data-product-name="${item.name}"
-                data-product-price="${item.price}"
-                data-product-description="${item.description || item.name}"
-                data-product-image="${productImage}">
-          <span class="search-hit__cart-icon" aria-hidden="true"></span>
-        </button>
+        <div class="search-hit__price-row">
+          <p class="search-hit__price">${formatPrice(item.price)}</p>
+          <button class="search-hit__add-btn"
+                  type="button"
+                  aria-label="Add to cart"
+                  title="Add to cart"
+                  data-product-id="${item.objectID}"
+                  data-product-name="${item.name}"
+                  data-product-price="${item.price}"
+                  data-product-description="${item.description || item.name}"
+                  data-product-image="${productImage}">
+            <span class="search-hit__cart-icon" aria-hidden="true"></span>
+          </button>
+        </div>
       </div>
     </div>`;
 }

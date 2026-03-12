@@ -46,7 +46,7 @@ function getSearchResultsConfig(block) {
     const key = normalizeBlockConfigKey(row.children[0].textContent || '', CONFIG_KEY_MAP);
     if (!key || !CONFIG_KEYS.has(key)) return;
     const value = row.children[1].textContent?.trim() || '';
-    if (value) config[key] = value;
+    if (value) config[key] = (key === 'hasFacets') ? value === 'true' : value;
   });
 
   if (!config.appId && block.children?.[0]) {
