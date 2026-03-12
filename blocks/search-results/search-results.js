@@ -1,50 +1,31 @@
 import '../../scripts/lib-algoliasearch.js';
 import '../../scripts/lib-instantsearch.js';
 import {
-  getTextContent,
   createAlgoliaClient,
   handleAddToCart,
+  normalizeBlockConfigKey,
+  extractProductDataFromButton,
+  loadLayoutTemplate,
 } from '../../scripts/blocks-utils.js';
-import { loadBlock, decorateBlock } from '../../scripts/aem.js';
 
-const SUPPORTED_FACET_WIDGETS = ['refinementList', 'menu', 'menuSelect', 'hierarchicalMenu'];
-const DEFAULT_SOURCE_CONFIG = {
-  indexName: 'SW_Groceries_Products',
-  hitTemplate: 'productTemplate',
-  noResultsTemplate: 'productTemplate',
-  facetConfigs: [],
+const CONFIG_KEY_MAP = {
+  appid: 'appId',
+  apikey: 'apiKey',
+  placeholdertext: 'placeholderText',
+  layout: 'layoutTemplate',
+  layouttemplate: 'layoutTemplate',
+  source: 'source',
+  hasfacets: 'hasFacets',
 };
 
-function withDefaultSourceConfig(sourceConfig = {}) {
-  return {
-    indexName: sourceConfig.indexName || DEFAULT_SOURCE_CONFIG.indexName,
-    hitTemplate: sourceConfig.hitTemplate || DEFAULT_SOURCE_CONFIG.hitTemplate,
-    noResultsTemplate: sourceConfig.noResultsTemplate || DEFAULT_SOURCE_CONFIG.noResultsTemplate,
-    facetConfigs: Array.isArray(sourceConfig.facetConfigs)
-      ? sourceConfig.facetConfigs
-      : DEFAULT_SOURCE_CONFIG.facetConfigs,
-  };
-}
+const CONFIG_KEYS = new Set(Object.values(CONFIG_KEY_MAP));
 
 function getSearchBox(placeholder) {
   const { searchBox } = instantsearch.widgets;
   const { connectSearchBox } = instantsearch.connectors;
-  return (placeholder) ? searchBox({
-    container: '#searchbox',
-    placeholder,
-  }) : connectSearchBox(() => {})({});
-}
-
-function normalizeConfigKey(key = '') {
-  const normalized = key.trim().toLowerCase();
-  const keyMap = {
-    appid: 'appId',
-    apikey: 'apiKey',
-    placeholdertext: 'placeholderText',
-    layout: 'layoutTemplate',
-    source: 'sourceName',
-  };
-  return keyMap[normalized] || '';
+  return placeholder
+    ? searchBox({ container: '#searchbox', placeholder })
+    : connectSearchBox(() => {})({});
 }
 
 function getSearchResultsConfig(block) {
@@ -52,31 +33,20 @@ function getSearchResultsConfig(block) {
     appId: '',
     apiKey: '',
     placeholderText: '',
-    layoutTemplate: 'mainTemplate',
-    sourceName: '',
+    layoutTemplate: '',
+    source: '',
     hasFacets: false,
   };
-
-  const knownKeys = new Set([
-    'appId',
-    'apiKey',
-    'placeholderText',
-    'layoutTemplate',
-    'sourceName',
-    'hasFacets',
-  ]);
 
   const authoredContainer = block.querySelector('.search-results');
   const candidateRows = Array.from(authoredContainer?.children || block.children || []);
 
   candidateRows.forEach((row) => {
     if ((row.children?.length || 0) < 2) return;
-    const key = normalizeConfigKey(row.children[0].textContent || '');
-    if (!key || !knownKeys.has(key)) return;
+    const key = normalizeBlockConfigKey(row.children[0].textContent || '', CONFIG_KEY_MAP);
+    if (!key || !CONFIG_KEYS.has(key)) return;
     const value = row.children[1].textContent?.trim() || '';
-    if (value) {
-      config[key] = value;
-    }
+    if (value) config[key] = (key === 'hasFacets') ? value === 'true' : value;
   });
 
   if (!config.appId && block.children?.[0]) {
@@ -89,82 +59,13 @@ function getSearchResultsConfig(block) {
   return config;
 }
 
-function getLayoutTemplate(htmlElement) {
-  const layoutBlock = Array.from(htmlElement.children)
-    .find((child) => child.classList?.contains('layoutTemplate'));
-
-  if (layoutBlock?.children?.[0]) {
-    return getTextContent(layoutBlock.children[0]);
-  }
-
-  const layoutRow = Array.from(htmlElement.children)
-    .find((row) => {
-      const cells = Array.from(row.children || []).map((cell) => getTextContent(cell));
-      return cells.length >= 2 && cells[0] === 'layoutTemplate';
-    });
-
-  if (layoutRow) {
-    return getTextContent(layoutRow.children[1]);
-  }
-
-  return 'mainTemplate';
-}
-
-function getSearchIndex(htmlElement) {
-  const index = Array.from(htmlElement.children)
-    .find((child) => child.classList?.contains('search-index')) || htmlElement.children[3];
-  const indexName = getTextContent(index?.children?.[0]);
-  const hitTemplate = getTextContent(index?.children?.[1]);
-  const noResultsTemplate = getTextContent(index?.children?.[2]);
-  return { indexName, hitTemplate, noResultsTemplate };
-}
-
-function getSourceName(htmlElement) {
-  const sourceBlock = Array.from(htmlElement.children)
-    .find((child) => child.classList?.contains('source'));
-
-  if (sourceBlock?.children?.[0]) {
-    return getTextContent(sourceBlock.children[0]);
-  }
-
-  const sourceRow = Array.from(htmlElement.children)
-    .find((row) => {
-      const cells = Array.from(row.children || []).map((cell) => getTextContent(cell));
-      return cells.length >= 2 && cells[0] === 'source';
-    });
-
-  if (sourceRow) {
-    return getTextContent(sourceRow.children[1]);
-  }
-
-  return '';
-}
-
-function getFacetConfig(facetBlock) {
-  const widgetType = getTextContent(facetBlock.children[0]);
-  const facetTitle = getTextContent(facetBlock.children[1]);
-  const facetName = getTextContent(facetBlock.children[2]);
-
-  if (!widgetType || !SUPPORTED_FACET_WIDGETS.includes(widgetType)) {
-    return null;
-  }
-
-  if (widgetType === 'hierarchicalMenu') {
-    return null;
-  }
-
-  if (!facetName) {
-    return null;
-  }
-
-  return { widgetType, facetTitle, facetName };
-}
-
-function getFacetConfigs(htmlElement) {
-  return Array.from(htmlElement.children)
-    .filter((child) => child.classList?.contains('search-facet'))
-    .map((facetBlock) => getFacetConfig(facetBlock))
-    .filter(Boolean);
+function removeConfigFromBlock(block) {
+  const container = block.querySelector('.search-results') ?? block;
+  Array.from(container.children ?? []).forEach((row) => {
+    if ((row.children?.length ?? 0) < 2) return;
+    const key = normalizeBlockConfigKey(row.children[0].textContent ?? '', CONFIG_KEY_MAP);
+    if (key && CONFIG_KEYS.has(key)) row.remove();
+  });
 }
 
 function createFacetWidget(widgets, facetConfig, container) {
@@ -172,95 +73,53 @@ function createFacetWidget(widgets, facetConfig, container) {
     panel, refinementList, menu, menuSelect, hierarchicalMenu,
   } = widgets;
 
-  const widgetFactories = {
-    refinementList,
-    menu,
-    menuSelect,
-    hierarchicalMenu,
-  };
-
-  const widgetFactory = widgetFactories[facetConfig.widgetType];
+  const widgetFactory = {
+    refinementList, menu, menuSelect, hierarchicalMenu,
+  }[facetConfig.widgetType];
   if (!widgetFactory) return null;
 
-  const widgetParams = {
-    container,
-  };
+  const widgetParams = { container };
 
   if (facetConfig.widgetType === 'hierarchicalMenu') {
-    if (!Array.isArray(facetConfig.attributes) || facetConfig.attributes.length === 0) {
-      return null;
-    }
+    if (!Array.isArray(facetConfig.attributes) || facetConfig.attributes.length === 0) return null;
     widgetParams.attributes = facetConfig.attributes;
   } else {
     if (!facetConfig.facetName) return null;
     widgetParams.attribute = facetConfig.facetName;
   }
 
-  const widget = widgetFactory(widgetParams);
+  if (!facetConfig.facetTitle) return widgetFactory(widgetParams);
 
-  if (!facetConfig.facetTitle) {
-    return widget;
-  }
-
-  return panel({
-    templates: {
-      header: facetConfig.facetTitle,
-    },
-  })(widget);
+  return panel({ templates: { header: facetConfig.facetTitle } })(widgetFactory)(widgetParams);
 }
 
 export default function decorate(block) {
-  decorateBlock(block);
-  loadBlock(block);
   const config = getSearchResultsConfig(block);
-  const { appId } = config;
-  const { apiKey } = config;
-  const layoutTemplate = config.layoutTemplate || getLayoutTemplate(block);
-  const sourceName = config.sourceName || getSourceName(block);
-  const fallbackSearchIndexConfig = getSearchIndex(block);
-  const authoredFacetConfigs = getFacetConfigs(block);
+  removeConfigFromBlock(block);
+  const {
+    appId,
+    apiKey,
+    layoutTemplate,
+    source,
+    hasFacets,
+  } = config;
 
   setTimeout(async () => {
-    let layoutTemplateFunction;
-    try {
-      ({ default: layoutTemplateFunction } = await import(`./templates/layout/${layoutTemplate}.js`));
-    } catch {
-      ({ default: layoutTemplateFunction } = await import('./templates/layout/mainTemplate.js'));
-    }
+    const templateBase = new URL('./templates/layout', import.meta.url).href;
+    const layoutTemplateFunction = await loadLayoutTemplate(templateBase, layoutTemplate);
 
+    const { hits, pagination, configure } = instantsearch.widgets;
+
+    const sourceModule = await import(`./sources/${source}.js`);
     const {
-      hits, pagination, configure,
-    } = instantsearch.widgets;
-
-    let searchIndexConfig = fallbackSearchIndexConfig;
-    if (sourceName) {
-      try {
-        const sourceModule = await import(`./sources/${sourceName}.js`);
-        searchIndexConfig = {
-          indexName: sourceModule.SOURCE_INDEX_NAME,
-          hitTemplate: sourceModule.SOURCE_HIT_TEMPLATE,
-          noResultsTemplate: sourceModule.SOURCE_NO_RESULTS_TEMPLATE,
-          facetConfigs: sourceModule.SOURCE_FACET_CONFIGS,
-        };
-      } catch {
-        searchIndexConfig = fallbackSearchIndexConfig;
-      }
-    }
-
-    const {
-      indexName,
-      hitTemplate,
-      noResultsTemplate,
-      facetConfigs: sourceFacetConfigs,
-    } = withDefaultSourceConfig(searchIndexConfig);
-    const facetConfigs = sourceFacetConfigs.length > 0 ? sourceFacetConfigs : authoredFacetConfigs;
-    const hasFacets = facetConfigs.length > 0;
+      SOURCE_INDEX_NAME: indexName,
+      SOURCE_HIT_TEMPLATE: hitTemplate,
+      SOURCE_NO_RESULTS_TEMPLATE: noResultsTemplate,
+      SOURCE_FACET_CONFIGS: facetConfigs,
+    } = sourceModule;
 
     const searchContainer = document.createElement('div');
-    searchContainer.innerHTML = layoutTemplateFunction({
-      indexName,
-      hasFacets,
-    });
+    searchContainer.innerHTML = layoutTemplateFunction({ indexName, hasFacets });
     block.appendChild(searchContainer);
 
     const searchClient = createAlgoliaClient(appId, apiKey);
@@ -271,18 +130,8 @@ export default function decorate(block) {
     });
 
     const searchBox = getSearchBox(config.placeholderText);
-    let itemTemplateFunction;
-    let noResultsTemplateFunction;
-    try {
-      ({ default: itemTemplateFunction } = await import(`./templates/hit/${hitTemplate}.js`));
-    } catch {
-      ({ default: itemTemplateFunction } = await import('./templates/hit/productTemplate.js'));
-    }
-    try {
-      ({ default: noResultsTemplateFunction } = await import(`./templates/noresults/${noResultsTemplate}.js`));
-    } catch {
-      ({ default: noResultsTemplateFunction } = await import('./templates/noresults/productTemplate.js'));
-    }
+    const { default: itemTemplateFunction } = await import(`./templates/hit/${hitTemplate}.js`);
+    const { default: noResultsTemplateFunction } = await import(`./templates/noresults/${noResultsTemplate}.js`);
     const facetsContainer = searchContainer.querySelector('#facets');
     const facetWidgets = [];
 
@@ -298,10 +147,7 @@ export default function decorate(block) {
           facetConfig,
           `#${facetContainer.id}`,
         );
-
-        if (widget) {
-          facetWidgets.push(widget);
-        }
+        if (widget) facetWidgets.push(widget);
       });
     }
 
@@ -338,26 +184,15 @@ export default function decorate(block) {
     ]);
 
     search.start();
-
     window.searchInstance = search;
 
-    // Handle "Add to cart" button clicks using event delegation (only for products)
+    // Handle "Add to cart" button clicks using event delegation
     searchContainer.addEventListener('click', (event) => {
       const addToCartButton = event.target.closest('.add-btn');
-      if (addToCartButton) {
-        event.preventDefault();
-        event.stopPropagation();
-
-        const productData = {
-          objectID: addToCartButton.dataset.productId,
-          name: addToCartButton.dataset.productName,
-          price: parseFloat(addToCartButton.dataset.productPrice) || 0,
-          description: addToCartButton.dataset.productDescription,
-          image: addToCartButton.dataset.productImage,
-        };
-
-        handleAddToCart(addToCartButton, productData);
-      }
+      if (!addToCartButton) return;
+      event.preventDefault();
+      event.stopPropagation();
+      handleAddToCart(addToCartButton, extractProductDataFromButton(addToCartButton));
     });
   }, 500);
 }

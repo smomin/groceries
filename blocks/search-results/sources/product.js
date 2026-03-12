@@ -6,9 +6,9 @@ export const SOURCE_FACET_CONFIGS = [
     widgetType: 'hierarchicalMenu',
     facetTitle: 'Categories',
     attributes: [
+      'categories.lvl0',
       'categories.lvl1',
       'categories.lvl2',
-      'categories.lvl3',
     ],
   },
 ];

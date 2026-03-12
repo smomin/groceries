@@ -30,7 +30,12 @@
     margin: 0 auto;
 }
 
-/* Green outline for search box to match theme */
+/* Green outline and icon to match theme */
+.global-search.block {
+    --aa-primary-color-rgb: 59, 183, 126;
+    --aa-primary-color-alpha: 1;
+}
+
 .aa-Form {
     border-color: #3BB77E !important;
 }
@@ -105,11 +110,38 @@
     color: inherit;
 }
 
-.search-hit__row {
+.search-hit--product {
     display: flex;
-    align-items: flex-end;
+    flex-direction: row;
+    align-items: stretch;
+    gap: 12px;
+    padding: 10px;
+}
+
+.search-hit__thumb-link {
+    flex-shrink: 0;
+    display: flex;
+    align-items: center;
+}
+
+.search-hit__body {
+    flex: 1;
+    min-width: 0;
+    display: flex;
+    flex-direction: column;
     justify-content: space-between;
-    gap: 10px;
+    gap: 4px;
+}
+
+.search-hit__title-link {
+    text-decoration: none;
+    color: inherit;
+    display: block;
+    padding-top: 2px;
+}
+
+.search-hit__title-link:hover .search-hit__title {
+    color: #3BB77E;
 }
 
 .search-hit__thumb {
@@ -135,7 +167,9 @@
 }
 
 .search-hit__price-row {
-    margin-top: 4px;
+    display: flex;
+    align-items: center;
+    gap: 10px;
 }
 
 .search-hit__title {
@@ -210,9 +244,7 @@
     object-fit: contain;
 }
 
-.search-hit__link:hover .search-hit__title {
-    color: #3BB77E;
-}
+
 
 .query-recent-col {
     display: flex;
