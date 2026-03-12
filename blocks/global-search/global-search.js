@@ -6,6 +6,9 @@ import {
   createAlgoliaClient,
   getParamFromUrl,
   handleAddToCart,
+  normalizeBlockConfigKey,
+  extractProductDataFromButton,
+  loadLayoutTemplate,
 } from '../../scripts/blocks-utils.js';
 
 export const SearchEvents = {
@@ -21,14 +24,24 @@ export const SearchEvents = {
 /** Source names to load when the block has no sources configured (e.g. nav has no sources row). */
 const DEFAULT_SOURCE_NAMES = ['product', 'recipe'];
 
+const CONFIG_KEY_MAP = {
+  appid: 'appId',
+  apikey: 'apiKey',
+  placeholdertext: 'placeholderText',
+  layouttemplate: 'layoutTemplate',
+  querysuggestionsindexname: 'querySuggestionsIndexName',
+  sources: 'sources',
+};
+
+const CONFIG_KEYS = new Set(Object.values(CONFIG_KEY_MAP));
+
 function parseSourceConfigsFromRows(rows) {
   return rows
     .map((row) => {
       const cells = Array.from(row.children || []).map((cell) => cell.textContent?.trim() || '');
       if (!cells.length) return null;
       const sourceName = cells[cells.length - 1];
-      if (!sourceName) return null;
-      return { sourceName };
+      return sourceName ? { sourceName } : null;
     })
     .filter(Boolean);
 }
@@ -36,7 +49,7 @@ function parseSourceConfigsFromRows(rows) {
 function parseSourceList(sourcesValue = '') {
   return sourcesValue
     .split(',')
-    .map((sourceName) => sourceName.trim())
+    .map((s) => s.trim())
     .filter(Boolean)
     .map((sourceName) => ({ sourceName }));
 }
@@ -50,30 +63,14 @@ function getConfigRows(block) {
   const authoredContainer = block.matches('.global-search') ? block : block.querySelector('.global-search');
   const authoredRows = Array.from(authoredContainer?.children || [])
     .filter((row) => (row.children?.length || 0) >= 2);
-  if (authoredRows.length) {
-    return authoredRows;
-  }
+  if (authoredRows.length) return authoredRows;
 
   const directRows = Array.from(block.children || [])
     .filter((row) => (row.children?.length || 0) >= 2);
-  if (directRows.length) {
-    return directRows;
-  }
+  if (directRows.length) return directRows;
 
-  return Array.from(block.querySelectorAll('div')).filter((row) => (row.children?.length || 0) >= 2 || isLeafRow(row));
-}
-
-function normalizeConfigKey(key = '') {
-  const normalized = key.trim().toLowerCase();
-  const keyMap = {
-    appid: 'appId',
-    apikey: 'apiKey',
-    placeholdertext: 'placeholderText',
-    layouttemplate: 'layoutTemplate',
-    querysuggestionsindexname: 'querySuggestionsIndexName',
-    sources: 'sources',
-  };
-  return keyMap[normalized] || '';
+  return Array.from(block.querySelectorAll('div'))
+    .filter((row) => (row.children?.length || 0) >= 2 || isLeafRow(row));
 }
 
 function getGlobalSearchConfig(block) {
@@ -87,19 +84,12 @@ function getGlobalSearchConfig(block) {
   };
 
   const directChildren = Array.from(block.children || []);
-  const knownKeys = new Set([
-    'appId',
-    'apiKey',
-    'placeholderText',
-    'layoutTemplate',
-    'querySuggestionsIndexName',
-    'sources',
-  ]);
   const rows = getConfigRows(block);
+
   const keyValueRows = rows.filter((row) => {
     if ((row.children?.length || 0) < 2) return false;
-    const key = normalizeConfigKey(row.children[0].textContent || '');
-    return !!key && knownKeys.has(key);
+    const key = normalizeBlockConfigKey(row.children[0].textContent || '', CONFIG_KEY_MAP);
+    return !!key && CONFIG_KEYS.has(key);
   });
 
   if (!config.placeholder) {
@@ -108,15 +98,13 @@ function getGlobalSearchConfig(block) {
       const text = child.textContent?.trim() || '';
       return hasNoElementChildren && !!text;
     });
-    if (standaloneTextRow) {
-      config.placeholder = standaloneTextRow.textContent.trim();
-    }
+    if (standaloneTextRow) config.placeholder = standaloneTextRow.textContent.trim();
   }
 
   let configuredSources = [];
 
   keyValueRows.forEach((row) => {
-    const key = normalizeConfigKey(row.children[0].textContent || '');
+    const key = normalizeBlockConfigKey(row.children[0].textContent || '', CONFIG_KEY_MAP);
     const value = row.children[1].textContent?.trim() || '';
     if (key === 'sources') {
       configuredSources = parseSourceList(value);
@@ -129,8 +117,8 @@ function getGlobalSearchConfig(block) {
 
   const sourceRows = rows.filter((row) => {
     if ((row.children?.length || 0) < 2) return false;
-    const firstCell = normalizeConfigKey(row.children[0].textContent || '');
-    return !firstCell || !knownKeys.has(firstCell);
+    const firstCell = normalizeBlockConfigKey(row.children[0].textContent || '', CONFIG_KEY_MAP);
+    return !firstCell || !CONFIG_KEYS.has(firstCell);
   });
 
   config.sourceConfigs = configuredSources.length
@@ -154,66 +142,55 @@ export default async function decorate(block) {
     sourceConfigs: rawSourceConfigs,
   } = getGlobalSearchConfig(block);
 
-  if (!appId || !apiKey) {
-    return;
-  }
+  if (!appId || !apiKey) return;
 
   const sourceConfigs = rawSourceConfigs.length > 0
     ? rawSourceConfigs
     : DEFAULT_SOURCE_NAMES.map((sourceName) => ({ sourceName }));
 
   const searchClient = createAlgoliaClient(appId, apiKey);
-  const resolvedLayoutTemplate = layoutTemplate || 'mainTemplate';
-  let layoutTemplateFunction;
-  try {
-    ({ default: layoutTemplateFunction } = await import(`./templates/layout/${resolvedLayoutTemplate}.js`));
-  } catch {
-    ({ default: layoutTemplateFunction } = await import('./templates/layout/mainTemplate.js'));
-  }
+  const templateBase = new URL('./templates/layout', import.meta.url).href;
+  const layoutTemplateFunction = await loadLayoutTemplate(
+    templateBase,
+    layoutTemplate || 'mainTemplate',
+  );
 
-  const sources = await Promise.all(sourceConfigs.map(async (sourceConfig) => {
-    const { sourceName } = sourceConfig;
+  const sources = await Promise.all(sourceConfigs.map(async ({ sourceName }) => {
     if (!sourceName) return null;
-
     try {
       const { default: source, SOURCE_INDEX_NAME: indexName } = await import(`./sources/${sourceName}.js`);
       if (!indexName) return null;
-      const sourceFunction = source(
-        searchClient,
-        getAlgoliaResults,
-      );
-      return { source: sourceFunction, indexName };
+      return { source: source(searchClient, getAlgoliaResults), indexName };
     } catch {
       return null;
     }
-  })) || [];
+  }));
   const validSources = sources.filter(Boolean);
 
   block.innerHTML = '';
 
   const autocompleteContainer = document.createElement('div');
   autocompleteContainer.id = 'autocomplete';
-
   block.appendChild(autocompleteContainer);
 
-  // Set the InstantSearch index UI state from external events.
   const setInstantSearchUiState = (indexUiState) => {
-    // Only update UI state if InstantSearch instance exists (e.g., on search results page)
     if (window.searchInstance && typeof window.searchInstance.setUiState === 'function') {
       window.searchInstance.setUiState((uiState) => {
-        validSources.forEach((source) => {
-          uiState[source.indexName] = {
-            ...uiState[source.indexName],
-            page: 1,
-            ...indexUiState,
-          };
+        validSources.forEach((s) => {
+          uiState[s.indexName] = { ...uiState[s.indexName], page: 1, ...indexUiState };
         });
         return uiState;
       });
     }
   };
 
-  const plugins = [];
+  const createSourceHeader = (createElement, title) => createElement(
+    'div',
+    {},
+    createElement('span', { className: 'aa-SourceHeaderTitle' }, title),
+    createElement('div', { className: 'aa-SourceHeaderLine' }),
+  );
+
   const recentSearchesPlugin = createLocalStorageRecentSearchesPlugin({
     key: 'navbar',
     limit: 3,
@@ -223,37 +200,21 @@ export default async function decorate(block) {
         templates: {
           ...source.templates,
           header({ createElement }) {
-            return createElement(
-              'div',
-              {},
-              createElement(
-                'span',
-                {
-                  className: 'aa-SourceHeaderTitle',
-                },
-                'Recent Searches',
-              ),
-              createElement('div', {
-                className: 'aa-SourceHeaderLine',
-              }),
-            );
+            return createSourceHeader(createElement, 'Recent Searches');
           },
         },
       };
     },
   });
-  plugins.push(recentSearchesPlugin);
+
+  const plugins = [recentSearchesPlugin];
 
   if (querySuggestionsIndexName) {
     const querySuggestionsPlugin = createQuerySuggestionsPlugin({
       searchClient,
       indexName: querySuggestionsIndexName,
       categoryAttribute: ['facets', 'exact_matches', 'categories'],
-      getSearchParams() {
-        return {
-          hitsPerPage: 3,
-        };
-      },
+      getSearchParams() { return { hitsPerPage: 3 }; },
       transformSource({ source }) {
         return {
           ...source,
@@ -268,20 +229,7 @@ export default async function decorate(block) {
           templates: {
             ...source.templates,
             header({ createElement }) {
-              return createElement(
-                'div',
-                {},
-                createElement(
-                  'span',
-                  {
-                    className: 'aa-SourceHeaderTitle',
-                  },
-                  'Suggestions',
-                ),
-                createElement('div', {
-                  className: 'aa-SourceHeaderLine',
-                }),
-              );
+              return createSourceHeader(createElement, 'Suggestions');
             },
           },
         };
@@ -291,95 +239,60 @@ export default async function decorate(block) {
   }
 
   setTimeout(async () => {
-    // Code to be executed after 3 seconds
     const autocompleteInstance = autocomplete({
       container: '#autocomplete',
       shouldPanelOpen: false,
       placeholder,
       openOnFocus: true,
       plugins,
-      initialState: {
-        query: getParamFromUrl('search') || '',
-      },
-      onSubmit({ state }) {
-        setInstantSearchUiState({ query: state.query });
-      },
-      onReset() {
-        setInstantSearchUiState({ query: '' });
-      },
+      initialState: { query: getParamFromUrl('search') || '' },
+      onSubmit({ state }) { setInstantSearchUiState({ query: state.query }); },
+      onReset() { setInstantSearchUiState({ query: '' }); },
       onStateChange({ prevState, state }) {
-        if (prevState.query !== state.query) {
-          setInstantSearchUiState({ query: state.query });
-        }
+        if (prevState.query !== state.query) setInstantSearchUiState({ query: state.query });
       },
       getSources({ query: searchQuery }) {
-        return [
-          ...validSources.map((source) => source.source({ searchQuery })),
-        ];
+        return validSources.map((s) => s.source({ searchQuery }));
       },
       navigator: {
-        navigate({ itemUrl }) {
-          window.location.assign(itemUrl);
-        },
+        navigate({ itemUrl }) { window.location.assign(itemUrl); },
         navigateNewTab({ itemUrl }) {
-          const windowReference = window.open(itemUrl, '_blank', 'noopener');
-
-          if (windowReference) {
-            windowReference.focus();
-          }
+          const win = window.open(itemUrl, '_blank', 'noopener');
+          if (win) win.focus();
         },
-        navigateNewWindow({ itemUrl }) {
-          window.open(itemUrl, '_blank', 'noopener');
-        },
+        navigateNewWindow({ itemUrl }) { window.open(itemUrl, '_blank', 'noopener'); },
       },
       render: layoutTemplateFunction,
     });
 
-    // This keeps Autocomplete aware of state changes coming from routing
-    // and updates its query accordingly
+    // Keep Autocomplete in sync with browser history navigation
     window.addEventListener('popstate', () => {
       if (window.searchInstance?.helper?.state?.query) {
         autocompleteInstance.setQuery(window.searchInstance.helper.state.query);
       }
     });
 
-    // Close the autocomplete panel when scrolling
+    // Close the autocomplete panel when scrolling (debounced)
     let scrollTimeout;
-    const handleScroll = () => {
-      // Clear any existing timeout
+    window.addEventListener('scroll', () => {
       clearTimeout(scrollTimeout);
-      // Debounce to avoid excessive calls
       scrollTimeout = setTimeout(() => {
-        // Try to close via setIsOpen if available
-        if (autocompleteInstance.setIsOpen) {
-          autocompleteInstance.setIsOpen(false);
-        }
-        // Also blur the input to ensure panel closes (since openOnFocus is true)
-        const autocompleteEl = document.querySelector('#autocomplete');
-        if (autocompleteEl) {
-          const input = autocompleteEl.querySelector('input');
-          if (input) {
-            input.blur();
-          }
-        }
+        autocompleteInstance.setIsOpen?.(false);
+        autocompleteContainer.querySelector('input')?.blur();
       }, 10);
+    }, { passive: true });
+
+    // Prevent Autocomplete blur when pressing the add-to-cart button
+    const interceptAddToCart = (event) => {
+      if (event.target.closest('.search-hit__add-btn')) {
+        event.preventDefault();
+        event.stopPropagation();
+      }
     };
+    autocompleteContainer.addEventListener('pointerdown', interceptAddToCart, true);
+    autocompleteContainer.addEventListener('mousedown', interceptAddToCart, true);
 
-    window.addEventListener('scroll', handleScroll, { passive: true });
-
-    const shouldHandleAddToCartClick = (event) => event.target.closest('.search-hit__add-btn');
-
-    // Prevent Autocomplete item selection/blur behavior when clicking the cart button.
-    const interceptAddToCartPointerEvent = (event) => {
-      if (!shouldHandleAddToCartClick(event)) return;
-      event.preventDefault();
-      event.stopPropagation();
-    };
-
-    autocompleteContainer.addEventListener('pointerdown', interceptAddToCartPointerEvent, true);
-    autocompleteContainer.addEventListener('mousedown', interceptAddToCartPointerEvent, true);
-
-    // Handle "Add" button clicks in product hits inside global search panel.
+    // Handle "Add" button clicks inside the autocomplete panel
     autocompleteContainer.addEventListener('click', (event) => {
       const addToCartButton = event.target.closest('.search-hit__add-btn');
       if (!addToCartButton) return;
@@ -387,24 +300,12 @@ export default async function decorate(block) {
       event.preventDefault();
       event.stopPropagation();
 
-      const productData = {
-        objectID: addToCartButton.dataset.productId,
-        name: addToCartButton.dataset.productName,
-        price: parseFloat(addToCartButton.dataset.productPrice) || 0,
-        description: addToCartButton.dataset.productDescription,
-        image: addToCartButton.dataset.productImage,
-      };
+      handleAddToCart(addToCartButton, extractProductDataFromButton(addToCartButton));
 
-      handleAddToCart(addToCartButton, productData);
-
-      // Keep focus in the search input so the panel stays open after adding.
+      // Keep the panel open after adding to cart
       const input = autocompleteContainer.querySelector('input');
-      if (input && document.activeElement !== input) {
-        input.focus();
-      }
-      if (autocompleteInstance.setIsOpen) {
-        autocompleteInstance.setIsOpen(true);
-      }
+      if (input && document.activeElement !== input) input.focus();
+      autocompleteInstance.setIsOpen?.(true);
     });
   }, 500);
 }

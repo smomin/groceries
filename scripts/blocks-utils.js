@@ -586,6 +586,51 @@ export class Carousel {
 }
 
 /**
+ * Search Block Utilities
+ */
+
+/**
+ * Normalizes a raw authored config key using a caller-supplied map.
+ * @param {string} key - Raw key string from block DOM
+ * @param {Object} keyMap - Map of lowercase key → canonical camelCase key
+ * @returns {string} Canonical key or empty string if unrecognized
+ */
+export function normalizeBlockConfigKey(key = '', keyMap = {}) {
+  return keyMap[key.trim().toLowerCase()] || '';
+}
+
+/**
+ * Extracts standard product data fields from an add-to-cart button's dataset.
+ * @param {HTMLElement} button - Button element with data-product-* attributes
+ * @returns {{objectID: string, name: string, price: number, description: string, image: string}}
+ */
+export function extractProductDataFromButton(button) {
+  return {
+    objectID: button.dataset.productId,
+    name: button.dataset.productName,
+    price: parseFloat(button.dataset.productPrice) || 0,
+    description: button.dataset.productDescription,
+    image: button.dataset.productImage,
+  };
+}
+
+/**
+ * Dynamically imports a layout template, falling back to mainTemplate on error.
+ * @param {string} basePath - Base import path for templates (e.g. './templates/layout')
+ * @param {string} templateName - Template module name (without .js)
+ * @returns {Promise<Function>} The default export of the resolved template module
+ */
+export async function loadLayoutTemplate(basePath, templateName) {
+  try {
+    const { default: fn } = await import(`${basePath}/${templateName}.js`);
+    return fn;
+  } catch {
+    const { default: fn } = await import(`${basePath}/mainTemplate.js`);
+    return fn;
+  }
+}
+
+/**
  * Formatting Utilities
  */
 
