@@ -25,11 +25,21 @@ function normalizeConfigKey(key = '') {
     apikey: 'apiKey',
     placeholdertext: 'placeholderText',
     layout: 'layoutTemplate',
+    layouttemplate: 'layoutTemplate',
     source: 'source',
-    hasFacets: 'hasFacets',
+    hasfacets: 'hasFacets',
   };
   return keyMap[normalized] || '';
 }
+
+const CONFIG_KEYS = new Set([
+  'appId',
+  'apiKey',
+  'placeholderText',
+  'layoutTemplate',
+  'source',
+  'hasFacets',
+]);
 
 function getSearchResultsConfig(block) {
   const config = {
@@ -41,22 +51,13 @@ function getSearchResultsConfig(block) {
     hasFacets: false,
   };
 
-  const knownKeys = new Set([
-    'appId',
-    'apiKey',
-    'placeholderText',
-    'layoutTemplate',
-    'source',
-    'hasFacets',
-  ]);
-
   const authoredContainer = block.querySelector('.search-results');
   const candidateRows = Array.from(authoredContainer?.children || block.children || []);
 
   candidateRows.forEach((row) => {
     if ((row.children?.length || 0) < 2) return;
     const key = normalizeConfigKey(row.children[0].textContent || '');
-    if (!key || !knownKeys.has(key)) return;
+    if (!key || !CONFIG_KEYS.has(key)) return;
     const value = row.children[1].textContent?.trim() || '';
     if (value) {
       config[key] = value;
@@ -71,6 +72,17 @@ function getSearchResultsConfig(block) {
   }
 
   return config;
+}
+
+function removeConfigFromBlock(block) {
+  const container = block.querySelector('.search-results') ?? block;
+  const rows = Array.from(container.children ?? []);
+
+  rows.forEach((row) => {
+    if ((row.children?.length ?? 0) < 2) return;
+    const key = normalizeConfigKey(row.children[0].textContent ?? '');
+    if (key && CONFIG_KEYS.has(key)) row.remove();
+  });
 }
 
 function getFacetConfig(facetBlock) {
@@ -129,23 +141,21 @@ function createFacetWidget(widgets, facetConfig, container) {
     widgetParams.attribute = facetConfig.facetName;
   }
 
-  const widget = widgetFactory(widgetParams);
-
   if (!facetConfig.facetTitle) {
-    return widget;
+    return widgetFactory(widgetParams);
   }
 
   return panel({
     templates: {
       header: facetConfig.facetTitle,
     },
-  })(widget);
+  })(widgetFactory)(widgetParams);
 }
 
 export default function decorate(block) {
   const config = getSearchResultsConfig(block);
+  removeConfigFromBlock(block);
   const { appId, apiKey, layoutTemplate, source, hasFacets } = config;
-  
 
   setTimeout(async () => {
     let layoutTemplateFunction;

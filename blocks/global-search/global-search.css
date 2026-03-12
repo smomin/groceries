@@ -30,7 +30,12 @@
     margin: 0 auto;
 }
 
-/* Green outline for search box to match theme */
+/* Green outline and icon to match theme */
+.global-search.block {
+    --aa-primary-color-rgb: 59, 183, 126;
+    --aa-primary-color-alpha: 1;
+}
+
 .aa-Form {
     border-color: #3BB77E !important;
 }
