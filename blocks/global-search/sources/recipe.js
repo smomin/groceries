@@ -86,7 +86,7 @@ export default function source(
         );
       },
       item: itemTemplate,
-      noResults: noResultsTemplate,
+      renderNoResults: noResultsTemplate,
     },
   });
 }
