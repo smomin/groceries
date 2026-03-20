@@ -10,6 +10,18 @@ import {
   transformRecipeImagePath,
 } from '../../scripts/blocks-utils.js';
 
+function formatDuration(minutes) {
+  if (!minutes || Number.isNaN(Number(minutes))) return minutes;
+  const m = parseInt(minutes, 10);
+  if (m === 0) return '';
+  const hours = Math.floor(m / 60);
+  const mins = m % 60;
+  const parts = [];
+  if (hours > 0) parts.push(`${hours} hr${hours > 1 ? 's' : ''}`);
+  if (mins > 0) parts.push(`${mins} min${mins > 1 ? 's' : ''}`);
+  return parts.join(' ');
+}
+
 function extractIngredientsFromSteps(steps) {
   if (!Array.isArray(steps)) {
     return [];
@@ -220,14 +232,53 @@ export default function decorate(block) {
           if (recipe.servings) {
             metaItems.push(`<div class="recipe-meta-item"><strong>Servings:</strong> ${recipe.servings}</div>`);
           }
-          if (recipe.cookingTime || recipe.time || recipe.prepTime) {
-            const time = recipe.cookingTime || recipe.time || recipe.prepTime;
+          if (recipe.preparationDuration || recipe.prepTime || recipe.preparationTime) {
+            const prepTime = formatDuration(
+              recipe.preparationDuration || recipe.prepTime || recipe.preparationTime,
+            );
+            metaItems.push(`<div class="recipe-meta-item"><strong>Preparation:</strong> ${prepTime}</div>`);
+          }
+          if (recipe.cookingDuration || recipe.cookingTime || recipe.cookTime) {
+            const cookTime = formatDuration(
+              recipe.cookingDuration || recipe.cookingTime || recipe.cookTime,
+            );
+            metaItems.push(`<div class="recipe-meta-item"><strong>Cooking:</strong> ${cookTime}</div>`);
+          }
+          if (
+            !recipe.preparationDuration && !recipe.prepTime
+            && !recipe.cookingDuration && !recipe.cookingTime
+            && recipe.time
+          ) {
+            const time = formatDuration(recipe.time);
             metaItems.push(`<div class="recipe-meta-item"><strong>Time:</strong> ${time}</div>`);
           }
           if (recipe.difficulty || recipe.level) {
             const difficulty = recipe.difficulty || recipe.level;
             metaItems.push(`<div class="recipe-meta-item"><strong>Difficulty:</strong> ${difficulty}</div>`);
           }
+        }
+
+        // Add the requested fields unconditionally if they appear at root level,
+        // avoiding duplicates if they were somehow in attrs as well
+        if (recipe.course) {
+          const course = Array.isArray(recipe.course) ? recipe.course.join(', ') : recipe.course;
+          metaItems.push(`<div class="recipe-meta-item"><strong>Course:</strong> ${course}</div>`);
+        }
+        if (recipe.cuisine) {
+          const cuisine = Array.isArray(recipe.cuisine) ? recipe.cuisine.join(', ') : recipe.cuisine;
+          metaItems.push(`<div class="recipe-meta-item"><strong>Cuisine:</strong> ${cuisine}</div>`);
+        }
+        if (recipe.dietaryPreference || recipe.dietary_preference) {
+          const diet = recipe.dietaryPreference || recipe.dietary_preference;
+          const dietStr = Array.isArray(diet) ? diet.join(', ') : diet;
+          metaItems.push(
+            `<div class="recipe-meta-item"><strong>Dietary Preference:</strong> ${dietStr}</div>`,
+          );
+        }
+        if (recipe.mealType || recipe.meal_type) {
+          const meal = recipe.mealType || recipe.meal_type;
+          const mealStr = Array.isArray(meal) ? meal.join(', ') : meal;
+          metaItems.push(`<div class="recipe-meta-item"><strong>Meal Type:</strong> ${mealStr}</div>`);
         }
 
         if (metaItems.length > 0) {

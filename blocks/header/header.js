@@ -549,15 +549,15 @@ function generateHeader(fragment) {
           </button>
           <ul class="navigation__links">
             ${headerData.navigation.links.map((link) => {
-              const currentPath = window.location.pathname;
-              const isActive = link.href === '/'
-                ? currentPath === '/'
-                : currentPath.startsWith(link.href);
-              return `
+    const currentPath = window.location.pathname;
+    const isActive = link.href === '/'
+      ? currentPath === '/'
+      : currentPath.startsWith(link.href);
+    return `
               <li class="navigation__item">
                 <a href="${link.href}" class="navigation__link ${isActive ? 'navigation__link--active' : ''}">${link.text}</a>
               </li>`;
-            }).join('')}
+  }).join('')}
           </ul>
         </nav>
         <div class="header__contact-info">

@@ -110,6 +110,35 @@ export function createAlgoliaClient(appId, apiKey) {
 }
 
 /**
+ * Algolia user token from the _ALGOLIA cookie (JSON with userToken, or raw string).
+ * Used for analytics, click analytics, and personalization on search requests.
+ * @returns {string|undefined} Token string, or undefined if cookie is missing/empty
+ */
+export function getAlgoliaUserTokenFromCookie() {
+  if (typeof document === 'undefined') return undefined;
+  const parts = `; ${document.cookie}`.split('; _ALGOLIA=');
+  if (parts.length < 2) return undefined;
+  let raw = parts.pop().split(';').shift();
+  if (!raw) return undefined;
+  try {
+    raw = decodeURIComponent(raw);
+  } catch {
+    return undefined;
+  }
+  try {
+    const data = JSON.parse(raw);
+    if (data && typeof data === 'object') {
+      const token = data.userToken ?? data.user_token;
+      if (typeof token === 'string' && token.trim()) return token.trim();
+    }
+  } catch {
+    // not JSON — treat entire value as token
+  }
+  const trimmed = raw.trim();
+  return trimmed || undefined;
+}
+
+/**
  * Fetches an object from Algolia by objectID
  * @param {Object} searchClient - Algolia search client
  * @param {string} indexName - Index name

@@ -29,7 +29,7 @@
 
 /* Author via block Class Name → applied to outer searchContainer wrapper (e.g. search-container--header-clearance) */
 .search-results .search-container--header-clearance {
-    margin-top: 1.5rem;
+    margin-top: 3.5rem;
 }
 
 .search-panel {
@@ -42,6 +42,35 @@
     align-self: flex-start;
     position: sticky;
     top: 1rem;
+    padding-top: 0.25rem;
+}
+
+.search-filters-heading {
+    margin: 0 0 1rem;
+    font-size: 0.875rem;
+    font-weight: 700;
+    color: #262627;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+}
+
+.search-facet-widget {
+    margin-bottom: 1.5rem;
+}
+
+.search-facet-widget:last-child {
+    margin-bottom: 0;
+}
+
+.search-facet-widget[data-facet-attribute="cookingduration"] .rheostat-value,
+.search-facet-widget[data-facet-attribute="preparationduration"] .rheostat-value {
+    white-space: nowrap;
+    line-height: 1.1;
+}
+
+.search-facet-widget[data-facet-attribute="cookingduration"] .ais-RangeSlider .rheostat,
+.search-facet-widget[data-facet-attribute="preparationduration"] .ais-RangeSlider .rheostat {
+    margin-bottom: 54px;
 }
 
 .search-panel__results {

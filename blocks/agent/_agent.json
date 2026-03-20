@@ -22,6 +22,27 @@
       "fields": [
         {
           "component": "text",
+          "name": "appId",
+          "value": "",
+          "label": "App Id",
+          "valueType": "string"
+        },
+        {
+          "component": "text",
+          "name": "apiKey",
+          "value": "",
+          "label": "Search API Key",
+          "valueType": "string"
+        },
+        {
+          "component": "text",
+          "name": "indexName",
+          "value": "",
+          "label": "Index Name",
+          "valueType": "string"
+        },
+        {
+          "component": "text",
           "name": "agentId",
           "value": "",
           "label": "Agent Id",

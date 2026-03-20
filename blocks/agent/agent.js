@@ -2,15 +2,62 @@ import '../../scripts/lib-algoliasearch.js';
 import '../../scripts/lib-instantsearch.js';
 import '../../scripts/lib-instantsearch-chat.js';
 import { addToCart } from '../../scripts/cart.js';
-import { transformRecipeImagePath, transformProductImagePath } from '../../scripts/blocks-utils.js';
+import {
+  normalizeBlockConfigKey,
+  transformRecipeImagePath,
+  transformProductImagePath,
+} from '../../scripts/blocks-utils.js';
+
+const CONFIG_KEY_MAP = {
+  appid: 'appId',
+  apikey: 'apiKey',
+  searchapikey: 'apiKey',
+  indexname: 'indexName',
+  agentid: 'agentId',
+};
+
+const CONFIG_KEYS = new Set(Object.values(CONFIG_KEY_MAP));
+const DEFAULT_AGENT_CONFIG = {
+  appId: '',
+  apiKey: '',
+  indexName: '',
+  agentId: '',
+};
+
+function getAgentConfig(block) {
+  const config = { ...DEFAULT_AGENT_CONFIG };
+  const rows = Array.from(block.children || []);
+
+  rows.forEach((row) => {
+    if ((row.children?.length || 0) < 2) return;
+    const key = normalizeBlockConfigKey(row.children[0].textContent || '', CONFIG_KEY_MAP);
+    if (!key || !CONFIG_KEYS.has(key)) return;
+    const value = row.children[1].textContent?.trim() || '';
+    if (value) config[key] = value;
+  });
+
+  return config;
+}
 
 export default function decorate(block) {
   // Add agent class for CSS scoping
   block.classList.add('agent');
 
+  const {
+    appId,
+    apiKey,
+    indexName,
+    agentId,
+  } = getAgentConfig(block);
+
+  if (!appId || !apiKey || !indexName || !agentId) return;
+
+  // Remove authored config rows before rendering widget UI.
+  block.textContent = '';
+
   const searchClient = algoliasearch(
-    '0EXRPAXB56',
-    '4350d61521979144d2012720315f5fc6',
+    appId,
+    apiKey,
   );
 
   // Initialize InstantSearch
@@ -19,12 +66,12 @@ export default function decorate(block) {
   const search = instantsearch({
     searchClient,
     insights: true,
-    indexName: 'ag_products',
+    indexName,
   });
 
   const chat = InstantSearchChat({
     container: block,
-    agentId: '6311c8de-6df5-490e-8875-7dc96d96355c',
+    agentId,
     templates: {
       item: (hit, { html }) => {
         if (hit && hit.objectID) {
