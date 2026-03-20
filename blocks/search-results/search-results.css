@@ -27,6 +27,11 @@
     padding: 1.5rem 2rem;
 }
 
+/* Author via block Class Name → applied to outer searchContainer wrapper (e.g. search-container--header-clearance) */
+.search-results .search-container--header-clearance {
+    margin-top: 1.5rem;
+}
+
 .search-panel {
     gap: 2rem;
 }

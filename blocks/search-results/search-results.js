@@ -16,6 +16,7 @@ const CONFIG_KEY_MAP = {
   layouttemplate: 'layoutTemplate',
   source: 'source',
   hasfacets: 'hasFacets',
+  classname: 'className',
 };
 
 const CONFIG_KEYS = new Set(Object.values(CONFIG_KEY_MAP));
@@ -36,6 +37,7 @@ function getSearchResultsConfig(block) {
     layoutTemplate: '',
     source: '',
     hasFacets: false,
+    className: '',
   };
 
   const authoredContainer = block.querySelector('.search-results');
@@ -120,6 +122,10 @@ export default function decorate(block) {
 
     const searchContainer = document.createElement('div');
     searchContainer.innerHTML = layoutTemplateFunction({ indexName, hasFacets });
+    const extraClasses = (config.className || '').trim();
+    if (extraClasses) {
+      searchContainer.classList.add(...extraClasses.split(/\s+/));
+    }
     block.appendChild(searchContainer);
 
     const searchClient = createAlgoliaClient(appId, apiKey);

@@ -544,6 +544,18 @@
         "name": "hasFacets",
         "label": "Has Facets",
         "value": false
+      },
+      {
+        "component": "tab",
+        "label": "Styling",
+        "name": "styling"
+      },
+      {
+        "component": "text",
+        "valueType": "string",
+        "name": "className",
+        "label": "Class Name",
+        "value": ""
       }
     ]
   }
