@@ -14,7 +14,7 @@ export default function itemTemplateFunction(hit, { html, components }) {
   const recipeDescription = toPlainText(hit.description || hit.summary || '');
   const recipeTime = hit.cookingTime || hit.time || hit.prepTime || '';
   const recipeServings = hit.servings || '';
-  const recipeUrl = `/recipes.html?rid=${hit.objectID}`;
+  const recipeUrl = `/recipes?rid=${hit.objectID}`;
   // eslint-disable-next-line no-underscore-dangle
   const queryId = hit.__queryID;
   // eslint-disable-next-line no-underscore-dangle

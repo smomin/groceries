@@ -76,7 +76,7 @@ function createProductCard(product) {
   if (isRecipe) {
     // For recipes: show "View Recipe" link
     const viewRecipeLink = document.createElement('a');
-    viewRecipeLink.href = `/recipes.html?rid=${product.objectID}`;
+    viewRecipeLink.href = `/recipes?rid=${product.objectID}`;
     viewRecipeLink.className = 'recipe-view-btn';
     viewRecipeLink.innerHTML = '<span>View Recipe</span>';
     footer.appendChild(viewRecipeLink);

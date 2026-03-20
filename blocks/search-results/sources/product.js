@@ -5,11 +5,11 @@ export const SOURCE_FACET_CONFIGS = [
   {
     widgetType: 'hierarchicalMenu',
     attributes: [
-      "categories.lvl0",
-      "categories.lvl1",
-      "categories.lvl2",
-      "categories.lvl3",
-    ]
+      'categories.lvl0',
+      'categories.lvl1',
+      'categories.lvl2',
+      'categories.lvl3',
+    ],
   },
   {
     widgetType: 'refinementList',

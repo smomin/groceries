@@ -94,7 +94,14 @@ function createFacetWidget(widgets, facetConfig, container) {
 
   if (widgetType === 'rangeSlider') {
     ['min', 'max', 'step', 'precision', 'tooltips', 'pips'].forEach((key) => {
-      if (facetConfig[key] !== undefined) widgetParams[key] = facetConfig[key];
+      if (facetConfig[key] === undefined) return;
+      const isNumericRangeOption = ['min', 'max', 'step', 'precision'].includes(key);
+      if (isNumericRangeOption) {
+        const numericValue = Number(facetConfig[key]);
+        widgetParams[key] = Number.isFinite(numericValue) ? numericValue : facetConfig[key];
+      } else {
+        widgetParams[key] = facetConfig[key];
+      }
     });
   } else {
     ['limit', 'showMore', 'showMoreLimit'].forEach((key) => {
@@ -105,6 +112,71 @@ function createFacetWidget(widgets, facetConfig, container) {
   if (!facetConfig.facetTitle) return widgetFactory(widgetParams);
 
   return panel({ templates: { header: facetConfig.facetTitle } })(widgetFactory)(widgetParams);
+}
+
+function coerceNumericRefinements(helper, attributes = []) {
+  if (!helper?.state?.numericRefinements || attributes.length === 0) return;
+  const { numericRefinements } = helper.state;
+  let hasChanges = false;
+  const nextRefinements = { ...numericRefinements };
+
+  attributes.forEach((attribute) => {
+    const attributeRefinements = numericRefinements[attribute];
+    if (!attributeRefinements) return;
+
+    const nextAttributeRefinements = { ...attributeRefinements };
+    Object.entries(attributeRefinements).forEach(([operator, values]) => {
+      if (!Array.isArray(values)) return;
+      const castedValues = values.map((value) => {
+        const numericValue = Number(value);
+        return Number.isFinite(numericValue) ? numericValue : value;
+      });
+      const changed = castedValues.some((value, index) => value !== values[index]);
+      if (changed) {
+        nextAttributeRefinements[operator] = castedValues;
+        hasChanges = true;
+      }
+    });
+
+    nextRefinements[attribute] = nextAttributeRefinements;
+  });
+
+  if (hasChanges) {
+    helper.setQueryParameter('numericRefinements', nextRefinements);
+  }
+}
+
+function createNumericFacetTransformWidget(attributes = []) {
+  if (!attributes.length) return null;
+  return {
+    init({ helper }) {
+      coerceNumericRefinements(helper, attributes);
+    },
+    render({ helper }) {
+      coerceNumericRefinements(helper, attributes);
+    },
+  };
+}
+
+function shouldResetRecipeDurationRefinements() {
+  if (typeof window === 'undefined') return false;
+  const { pathname, search = '' } = window.location;
+  if (!pathname.startsWith('/recipes')) return false;
+  // Respect explicit filter links that intentionally encode duration refinements.
+  return !search.includes('preparationduration') && !search.includes('cookingduration');
+}
+
+function createRecipeDurationRefinementResetWidget(enabled) {
+  if (!enabled) return null;
+  return {
+    init({ helper }) {
+      const prepRefinements = helper?.state?.numericRefinements?.preparationduration;
+      const cookRefinements = helper?.state?.numericRefinements?.cookingduration;
+      if (!prepRefinements && !cookRefinements) return;
+      helper.removeNumericRefinement('preparationduration');
+      helper.removeNumericRefinement('cookingduration');
+    },
+  };
 }
 
 export default function decorate(block) {
@@ -131,6 +203,7 @@ export default function decorate(block) {
       SOURCE_NO_RESULTS_TEMPLATE: noResultsTemplate,
       SOURCE_FACET_CONFIGS: facetConfigs = [],
       SOURCE_CONFIGURE: sourceConfigure = {},
+      SOURCE_NUMERIC_FACET_ATTRIBUTES: numericFacetAttributes = [],
     } = sourceModule;
 
     const searchContainer = document.createElement('div');
@@ -153,6 +226,10 @@ export default function decorate(block) {
     const { default: noResultsTemplateFunction } = await import(`./templates/noresults/${noResultsTemplate}.js`);
     const facetsContainer = searchContainer.querySelector('#facets');
     const facetWidgets = [];
+    const numericFacetTransformWidget = createNumericFacetTransformWidget(numericFacetAttributes);
+    const resetRecipeDurationRefinements = createRecipeDurationRefinementResetWidget(
+      source === 'recipe' && shouldResetRecipeDurationRefinements(),
+    );
 
     const userToken = getAlgoliaUserTokenFromCookie();
 
@@ -177,6 +254,8 @@ export default function decorate(block) {
 
     search.addWidgets([
       searchBox,
+      ...(numericFacetTransformWidget ? [numericFacetTransformWidget] : []),
+      ...(resetRecipeDurationRefinements ? [resetRecipeDurationRefinements] : []),
       configure({
         hitsPerPage: 12,
         analytics: true,

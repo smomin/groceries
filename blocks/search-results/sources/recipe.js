@@ -1,6 +1,7 @@
 export const SOURCE_INDEX_NAME = 'SW-Groceries-PROD-US-EN-Recipes';
 export const SOURCE_HIT_TEMPLATE = 'recipeTemplate';
 export const SOURCE_NO_RESULTS_TEMPLATE = 'recipeTemplate';
+export const SOURCE_NUMERIC_FACET_ATTRIBUTES = ['cookingduration', 'preparationduration'];
 
 /** Ask Algolia for facet counts on every facetable attribute on this index. */
 export const SOURCE_CONFIGURE = {
@@ -11,25 +12,14 @@ export const SOURCE_CONFIGURE = {
 /** Requires matching `attributesForFaceting` / numeric facets on the recipe index. */
 export const SOURCE_FACET_CONFIGS = [
   {
-    widgetType: 'rangeSlider',
-    facetTitle: 'Cooking duration (minutes)',
-    facetName: 'cookingduration',
-  },
-  {
-    widgetType: 'rangeSlider',
-    facetTitle: 'Preparation duration (minutes)',
-    facetName: 'preparationduration',
-    max: 65,
+    widgetType: 'refinementList',
+    facetTitle: 'Cuisine',
+    facetName: 'cuisine',
   },
   {
     widgetType: 'refinementList',
     facetTitle: 'Course',
     facetName: 'course',
-  },
-  {
-    widgetType: 'refinementList',
-    facetTitle: 'Cuisine',
-    facetName: 'cuisine',
   },
   {
     widgetType: 'refinementList',
@@ -46,4 +36,14 @@ export const SOURCE_FACET_CONFIGS = [
     facetTitle: 'Meal type',
     facetName: 'mealtype',
   },
+  {
+    widgetType: 'rangeSlider',
+    facetTitle: 'Cooking duration (minutes)',
+    facetName: 'cookingduration',
+  },
+  {
+    widgetType: 'rangeSlider',
+    facetTitle: 'Preparation duration (minutes)',
+    facetName: 'preparationduration',
+  }
 ];
