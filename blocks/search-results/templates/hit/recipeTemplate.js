@@ -1,10 +1,17 @@
 import { transformRecipeImagePath } from '../../../../scripts/blocks-utils.js';
 
+function toPlainText(value = '') {
+  return String(value)
+    .replace(/<[^>]*>/g, ' ')
+    .replace(/\s+/g, ' ')
+    .trim();
+}
+
 export default function itemTemplateFunction(hit, { html, components }) {
   const recipeName = hit.name || hit.title || 'Recipe';
   const recipeImage = transformRecipeImagePath(hit.image || hit.imageUrl || '');
   const recipeCategory = hit.category || hit.cuisine || '';
-  const recipeDescription = hit.description || hit.summary || '';
+  const recipeDescription = toPlainText(hit.description || hit.summary || '');
   const recipeTime = hit.cookingTime || hit.time || hit.prepTime || '';
   const recipeServings = hit.servings || '';
   const recipeUrl = `/recipes.html?rid=${hit.objectID}`;

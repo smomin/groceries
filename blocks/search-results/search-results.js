@@ -2,6 +2,7 @@ import '../../scripts/lib-algoliasearch.js';
 import '../../scripts/lib-instantsearch.js';
 import {
   createAlgoliaClient,
+  getAlgoliaUserTokenFromCookie,
   handleAddToCart,
   normalizeBlockConfigKey,
   extractProductDataFromButton,
@@ -72,22 +73,33 @@ function removeConfigFromBlock(block) {
 
 function createFacetWidget(widgets, facetConfig, container) {
   const {
-    panel, refinementList, menu, menuSelect, hierarchicalMenu,
+    panel, refinementList, menu, menuSelect, hierarchicalMenu, rangeSlider,
   } = widgets;
 
   const widgetFactory = {
-    refinementList, menu, menuSelect, hierarchicalMenu,
+    refinementList, menu, menuSelect, hierarchicalMenu, rangeSlider,
   }[facetConfig.widgetType];
   if (!widgetFactory) return null;
 
   const widgetParams = { container };
+  const { widgetType } = facetConfig;
 
-  if (facetConfig.widgetType === 'hierarchicalMenu') {
+  if (widgetType === 'hierarchicalMenu') {
     if (!Array.isArray(facetConfig.attributes) || facetConfig.attributes.length === 0) return null;
     widgetParams.attributes = facetConfig.attributes;
   } else {
     if (!facetConfig.facetName) return null;
     widgetParams.attribute = facetConfig.facetName;
+  }
+
+  if (widgetType === 'rangeSlider') {
+    ['min', 'max', 'step', 'precision', 'tooltips', 'pips'].forEach((key) => {
+      if (facetConfig[key] !== undefined) widgetParams[key] = facetConfig[key];
+    });
+  } else {
+    ['limit', 'showMore', 'showMoreLimit'].forEach((key) => {
+      if (facetConfig[key] !== undefined) widgetParams[key] = facetConfig[key];
+    });
   }
 
   if (!facetConfig.facetTitle) return widgetFactory(widgetParams);
@@ -117,7 +129,8 @@ export default function decorate(block) {
       SOURCE_INDEX_NAME: indexName,
       SOURCE_HIT_TEMPLATE: hitTemplate,
       SOURCE_NO_RESULTS_TEMPLATE: noResultsTemplate,
-      SOURCE_FACET_CONFIGS: facetConfigs,
+      SOURCE_FACET_CONFIGS: facetConfigs = [],
+      SOURCE_CONFIGURE: sourceConfigure = {},
     } = sourceModule;
 
     const searchContainer = document.createElement('div');
@@ -141,11 +154,16 @@ export default function decorate(block) {
     const facetsContainer = searchContainer.querySelector('#facets');
     const facetWidgets = [];
 
+    const userToken = getAlgoliaUserTokenFromCookie();
+
     if (facetsContainer) {
       facetConfigs.forEach((facetConfig, facetIndex) => {
         const facetContainer = document.createElement('div');
         facetContainer.id = `search-facet-${facetIndex}`;
         facetContainer.classList.add('search-facet-widget');
+        if (facetConfig.facetName) {
+          facetContainer.dataset.facetAttribute = facetConfig.facetName;
+        }
         facetsContainer.appendChild(facetContainer);
 
         const widget = createFacetWidget(
@@ -164,6 +182,9 @@ export default function decorate(block) {
         analytics: true,
         enablePersonalization: true,
         clickAnalytics: true,
+        facets: ['*'],
+        ...(userToken ? { userToken } : {}),
+        ...sourceConfigure,
       }),
       ...facetWidgets,
       hits({
