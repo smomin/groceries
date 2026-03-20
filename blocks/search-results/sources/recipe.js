@@ -45,5 +45,5 @@ export const SOURCE_FACET_CONFIGS = [
     widgetType: 'rangeSlider',
     facetTitle: 'Preparation duration (minutes)',
     facetName: 'preparationduration',
-  }
+  },
 ];
