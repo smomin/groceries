@@ -144,7 +144,7 @@ function renderCategoriesMarkup(categories = []) {
         <li class="categories-overlay__item">
           <a
             class="categories-overlay__link"
-            href="/search?category=${encodeURIComponent(category.path)}"
+            href="/shop?category=${encodeURIComponent(category.path)}"
             data-category-path="${category.path}"
           >
             <span class="categories-overlay__name">${category.label}</span>
