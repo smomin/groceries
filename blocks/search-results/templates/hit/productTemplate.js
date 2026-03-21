@@ -9,7 +9,7 @@ export default function itemTemplateFunction(hit, { html, components }) {
   return html`
     <div class="product-card algolia-analytics" data-insights-query-id="${queryId}" data-insights-object-id="${hit.objectID}" data-insights-position="${position}">
       <img class="product-card__image" src="${productImage}" alt="${hit.name}" />
-      <div class="product-card__category">${hit.categories?.lvl0 || ''}</div>
+      <div class="product-card__category">${hit.categories?.lvl1 ? hit.categories.lvl1.split(' > ').pop() : (hit.categories?.lvl0 || '')}</div>
       <div class="product-card__name">${components.Highlight({ attribute: 'name', hit })}</div>
       ${hit.brand
     ? html`<div class="vendor">

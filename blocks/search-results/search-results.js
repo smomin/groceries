@@ -218,7 +218,37 @@ export default function decorate(block) {
     const search = instantsearch({
       searchClient,
       indexName,
-      stateMapping: instantsearch.stateMappings.singleIndex(indexName),
+      routing: {
+        stateMapping: {
+          stateToRoute(uiState) {
+            const indexUiState = uiState[indexName] || {};
+            return {
+              query: indexUiState.query,
+              category: indexUiState.hierarchicalMenu && indexUiState.hierarchicalMenu['categories.lvl0']
+                ? indexUiState.hierarchicalMenu['categories.lvl0']
+                : undefined,
+              page: indexUiState.page,
+              status: indexUiState.refinementList && indexUiState.refinementList.status,
+              visibility: indexUiState.refinementList && indexUiState.refinementList.visibility,
+            };
+          },
+          routeToState(routeState) {
+            return {
+              [indexName]: {
+                query: routeState.query,
+                page: routeState.page,
+                hierarchicalMenu: {
+                  'categories.lvl0': routeState.category ? (Array.isArray(routeState.category) ? routeState.category : [routeState.category]) : undefined,
+                },
+                refinementList: {
+                  status: routeState.status,
+                  visibility: routeState.visibility,
+                },
+              },
+            };
+          },
+        },
+      },
     });
 
     const searchBox = getSearchBox(config.placeholderText);
