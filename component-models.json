@@ -444,11 +444,21 @@
         "value": ""
       },
       {
-        "component": "text",
+        "component": "select",
         "valueType": "string",
-        "name": "indexName",
-        "label": "Index Name",
-        "value": ""
+        "name": "source",
+        "label": "Source",
+        "value": "product",
+        "options": [
+          {
+            "name": "Product",
+            "value": "product"
+          },
+          {
+            "name": "Recipe",
+            "value": "recipe"
+          }
+        ]
       },
       {
         "component": "dropdown",

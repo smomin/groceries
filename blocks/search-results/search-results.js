@@ -87,6 +87,9 @@ function createFacetWidget(widgets, facetConfig, container) {
   if (widgetType === 'hierarchicalMenu') {
     if (!Array.isArray(facetConfig.attributes) || facetConfig.attributes.length === 0) return null;
     widgetParams.attributes = facetConfig.attributes;
+    if (facetConfig.separator) {
+      widgetParams.separator = facetConfig.separator;
+    }
   } else {
     if (!facetConfig.facetName) return null;
     widgetParams.attribute = facetConfig.facetName;
@@ -107,6 +110,10 @@ function createFacetWidget(widgets, facetConfig, container) {
     ['limit', 'showMore', 'showMoreLimit'].forEach((key) => {
       if (facetConfig[key] !== undefined) widgetParams[key] = facetConfig[key];
     });
+  }
+
+  if (typeof facetConfig.transformItems === 'function') {
+    widgetParams.transformItems = facetConfig.transformItems;
   }
 
   if (!facetConfig.facetTitle) return widgetFactory(widgetParams);
@@ -224,8 +231,8 @@ export default function decorate(block) {
             const indexUiState = uiState[indexName] || {};
             return {
               query: indexUiState.query,
-              category: indexUiState.hierarchicalMenu && indexUiState.hierarchicalMenu['categories.lvl0']
-                ? indexUiState.hierarchicalMenu['categories.lvl0']
+              category: indexUiState.menu && indexUiState.menu['categories.lvl1']
+                ? indexUiState.menu['categories.lvl1']
                 : undefined,
               page: indexUiState.page,
               status: indexUiState.refinementList && indexUiState.refinementList.status,
@@ -237,8 +244,8 @@ export default function decorate(block) {
               [indexName]: {
                 query: routeState.query,
                 page: routeState.page,
-                hierarchicalMenu: {
-                  'categories.lvl0': routeState.category ? (Array.isArray(routeState.category) ? routeState.category : [routeState.category]) : undefined,
+                menu: {
+                  'categories.lvl1': routeState.category || undefined,
                 },
                 refinementList: {
                   status: routeState.status,

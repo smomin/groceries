@@ -3,13 +3,13 @@ export const SOURCE_HIT_TEMPLATE = 'productTemplate';
 export const SOURCE_NO_RESULTS_TEMPLATE = 'productTemplate';
 export const SOURCE_FACET_CONFIGS = [
   {
-    widgetType: 'hierarchicalMenu',
-    attributes: [
-      'categories.lvl0',
-      'categories.lvl1',
-      'categories.lvl2',
-      'categories.lvl3',
-    ],
+    widgetType: 'menu',
+    facetTitle: 'Category',
+    facetName: 'categories.lvl1',
+    transformItems: (items) => items.map((item) => ({
+      ...item,
+      label: item.label.replace(/^Default Category\s*>\s*/, ''),
+    })),
   },
   {
     widgetType: 'refinementList',

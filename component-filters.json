@@ -22,7 +22,8 @@
       "search-results",
       "product",
       "recipe",
-      "recommend"
+      "recommend",
+      "agent"
     ]
   },
   {

@@ -2,8 +2,8 @@ import '../../scripts/lib-algoliasearch.js';
 import {
   getTextContent,
   getCredentials,
-  getIndexName,
   getObjectIdFromUrl,
+  getAlgoliaUserTokenFromCookie,
   createAlgoliaClient,
   createImageElement,
   formatPrice,
@@ -14,6 +14,11 @@ import {
 } from '../../scripts/blocks-utils.js';
 
 // Helper functions
+function getSource(htmlElement) {
+  const source = getTextContent(htmlElement.children?.[2]);
+  return source || 'product';
+}
+
 function getModel(htmlElement) {
   const model = getTextContent(htmlElement.children?.[3]);
   return model || 'looking-similar';
@@ -163,9 +168,11 @@ async function fetchRecommendations(
   model,
   objectId,
   fallbackIndexName,
+  userToken,
 ) {
   try {
     const requests = [];
+    const queryParameters = { enablePersonalization: true, ...(userToken ? { userToken } : {}) };
 
     // Build request based on model type
     if (model === 'looking-similar' && objectId) {
@@ -175,6 +182,7 @@ async function fetchRecommendations(
         objectID: objectId,
         threshold: 0,
         maxRecommendations: 10,
+        queryParameters,
       });
     } else if (model === 'bought-together' && objectId) {
       requests.push({
@@ -183,6 +191,7 @@ async function fetchRecommendations(
         objectID: objectId,
         threshold: 0,
         maxRecommendations: 10,
+        queryParameters,
       });
     } else if (model === 'trending-items') {
       requests.push({
@@ -190,6 +199,7 @@ async function fetchRecommendations(
         model: 'trending-items',
         threshold: 0,
         maxRecommendations: 10,
+        queryParameters,
       });
     } else if (model === 'related-products' && objectId) {
       requests.push({
@@ -198,6 +208,7 @@ async function fetchRecommendations(
         objectID: objectId,
         threshold: 0,
         maxRecommendations: 10,
+        queryParameters,
       });
     }
 
@@ -231,6 +242,8 @@ async function fetchRecommendations(
     const index = searchClient.initIndex(fallbackIndexName || indexName);
     const results = await index.search('', {
       hitsPerPage: 10,
+      enablePersonalization: true,
+      ...(userToken ? { userToken } : {}),
     });
     return results.hits;
   } catch (error) {
@@ -241,6 +254,8 @@ async function fetchRecommendations(
       const index = searchClient.initIndex(fallbackIndexName || indexName);
       const results = await index.search('', {
         hitsPerPage: 10,
+        enablePersonalization: true,
+        ...(userToken ? { userToken } : {}),
       });
       return results.hits;
     } catch (fallbackError) {
@@ -253,7 +268,7 @@ async function fetchRecommendations(
 
 export default async function decorate(block) {
   const { appId, apiKey } = getCredentials(block);
-  const indexName = getIndexName(block);
+  const source = getSource(block);
   const model = getModel(block);
   const objectIdParam = getObjectId(block);
   const title = getTitle(block);
@@ -275,12 +290,12 @@ export default async function decorate(block) {
   block.textContent = '';
   block.appendChild(recommendContainer);
 
-  if (!appId || !apiKey || !indexName) {
+  if (!appId || !apiKey) {
     const errorDiv = recommendContainer.querySelector('.recommend-error');
     const loadingDiv = recommendContainer.querySelector('.recommend-loading');
     loadingDiv.style.display = 'none';
     errorDiv.style.display = 'block';
-    errorDiv.textContent = 'Algolia credentials and index name are required.';
+    errorDiv.textContent = 'Algolia credentials are required.';
     return;
   }
 
@@ -292,7 +307,11 @@ export default async function decorate(block) {
   titleElement.textContent = title;
 
   setTimeout(async () => {
+    const sourceModule = await import(`./sources/${source}.js`);
+    const { SOURCE_INDEX_NAME: indexName } = sourceModule;
+
     const searchClient = createAlgoliaClient(appId, apiKey);
+    const userToken = getAlgoliaUserTokenFromCookie();
 
     try {
       const recommendations = await fetchRecommendations(
@@ -303,6 +322,7 @@ export default async function decorate(block) {
         model,
         objectId,
         indexName,
+        userToken,
       );
 
       if (!recommendations || recommendations.length === 0) {

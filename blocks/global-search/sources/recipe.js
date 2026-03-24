@@ -45,6 +45,7 @@ function noResultsTemplate({ state, render }, root) {
 export default function source(
   searchClient,
   getAlgoliaResults,
+  userToken,
 ) {
   return ({ searchQuery }) => ({
     sourceId: 'recipes',
@@ -60,6 +61,7 @@ export default function source(
               analytics: true,
               enablePersonalization: true,
               clickAnalytics: true,
+              ...(userToken ? { userToken } : {}),
             },
           },
         ],

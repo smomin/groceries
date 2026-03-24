@@ -4,6 +4,7 @@ import '../../scripts/lib-autocomplete-plugin-query-suggestions.js';
 import '../../scripts/lib-autocomplete-plugin-recent-searches.js';
 import {
   createAlgoliaClient,
+  getAlgoliaUserTokenFromCookie,
   getParamFromUrl,
   handleAddToCart,
   normalizeBlockConfigKey,
@@ -155,12 +156,14 @@ export default async function decorate(block) {
     layoutTemplate || 'mainTemplate',
   );
 
+  const userToken = getAlgoliaUserTokenFromCookie();
+
   const sources = await Promise.all(sourceConfigs.map(async ({ sourceName }) => {
     if (!sourceName) return null;
     try {
       const { default: source, SOURCE_INDEX_NAME: indexName } = await import(`./sources/${sourceName}.js`);
       if (!indexName) return null;
-      return { source: source(searchClient, getAlgoliaResults), indexName };
+      return { source: source(searchClient, getAlgoliaResults, userToken), indexName };
     } catch {
       return null;
     }
