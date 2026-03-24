@@ -308,7 +308,7 @@ export default async function decorate(block) {
 
   setTimeout(async () => {
     const sourceModule = await import(`./sources/${source}.js`);
-    const { SOURCE_INDEX_NAME: indexName } = sourceModule;
+    const indexName = sourceModule.default ?? sourceModule.SOURCE_INDEX_NAME;
 
     const searchClient = createAlgoliaClient(appId, apiKey);
     const userToken = getAlgoliaUserTokenFromCookie();
