@@ -125,6 +125,12 @@ async function loadLazy(doc) {
   loadHeader(doc.querySelector('header'));
   loadFooter(doc.querySelector('footer'));
 
+  // Load the chat agent — creates its own container appended to body,
+  // matching the same lazy-load phase as header and footer.
+  const agentContainer = document.createElement('div');
+  document.body.appendChild(agentContainer);
+  loadAgent(agentContainer);
+
   loadCSS(`${window.hlx.codeBasePath}/styles/lazy-styles.css`);
   loadFonts();
 }
@@ -145,8 +151,4 @@ async function loadPage() {
   loadDelayed();
 }
 
-loadPage().then(() => {
-  const agentContainer = document.createElement('div');
-  document.body.appendChild(agentContainer);
-  loadAgent(agentContainer);
-});
+loadPage();
