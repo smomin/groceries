@@ -7,6 +7,7 @@ import {
   normalizeBlockConfigKey,
   transformRecipeImagePath,
   transformProductImagePath,
+  getAlgoliaUserTokenFromCookie,
 } from '../../scripts/blocks-utils.js';
 
 // ---------------------------------------------------------------------------
@@ -18,6 +19,10 @@ const AGENT_DEFAULTS = {
   apiKey: '4350d61521979144d2012720315f5fc6',
   indexName: 'SW-Groceries-PROD-US-EN-Recipes',
   agentId: '6311c8de-6df5-490e-8875-7dc96d96355c',
+  // Add authKeyId and authSecretKey to enable per-user memory.
+  // Obtain both from Agent Studio → Settings → User Authentication.
+  authKeyId: '',
+  authSecretKey: '',
 };
 
 const CONFIG_KEY_MAP = {
@@ -26,6 +31,8 @@ const CONFIG_KEY_MAP = {
   searchapikey: 'apiKey',
   indexname: 'indexName',
   agentid: 'agentId',
+  authkeyid: 'authKeyId',
+  authsecretkey: 'authSecretKey',
 };
 
 const CONFIG_KEYS = new Set(Object.values(CONFIG_KEY_MAP));
@@ -34,7 +41,34 @@ const DEFAULT_AGENT_CONFIG = {
   apiKey: '',
   indexName: '',
   agentId: '',
+  authKeyId: '',
+  authSecretKey: '',
 };
+
+/**
+ * Generates a signed HS256 JWT using the browser Web Crypto API.
+ * The subject (`sub`) is the analytics userToken from the _ALGOLIA cookie so
+ * memory is scoped per user. Falls back to a random UUID for first-time visitors.
+ * @param {string} authKeyId - Algolia key ID (from Agent Studio → User Authentication)
+ * @param {string} authSecretKey - Algolia secret key (sk-alg-...)
+ * @returns {Promise<string>} Signed JWT
+ */
+async function generateSecureUserToken(authKeyId, authSecretKey) {
+  const userId = getAlgoliaUserTokenFromCookie() || `anonymous-${crypto.randomUUID()}`;
+  const b64url = (str) => btoa(str).replace(/=/g, '').replace(/\+/g, '-').replace(/\//g, '_');
+  const header = b64url(JSON.stringify({ alg: 'HS256', typ: 'JWT', kid: authKeyId }));
+  const payload = b64url(JSON.stringify({
+    sub: userId,
+    exp: Math.floor(Date.now() / 1000) + 24 * 3600,
+  }));
+  const signingInput = `${header}.${payload}`;
+  const enc = new TextEncoder();
+  const cryptoKey = await crypto.subtle.importKey('raw', enc.encode(authSecretKey), { name: 'HMAC', hash: 'SHA-256' }, false, ['sign']);
+  const sig = await crypto.subtle.sign('HMAC', cryptoKey, enc.encode(signingInput));
+  const sigB64 = btoa(String.fromCharCode(...new Uint8Array(sig)))
+    .replace(/=/g, '').replace(/\+/g, '-').replace(/\//g, '_');
+  return `${signingInput}.${sigB64}`;
+}
 
 function getAgentConfig(block) {
   const config = { ...DEFAULT_AGENT_CONFIG };
@@ -73,6 +107,8 @@ function getConfigFromMetadata() {
     apiKey: getMetadata('algolia-api-key'),
     indexName: getMetadata('algolia-index-name'),
     agentId: getMetadata('algolia-agent-id'),
+    authKeyId: getMetadata('algolia-auth-key-id'),
+    authSecretKey: getMetadata('algolia-auth-secret-key'),
   };
   return isValidConfig(cfg) ? cfg : null;
 }
@@ -125,7 +161,8 @@ export default async function decorate(block) {
   // Config resolution order (first valid source wins):
   //  1. /agent fragment page  — preferred for the loadAgent() global pattern
   //  2. Authored block rows   — for agent blocks placed directly on a page
-  //  3. Page metadata tags    — algolia-app-id / algolia-api-key / algolia-index-name / algolia-agent-id
+  //  3. Page metadata tags    — algolia-app-id / algolia-api-key / algolia-index-name /
+  //                             algolia-agent-id
   //  4. AGENT_DEFAULTS        — hardcoded site-level fallback at the top of this file
   const agentMeta = getMetadata('agent');
   const agentPath = agentMeta ? new URL(agentMeta, window.location).pathname : '/agent';
@@ -147,6 +184,8 @@ export default async function decorate(block) {
     apiKey,
     indexName,
     agentId,
+    authKeyId,
+    authSecretKey,
   } = config;
 
   if (!appId || !apiKey || !indexName || !agentId) return;
@@ -168,9 +207,26 @@ export default async function decorate(block) {
     indexName,
   });
 
+  // Generate a secure user JWT client-side to scope memory per user.
+  // Falls back to agentId-only mode (no memory) if auth keys are not configured.
+  let chatConfig = { container: block, agentId };
+  if (authKeyId && authSecretKey) {
+    const secureUserToken = await generateSecureUserToken(authKeyId, authSecretKey);
+    chatConfig = {
+      container: block,
+      transport: {
+        api: `https://${appId}.algolia.net/agent-studio/1/agents/${agentId}/completions?compatibilityMode=ai-sdk-5`,
+        headers: {
+          'x-algolia-application-id': appId,
+          'x-algolia-api-Key': apiKey,
+          'x-algolia-secure-user-token': secureUserToken,
+        },
+      },
+    };
+  }
+
   const chat = InstantSearchChat({
-    container: block,
-    agentId,
+    ...chatConfig,
     templates: {
       item: (hit, { html }) => {
         if (hit && hit.objectID) {

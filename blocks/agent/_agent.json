@@ -22,6 +22,11 @@
       "id": "agent",
       "fields": [
         {
+          "component": "tab",
+          "label": "Account",
+          "name": "account"
+        },
+        {
           "component": "text",
           "name": "appId",
           "value": "",
@@ -43,10 +48,34 @@
           "valueType": "string"
         },
         {
+          "component": "tab",
+          "label": "Agent Configuration",
+          "name": "agentConfiguration"
+        },
+        {
           "component": "text",
           "name": "agentId",
           "value": "",
           "label": "Agent Id",
+          "valueType": "string"
+        },
+        {
+          "component": "tab",
+          "label": "User Authentication",
+          "name": "userAuthentication"
+        },
+        {
+          "component": "text",
+          "name": "authKeyId",
+          "value": "",
+          "label": "Auth Key Id",
+          "valueType": "string"
+        },
+        {
+          "component": "text",
+          "name": "authSecretKey",
+          "value": "",
+          "label": "Auth Secret Key",
           "valueType": "string"
         }
       ]
