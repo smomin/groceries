@@ -8,6 +8,7 @@ import {
   transformRecipeImagePath,
   transformProductImagePath,
   getAlgoliaUserTokenFromCookie,
+  fetchAlgoliaUserProfile,
 } from '../../scripts/blocks-utils.js';
 
 // ---------------------------------------------------------------------------
@@ -23,6 +24,8 @@ const AGENT_DEFAULTS = {
   // Obtain both from Agent Studio → Settings → User Authentication.
   authKeyId: '',
   authSecretKey: '',
+  // Algolia analytics region for the Advanced Personalization API ('eu' or 'us').
+  personalizationRegion: 'us',
 };
 
 const CONFIG_KEY_MAP = {
@@ -33,6 +36,7 @@ const CONFIG_KEY_MAP = {
   agentid: 'agentId',
   authkeyid: 'authKeyId',
   authsecretkey: 'authSecretKey',
+  personalizationregion: 'personalizationRegion',
 };
 
 const CONFIG_KEYS = new Set(Object.values(CONFIG_KEY_MAP));
@@ -43,6 +47,7 @@ const DEFAULT_AGENT_CONFIG = {
   agentId: '',
   authKeyId: '',
   authSecretKey: '',
+  personalizationRegion: '',
 };
 
 /**
@@ -109,6 +114,7 @@ function getConfigFromMetadata() {
     agentId: getMetadata('algolia-agent-id'),
     authKeyId: getMetadata('algolia-auth-key-id'),
     authSecretKey: getMetadata('algolia-auth-secret-key'),
+    personalizationRegion: getMetadata('algolia-personalization-region'),
   };
   return isValidConfig(cfg) ? cfg : null;
 }
@@ -186,6 +192,7 @@ export default async function decorate(block) {
     agentId,
     authKeyId,
     authSecretKey,
+    personalizationRegion,
   } = config;
 
   if (!appId || !apiKey || !indexName || !agentId) return;
@@ -207,6 +214,16 @@ export default async function decorate(block) {
     indexName,
   });
 
+  // Fetch the Algolia user profile for personalization context.
+  // The _ALGOLIA cookie provides the userToken that identifies the visitor.
+  // The profile is resolved in parallel with other async setup work; a missing
+  // or failed profile is silently ignored — the widget works without it.
+  const userProfile = await fetchAlgoliaUserProfile(appId, apiKey, personalizationRegion);
+
+  // Build the agent completions URL so we can use an explicit transport for
+  // all modes — this lets us attach the user profile to every request body.
+  const completionsApi = `https://${appId}.algolia.net/agent-studio/1/agents/${agentId}/completions?compatibilityMode=ai-sdk-5`;
+
   // Generate a secure user JWT client-side to scope memory per user.
   // Falls back to agentId-only mode (no memory) if auth keys are not configured.
   let chatConfig = { container: block, agentId };
@@ -215,12 +232,27 @@ export default async function decorate(block) {
     chatConfig = {
       container: block,
       transport: {
-        api: `https://${appId}.algolia.net/agent-studio/1/agents/${agentId}/completions?compatibilityMode=ai-sdk-5`,
+        api: completionsApi,
         headers: {
           'x-algolia-application-id': appId,
           'x-algolia-api-Key': apiKey,
           'x-algolia-secure-user-token': secureUserToken,
         },
+        ...(userProfile ? { body: { userProfile } } : {}),
+      },
+    };
+  } else if (userProfile) {
+    // No per-user memory keys, but we still have a profile — use an explicit
+    // transport so we can include the profile in every request body.
+    chatConfig = {
+      container: block,
+      transport: {
+        api: completionsApi,
+        headers: {
+          'x-algolia-application-id': appId,
+          'x-algolia-api-Key': apiKey,
+        },
+        body: { userProfile },
       },
     };
   }

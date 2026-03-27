@@ -139,6 +139,42 @@ export function getAlgoliaUserTokenFromCookie() {
 }
 
 /**
+ * Fetches an Algolia user profile from the Advanced Personalization API.
+ * Uses the user token from the _ALGOLIA cookie to identify the user.
+ * @param {string} appId - Algolia application ID
+ * @param {string} apiKey - Algolia API key (requires search, browse, recommendation ACL)
+ * @param {string} region - Analytics region ('eu' or 'us'), defaults to 'us'
+ * @returns {Promise<Object|null>} User profile object or null if unavailable
+ */
+export async function fetchAlgoliaUserProfile(appId, apiKey, region) {
+  const userToken = getAlgoliaUserTokenFromCookie();
+  if (!userToken || !appId || !apiKey) return null;
+  const resolvedRegion = region || 'us';
+  try {
+    const url = `https://ai-personalization.${resolvedRegion}.algolia.com/2/users/${encodeURIComponent(userToken)}`;
+    const resp = await fetch(url, {
+      headers: {
+        'x-algolia-application-id': appId,
+        'x-algolia-api-key': apiKey,
+      },
+    });
+    if (!resp.ok) return null;
+    return await resp.json();
+  } catch (err) {
+    // A TypeError with "Failed to fetch" or ERR_NAME_NOT_RESOLVED typically means
+    // the Advanced Personalization API is not enabled on this Algolia plan/region.
+    const isNetworkError = err instanceof TypeError;
+    // eslint-disable-next-line no-console
+    const log = isNetworkError ? console.warn : console.error;
+    // eslint-disable-next-line no-console
+    log('[fetchAlgoliaUserProfile]', isNetworkError
+      ? `Network error — check that Advanced Personalization is enabled for your Algolia plan and that the region is correct. Current region: "${resolvedRegion}".`
+      : 'Unexpected error fetching user profile:', err);
+    return null;
+  }
+}
+
+/**
  * Fetches an object from Algolia by objectID
  * @param {Object} searchClient - Algolia search client
  * @param {string} indexName - Index name
