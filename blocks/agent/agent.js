@@ -98,10 +98,12 @@ function buildUserContextSummary(profile) {
   // Build optionalFilters with correct OR/AND structure per Algolia filter scoring docs:
   //   https://www.algolia.com/doc/guides/managing-results/refine-results/filtering/in-depth/filter-scoring
   //
-  // - Multiple values for the SAME facet → nested inner array → OR'd (a recipe can only match one cuisine)
+  // - Multiple values for the SAME facet → nested inner array → OR'd
+  //   (a recipe can only match one cuisine)
   //   e.g. [["cuisine:Italian<score=200>", "cuisine:Indian<score=200>"]]
   //
-  // - Values from DIFFERENT facets → separate entries in outer array → AND'd (each adds to total score)
+  // - Values from DIFFERENT facets → separate entries in outer array → AND'd
+  //   (each adds to total score)
   //   e.g. [["cuisine:Italian<score=200>"], ["mealtype:Dinner<score=525>"]]
   //
   // - sumOrFiltersScores: true MUST be added to the search call so scores accumulate
@@ -146,16 +148,16 @@ function buildUserContextSummary(profile) {
     'DIETARY PREFERENCES',
     `  Strong (affinity ≥ 10/20 → hard filter, facetFilters): ${hardDietary.length ? hardDietary.join(', ') : 'none'}`,
     `  Soft   (affinity  < 10/20 → boosted,    optionalFilters): ${softDietary.length ? softDietary.join(', ') : 'none'}`,
-    `  (affinity scores 1–20 normalized to filter scores 50–1000)`,
+    '  (affinity scores 1–20 normalized to filter scores 50–1000)',
     '',
     '── RECIPE INDEX SEARCH PARAMETERS (SW-Groceries-PROD-US-EN-Recipes) ──',
     `  facetFilters:       [${facetFilters.join(', ')}]`,
     `  optionalFilters:    [${optionalFilters.join(', ')}]`,
-    `  sumOrFiltersScores: true`,
+    '  sumOrFiltersScores: true',
     '',
     '── PRODUCT INDEX SEARCH PARAMETERS (SW_Groceries_Products) ──',
     `  optionalFilters:    [${productOptionalFilters.length ? productOptionalFilters.join(', ') : 'none'}]`,
-    `  sumOrFiltersScores: true`,
+    '  sumOrFiltersScores: true',
     '',
     'NOTE: facetFilters (hard dietary filters) apply to recipe searches only.',
     'Product searches use category optionalFilters to boost preferred product types.',
