@@ -77,6 +77,22 @@
           "value": "",
           "label": "Auth Secret Key",
           "valueType": "string"
+        },
+        {
+          "component": "tab",
+          "label": "Personalization",
+          "name": "personalization"
+        },
+        {
+          "component": "select",
+          "name": "personalizationRegion",
+          "value": "us",
+          "label": "Personalization Region",
+          "valueType": "string",
+          "options": [
+            { "name": "US", "value": "us" },
+            { "name": "EU", "value": "eu" }
+          ]
         }
       ]
     }

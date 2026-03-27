@@ -12,6 +12,7 @@
     "build:json:models": "merge-json-cli -i \"models/_component-models.json\" -o \"component-models.json\"",
     "build:json:definitions": "merge-json-cli -i \"models/_component-definition.json\" -o \"component-definition.json\"",
     "build:json:filters": "merge-json-cli -i \"models/_component-filters.json\" -o \"component-filters.json\"",
+    "update:algolia": "node update-algolia-libs.mjs",
     "prepare": "husky"
   },
   "repository": {
@@ -25,7 +26,9 @@
   },
   "homepage": "https://github.com/adobe/aem-boilerplate#readme",
   "devDependencies": {
+    "@babel/core": "^7.29.0",
     "@babel/eslint-parser": "7.28.0",
+    "esbuild": "^0.27.4",
     "eslint": "8.57.1",
     "eslint-config-airbnb-base": "15.0.0",
     "eslint-plugin-import": "2.32.0",

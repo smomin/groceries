@@ -1,6 +1,5 @@
 import '../../scripts/lib-algoliasearch.js';
 import '../../scripts/lib-instantsearch.js';
-import '../../scripts/lib-instantsearch-chat.js';
 import { addToCart } from '../../scripts/cart.js';
 import { getMetadata } from '../../scripts/aem.js';
 import {
@@ -8,6 +7,7 @@ import {
   transformRecipeImagePath,
   transformProductImagePath,
   getAlgoliaUserTokenFromCookie,
+  fetchAlgoliaUserProfile,
 } from '../../scripts/blocks-utils.js';
 
 // ---------------------------------------------------------------------------
@@ -23,6 +23,8 @@ const AGENT_DEFAULTS = {
   // Obtain both from Agent Studio → Settings → User Authentication.
   authKeyId: '',
   authSecretKey: '',
+  // Algolia analytics region for the Advanced Personalization API ('eu' or 'us').
+  personalizationRegion: 'us',
 };
 
 const CONFIG_KEY_MAP = {
@@ -33,6 +35,7 @@ const CONFIG_KEY_MAP = {
   agentid: 'agentId',
   authkeyid: 'authKeyId',
   authsecretkey: 'authSecretKey',
+  personalizationregion: 'personalizationRegion',
 };
 
 const CONFIG_KEYS = new Set(Object.values(CONFIG_KEY_MAP));
@@ -43,7 +46,127 @@ const DEFAULT_AGENT_CONFIG = {
   agentId: '',
   authKeyId: '',
   authSecretKey: '',
+  personalizationRegion: '',
 };
+
+/**
+ * Builds a structured, actionable summary of a user's Algolia personalization
+ * profile that the agent can directly translate into search parameters.
+ *
+ * Affinities with score >= 7 are treated as strong preferences and surfaced
+ * as ready-to-use facet_filters. Lower-scored affinities become optionalFilters
+ * with their score embedded so the agent can boost without hard-filtering.
+ *
+ * @param {Object} profile - User profile from the Advanced Personalization API
+ * @returns {string} Formatted, actionable context string, or empty string if no data
+ */
+function buildUserContextSummary(profile) {
+  if (!profile || !Array.isArray(profile.affinities) || profile.affinities.length === 0) {
+    return '';
+  }
+
+  // Group and sort affinities by facet name
+  const grouped = {};
+  profile.affinities.forEach(({ name, value, score }) => {
+    if (!grouped[name]) grouped[name] = [];
+    grouped[name].push({ value, score });
+  });
+  Object.values(grouped).forEach((arr) => arr.sort((a, b) => b.score - a.score));
+
+  // Affinity scores are 1–20 (Algolia Advanced Personalization scale).
+  // optionalFilters filter scores are 0–65,535 — a completely different system.
+  // Normalize affinity scores onto a 0–1,000 range so the boost values are
+  // meaningful and have clear separation (affinity 20 → filter score 1000,
+  // affinity 1 → filter score 50).
+  const AFFINITY_MAX = 20;
+  const FILTER_SCORE_MAX = 1000;
+  const FILTER_SCORE_MIN = 50;
+  const normalizeScore = (s) => Math.round(
+    FILTER_SCORE_MIN + ((s / AFFINITY_MAX) * (FILTER_SCORE_MAX - FILTER_SCORE_MIN)),
+  );
+
+  // Split dietary preferences at the affinity midpoint (10 / 20):
+  // - score >= 10 → strong signal → apply as facet_filters (hard filter)
+  // - score <  10 → weaker signal → apply as optionalFilters (soft boost)
+  const dietaryAll = grouped.dietarypreferences || [];
+  const hardDietary = dietaryAll.filter((a) => a.score >= 10).map((a) => a.value);
+  const softDietary = dietaryAll.filter((a) => a.score < 10).map((a) => a.value);
+
+  // Build facet_filters suggestion — one inner array per hard dietary requirement (AND logic)
+  const facetFilters = hardDietary.map((v) => `["dietarypreferences:${v}"]`);
+
+  // Build optionalFilters with correct OR/AND structure per Algolia filter scoring docs:
+  //   https://www.algolia.com/doc/guides/managing-results/refine-results/filtering/in-depth/filter-scoring
+  //
+  // - Multiple values for the SAME facet → nested inner array → OR'd
+  //   (a recipe can only match one cuisine)
+  //   e.g. [["cuisine:Italian<score=200>", "cuisine:Indian<score=200>"]]
+  //
+  // - Values from DIFFERENT facets → separate entries in outer array → AND'd
+  //   (each adds to total score)
+  //   e.g. [["cuisine:Italian<score=200>"], ["mealtype:Dinner<score=525>"]]
+  //
+  // - sumOrFiltersScores: true MUST be added to the search call so scores accumulate
+  //   across facets rather than only the highest score winning (default behaviour).
+  const optionalFilterFacets = ['cuisine', 'mealtype', 'course', 'level'];
+  const optionalFilters = [];
+  optionalFilterFacets.forEach((facet) => {
+    const values = grouped[facet] || [];
+    if (values.length === 0) return;
+    // Group same-facet values into one inner array so Algolia OR's them
+    const inner = values.map(({ value, score }) => `"${facet}:${value}<score=${normalizeScore(score)}>"`);
+    optionalFilters.push(`[${inner.join(', ')}]`);
+  });
+
+  // Soft dietary prefs — group into one inner array (OR logic: match any soft pref)
+  const softDietaryValues = (grouped.dietarypreferences || []).filter((a) => a.score < 10);
+  if (softDietaryValues.length > 0) {
+    const inner = softDietaryValues.map(({ value, score }) => `"dietarypreferences:${value}<score=${normalizeScore(score)}>"`);
+    optionalFilters.push(`[${inner.join(', ')}]`);
+  }
+
+  // Build product optionalFilters from categories.lvl2 affinities.
+  // The products index uses categories.lvl0/lvl1/lvl2 facets — not dietary prefs.
+  const productOptionalFilters = [];
+  ['categories.lvl2', 'categories.lvl1', 'categories.lvl0'].forEach((facet) => {
+    const values = grouped[facet] || [];
+    if (values.length === 0) return;
+    const inner = values.map(({ value, score }) => `"${facet}:${value}<score=${normalizeScore(score)}>"`);
+    productOptionalFilters.push(`[${inner.join(', ')}]`);
+  });
+
+  // Build human-readable affinity lines (all non-dietary facets)
+  const recipeAffinityFacets = new Set(['dietarypreferences', 'cuisine', 'mealtype', 'course', 'level']);
+  const productAffinityFacets = new Set(['categories.lvl0', 'categories.lvl1', 'categories.lvl2']);
+  const otherAffinityLines = Object.entries(grouped)
+    .filter(([name]) => !recipeAffinityFacets.has(name) && !productAffinityFacets.has(name))
+    .map(([name, values]) => `  ${name}: ${values.map((v) => `${v.value} (score: ${v.score})`).join(', ')}`);
+
+  const lines = [
+    'USER PROFILE (from Algolia Advanced Personalization)',
+    '',
+    'DIETARY PREFERENCES',
+    `  Strong (affinity ≥ 10/20 → hard filter, facetFilters): ${hardDietary.length ? hardDietary.join(', ') : 'none'}`,
+    `  Soft   (affinity  < 10/20 → boosted,    optionalFilters): ${softDietary.length ? softDietary.join(', ') : 'none'}`,
+    '  (affinity scores 1–20 normalized to filter scores 50–1000)',
+    '',
+    '── RECIPE INDEX SEARCH PARAMETERS (SW-Groceries-PROD-US-EN-Recipes) ──',
+    `  facetFilters:       [${facetFilters.join(', ')}]`,
+    `  optionalFilters:    [${optionalFilters.join(', ')}]`,
+    '  sumOrFiltersScores: true',
+    '',
+    '── PRODUCT INDEX SEARCH PARAMETERS (SW_Groceries_Products) ──',
+    `  optionalFilters:    [${productOptionalFilters.length ? productOptionalFilters.join(', ') : 'none'}]`,
+    '  sumOrFiltersScores: true',
+    '',
+    'NOTE: facetFilters (hard dietary filters) apply to recipe searches only.',
+    'Product searches use category optionalFilters to boost preferred product types.',
+    'sumOrFiltersScores:true ensures scores accumulate across facet groups.',
+    ...(otherAffinityLines.length ? ['', 'OTHER AFFINITIES', ...otherAffinityLines] : []),
+  ];
+
+  return lines.join('\n');
+}
 
 /**
  * Generates a signed HS256 JWT using the browser Web Crypto API.
@@ -109,6 +232,7 @@ function getConfigFromMetadata() {
     agentId: getMetadata('algolia-agent-id'),
     authKeyId: getMetadata('algolia-auth-key-id'),
     authSecretKey: getMetadata('algolia-auth-secret-key'),
+    personalizationRegion: getMetadata('algolia-personalization-region'),
   };
   return isValidConfig(cfg) ? cfg : null;
 }
@@ -186,6 +310,7 @@ export default async function decorate(block) {
     agentId,
     authKeyId,
     authSecretKey,
+    personalizationRegion,
   } = config;
 
   if (!appId || !apiKey || !indexName || !agentId) return;
@@ -207,6 +332,16 @@ export default async function decorate(block) {
     indexName,
   });
 
+  // Fetch the Algolia user profile for personalization context.
+  // The _ALGOLIA cookie provides the userToken that identifies the visitor.
+  // The profile is resolved in parallel with other async setup work; a missing
+  // or failed profile is silently ignored — the widget works without it.
+  const userProfile = await fetchAlgoliaUserProfile(appId, apiKey, personalizationRegion);
+
+  // Build the agent completions URL so we can use an explicit transport for
+  // all modes — this lets us attach the user profile to every request body.
+  const completionsApi = `https://${appId}.algolia.net/agent-studio/1/agents/${agentId}/completions?compatibilityMode=ai-sdk-5`;
+
   // Generate a secure user JWT client-side to scope memory per user.
   // Falls back to agentId-only mode (no memory) if auth keys are not configured.
   let chatConfig = { container: block, agentId };
@@ -215,18 +350,69 @@ export default async function decorate(block) {
     chatConfig = {
       container: block,
       transport: {
-        api: `https://${appId}.algolia.net/agent-studio/1/agents/${agentId}/completions?compatibilityMode=ai-sdk-5`,
+        api: completionsApi,
         headers: {
           'x-algolia-application-id': appId,
           'x-algolia-api-Key': apiKey,
           'x-algolia-secure-user-token': secureUserToken,
         },
+        ...(userProfile ? { body: { userProfile } } : {}),
+      },
+    };
+  } else if (userProfile) {
+    // No per-user memory keys, but we still have a profile — use an explicit
+    // transport so we can include the profile in every request body.
+    chatConfig = {
+      container: block,
+      transport: {
+        api: completionsApi,
+        headers: {
+          'x-algolia-application-id': appId,
+          'x-algolia-api-Key': apiKey,
+        },
+        body: { userProfile },
       },
     };
   }
 
-  const chat = InstantSearchChat({
+  // ---------------------------------------------------------------------------
+  // Client-side MCP tool: get_user_profile
+  //
+  // Exposes the Algolia Advanced Personalization profile as a tool the agent
+  // can call by name. Register a matching tool in Algolia Agent Studio with:
+  //
+  //   Name:        get_user_profile
+  //   Type:        Client tool
+  //   Description: Returns the current visitor's personalisation affinities
+  //                (dietary preferences, cuisine, meal type, difficulty level,
+  //                etc.) inferred from their browsing history. Call this tool
+  //                whenever the user asks about their preferences or when you
+  //                need to personalise recipe or product recommendations.
+  //   Parameters:  none
+  //
+  // The handler uses the profile already fetched at page load for a fast
+  // response, and falls back to a live fetch if needed.
+  // ---------------------------------------------------------------------------
+  let cachedProfile = userProfile;
+  const tools = {
+    get_user_profile: {
+      onToolCall: async ({ addToolResult }) => {
+        if (!cachedProfile) {
+          cachedProfile = await fetchAlgoliaUserProfile(appId, apiKey, personalizationRegion);
+        }
+        if (!cachedProfile) {
+          addToolResult({ output: 'No user profile is available for this visitor.' });
+          return;
+        }
+        const summary = buildUserContextSummary(cachedProfile);
+        addToolResult({ output: summary || 'User profile found but contains no affinities.' });
+      },
+    },
+  };
+
+  const chat = instantsearch.widgets.chat({
     ...chatConfig,
+    tools,
     templates: {
       item: (hit, { html }) => {
         if (hit && hit.objectID) {
