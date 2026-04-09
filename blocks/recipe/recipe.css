@@ -2,7 +2,7 @@
   max-width: 1200px;
   margin: 0 auto;
   padding: 2rem 1rem;
-  margin-top: 40px; /* Account for fixed header height - ensures no overlap */
+  margin-top: 40px; // Account for fixed header height - ensures no overlap
   scroll-margin-top: 150px;
 } */
 

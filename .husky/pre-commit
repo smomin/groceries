@@ -1,1 +1,2 @@
+npm run lint
 node .husky/pre-commit.mjs

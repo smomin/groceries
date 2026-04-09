@@ -595,7 +595,7 @@ export default async function decorate(block) {
     const ingredientLink = event.target.closest('.ais-Carousel-hit-ingredient-link');
     if (!ingredientLink) return;
 
-    const productName = ingredientLink.dataset.productName;
+    const { productName } = ingredientLink.dataset;
     if (!productName) return;
 
     if (isOnShopPage()) {

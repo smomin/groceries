@@ -223,7 +223,9 @@ export default function decorate(block) {
     } = sourceModule;
 
     const searchContainer = document.createElement('div');
-    searchContainer.innerHTML = layoutTemplateFunction({ indexName, hasFacets, showActiveRefinements });
+    searchContainer.innerHTML = layoutTemplateFunction(
+      { indexName, hasFacets, showActiveRefinements },
+    );
     const extraClasses = (config.className || '').trim();
     if (extraClasses) {
       searchContainer.classList.add(...extraClasses.split(/\s+/));

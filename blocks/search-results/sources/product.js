@@ -13,5 +13,5 @@ export const SOURCE_FACET_CONFIGS = [
     ],
     showParentLevel: false,
     rootPath: 'Default Category',
-  }
+  },
 ];
