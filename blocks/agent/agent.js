@@ -281,6 +281,33 @@ async function loadAgentFragment(path) {
   return null;
 }
 
+function isOnShopPage() {
+  const { pathname } = window.location;
+  return pathname === '/shop' || pathname === '/shop.html' || pathname.startsWith('/shop/');
+}
+
+function navigateToShopWithQuery(productName) {
+  const url = `/shop.html?query=${encodeURIComponent(productName)}`;
+  window.location.href = url;
+}
+
+function updateShopSearch(productName) {
+  if (!window.searchInstance) return false;
+  window.searchInstance.setUiState((prevUiState) => {
+    const [indexName] = Object.keys(prevUiState);
+    return {
+      [indexName]: {
+        ...prevUiState[indexName],
+        query: productName,
+        page: undefined,
+      },
+    };
+  });
+  const hitsEl = document.querySelector('#hits');
+  if (hitsEl) hitsEl.scrollIntoView({ behavior: 'smooth' });
+  return true;
+}
+
 export default async function decorate(block) {
   // Config resolution order (first valid source wins):
   //  1. /agent fragment page  — preferred for the loadAgent() global pattern
@@ -421,13 +448,21 @@ export default async function decorate(block) {
             ? transformRecipeImagePath(hit.image)
             : transformProductImagePath(hit.image);
 
+          const shopQueryUrl = `/shop.html?query=${encodeURIComponent(hit.name)}`;
+
           return html`
               <article class="ais-Carousel-hit">
                 <div class="ais-Carousel-hit-image">
                   <img src="${imageUrl}" alt="${hit.name}" />
                 </div>
                 <h2 class="ais-Carousel-hit-title">
-                  <a href="/products.html?pid=${hit.objectID}" class="ais-Carousel-hit-link">${hit.name}</a>
+                  ${isRecipe ? html`
+                    <a href="/products.html?pid=${hit.objectID}" class="ais-Carousel-hit-link">${hit.name}</a>
+                  ` : html`
+                    <a href="${shopQueryUrl}"
+                       class="ais-Carousel-hit-link ais-Carousel-hit-ingredient-link"
+                       data-product-name="${hit.name}">${hit.name}</a>
+                  `}
                 </h2>
                 ${isRecipe ? html`
                   <button class="ais-Carousel-hit-get-ingredients" 
@@ -552,6 +587,23 @@ export default async function decorate(block) {
       setTimeout(() => {
         addWelcomeMessage();
       }, 300);
+    }
+  });
+
+  // Handle ingredient (product) title link clicks — navigate to shop with query
+  block.addEventListener('click', (event) => {
+    const ingredientLink = event.target.closest('.ais-Carousel-hit-ingredient-link');
+    if (!ingredientLink) return;
+
+    const productName = ingredientLink.dataset.productName;
+    if (!productName) return;
+
+    if (isOnShopPage()) {
+      event.preventDefault();
+      updateShopSearch(productName);
+    } else {
+      event.preventDefault();
+      navigateToShopWithQuery(productName);
     }
   });
 

@@ -90,6 +90,12 @@ function createFacetWidget(widgets, facetConfig, container) {
     if (facetConfig.separator) {
       widgetParams.separator = facetConfig.separator;
     }
+    if (facetConfig.showParentLevel !== undefined) {
+      widgetParams.showParentLevel = facetConfig.showParentLevel;
+    }
+    if (facetConfig.rootPath !== undefined) {
+      widgetParams.rootPath = facetConfig.rootPath;
+    }
   } else {
     if (!facetConfig.facetName) return null;
     widgetParams.attribute = facetConfig.facetName;
@@ -201,7 +207,9 @@ export default function decorate(block) {
     const templateBase = new URL('./templates/layout', import.meta.url).href;
     const layoutTemplateFunction = await loadLayoutTemplate(templateBase, layoutTemplate);
 
-    const { hits, pagination, configure } = instantsearch.widgets;
+    const {
+      hits, pagination, configure, currentRefinements, clearRefinements,
+    } = instantsearch.widgets;
 
     const sourceModule = await import(`./sources/${source}.js`);
     const {
@@ -211,10 +219,11 @@ export default function decorate(block) {
       SOURCE_FACET_CONFIGS: facetConfigs = [],
       SOURCE_CONFIGURE: sourceConfigure = {},
       SOURCE_NUMERIC_FACET_ATTRIBUTES: numericFacetAttributes = [],
+      SOURCE_SHOW_ACTIVE_REFINEMENTS: showActiveRefinements = false,
     } = sourceModule;
 
     const searchContainer = document.createElement('div');
-    searchContainer.innerHTML = layoutTemplateFunction({ indexName, hasFacets });
+    searchContainer.innerHTML = layoutTemplateFunction({ indexName, hasFacets, showActiveRefinements });
     const extraClasses = (config.className || '').trim();
     if (extraClasses) {
       searchContainer.classList.add(...extraClasses.split(/\s+/));
@@ -225,37 +234,7 @@ export default function decorate(block) {
     const search = instantsearch({
       searchClient,
       indexName,
-      routing: {
-        stateMapping: {
-          stateToRoute(uiState) {
-            const indexUiState = uiState[indexName] || {};
-            return {
-              query: indexUiState.query,
-              category: indexUiState.menu && indexUiState.menu['categories.lvl1']
-                ? indexUiState.menu['categories.lvl1']
-                : undefined,
-              page: indexUiState.page,
-              status: indexUiState.refinementList && indexUiState.refinementList.status,
-              visibility: indexUiState.refinementList && indexUiState.refinementList.visibility,
-            };
-          },
-          routeToState(routeState) {
-            return {
-              [indexName]: {
-                query: routeState.query,
-                page: routeState.page,
-                menu: {
-                  'categories.lvl1': routeState.category || undefined,
-                },
-                refinementList: {
-                  status: routeState.status,
-                  visibility: routeState.visibility,
-                },
-              },
-            };
-          },
-        },
-      },
+      routing: true,
     });
 
     const searchBox = getSearchBox(config.placeholderText);
@@ -289,10 +268,15 @@ export default function decorate(block) {
       });
     }
 
+    const currentRefinementsContainer = showActiveRefinements && searchContainer.querySelector('#current-refinements');
+    const clearRefinementsContainer = showActiveRefinements && searchContainer.querySelector('#clear-refinements');
+
     search.addWidgets([
       searchBox,
       ...(numericFacetTransformWidget ? [numericFacetTransformWidget] : []),
       ...(resetRecipeDurationRefinements ? [resetRecipeDurationRefinements] : []),
+      ...(currentRefinementsContainer ? [currentRefinements({ container: '#current-refinements' })] : []),
+      ...(clearRefinementsContainer ? [clearRefinements({ container: '#clear-refinements' })] : []),
       configure({
         hitsPerPage: 12,
         analytics: true,

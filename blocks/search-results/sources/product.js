@@ -3,22 +3,15 @@ export const SOURCE_HIT_TEMPLATE = 'productTemplate';
 export const SOURCE_NO_RESULTS_TEMPLATE = 'productTemplate';
 export const SOURCE_FACET_CONFIGS = [
   {
-    widgetType: 'menu',
+    widgetType: 'hierarchicalMenu',
     facetTitle: 'Category',
-    facetName: 'categories.lvl1',
-    transformItems: (items) => items.map((item) => ({
-      ...item,
-      label: item.label.replace(/^Default Category\s*>\s*/, ''),
-    })),
-  },
-  {
-    widgetType: 'refinementList',
-    facetTitle: 'Status',
-    facetName: 'status',
-  },
-  {
-    widgetType: 'refinementList',
-    facetTitle: 'Visibility',
-    facetName: 'visibility',
-  },
+    attributes: [
+      'categories.lvl0',
+      'categories.lvl1',
+      'categories.lvl2',
+      'categories.lvl3',
+    ],
+    showParentLevel: false,
+    rootPath: 'Default Category',
+  }
 ];

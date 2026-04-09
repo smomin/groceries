@@ -29,6 +29,8 @@
 
 /* Author via block Class Name → applied to outer searchContainer wrapper (e.g. search-container--header-clearance) */
 .search-results .search-container--header-clearance {
+    max-width: 1200px;
+    margin: 0 auto;
     margin-top: 3.5rem;
 }
 
@@ -231,6 +233,15 @@
 .search-panel__filters .ais-Menu-item--selected .ais-Menu-label {
     color: #3bb77e;
     font-weight: 600;
+}
+
+.search-panel__filters .ais-HierarchicalMenu-link::before {
+    background-image: url("data:image/svg+xml;utf8,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20width%3D%2216%22%20height%3D%2216%22%20viewBox%3D%220%200%2024%2024%22%20fill%3D%22none%22%20stroke%3D%22%23b6b7d5%22%20stroke-width%3D%222%22%20stroke-linecap%3D%22round%22%20stroke-linejoin%3D%22round%22%3E%3Cpolyline%20points%3D%229%2018%2015%2012%209%206%22%3E%3C%2Fpolyline%3E%3C%2Fsvg%3E");
+}
+
+.search-panel__filters .ais-HierarchicalMenu-item--selected > .ais-HierarchicalMenu-link::before,
+.search-panel__filters .ais-HierarchicalMenu-item--parent > .ais-HierarchicalMenu-link::before {
+    background-image: url("data:image/svg+xml;utf8,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20width%3D%2216%22%20height%3D%2216%22%20viewBox%3D%220%200%2024%2024%22%20fill%3D%22none%22%20stroke%3D%22%233bb77e%22%20stroke-width%3D%222%22%20stroke-linecap%3D%22round%22%20stroke-linejoin%3D%22round%22%3E%3Cpolyline%20points%3D%226%209%2012%2015%2018%209%22%3E%3C%2Fpolyline%3E%3C%2Fsvg%3E");
 }
 
 .search-panel__filters .ais-HierarchicalMenu-count,
@@ -514,6 +525,70 @@
 	color: #00b207;
 	background: transparent;
 	border-color: transparent;
+}
+
+/* ── Active refinements (inside filters sidebar) ────────────── */
+
+.search-panel__filters #current-refinements:not(:has(.ais-CurrentRefinements--noRefinement)),
+.search-panel__filters #clear-refinements:not(:has(.ais-ClearRefinements-button:disabled)) {
+    margin-bottom: 1.25rem;
+    padding-bottom: 1.25rem;
+    border-bottom: 1px solid rgb(59 183 126 / 12%);
+}
+
+.search-panel__filters .ais-CurrentRefinements--noRefinement,
+.search-panel__filters #current-refinements:has(.ais-CurrentRefinements--noRefinement),
+.search-panel__filters #clear-refinements:has(.ais-ClearRefinements-button:disabled) {
+    display: none;
+}
+
+.search-panel__filters .ais-CurrentRefinements-list {
+    display: flex;
+    flex-direction: column;
+    gap: 0.4rem;
+    grid-auto-flow: unset;
+}
+
+.search-panel__filters .ais-CurrentRefinements-item {
+    background-color: rgb(59 183 126 / 8%);
+    border-color: rgb(59 183 126 / 40%);
+    color: #2a8e62;
+    flex-wrap: wrap;
+}
+
+.search-panel__filters .ais-CurrentRefinements-label {
+    font-weight: 600;
+    font-size: 0.75rem;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+}
+
+.search-panel__filters .ais-CurrentRefinements-delete {
+    color: #3bb77e;
+}
+
+.search-panel__filters .ais-CurrentRefinements-delete:hover {
+    color: #009606;
+}
+
+.search-panel__filters .ais-ClearRefinements-button {
+    width: 100%;
+    color: #3bb77e;
+    border-color: rgb(59 183 126 / 40%);
+    background: #fff;
+    background-image: none;
+    font-size: 0.8125rem;
+    height: 1.75rem;
+}
+
+.search-panel__filters .ais-ClearRefinements-button:hover {
+    background: rgb(59 183 126 / 8%);
+    background-image: none;
+    border-color: #3bb77e;
+}
+
+.search-panel__filters .ais-ClearRefinements-button:disabled {
+    display: none;
 }
 
 /* Recipe Card Styles */
