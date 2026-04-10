@@ -281,6 +281,119 @@ async function loadAgentFragment(path) {
   return null;
 }
 
+/**
+ * Finds /content/dam/sw-groceries/recipes/… paths in chat message text nodes,
+ * wraps the nearest preceding bold/strong title in an <a href="/recipes?rid=…">,
+ * and removes the raw path from the text.
+ * @param {Element} el - .ais-ChatMessage-message container
+ */
+function linkifyRecipePaths(el) {
+  const RECIPE_PATH_TEST = /\/content\/dam\/sw-groceries\/recipes\/[a-z0-9/_-]+/;
+  const RECIPE_PATH_RE = /\/content\/dam\/sw-groceries\/recipes\/[a-z0-9/_-]+/g;
+
+  const walker = document.createTreeWalker(el, NodeFilter.SHOW_TEXT, {
+    acceptNode(node) {
+      if (node.parentElement?.closest('a')) return NodeFilter.FILTER_REJECT;
+      return RECIPE_PATH_TEST.test(node.textContent)
+        ? NodeFilter.FILTER_ACCEPT : NodeFilter.FILTER_REJECT;
+    },
+  });
+
+  const textNodes = [];
+  let n = walker.nextNode();
+  while (n) { textNodes.push(n); n = walker.nextNode(); }
+
+  // eslint-disable-next-line no-console
+  console.log(`[linkifyRecipePaths] found ${textNodes.length} text node(s) with recipe paths`);
+
+  textNodes.forEach((textNode) => {
+    RECIPE_PATH_RE.lastIndex = 0;
+    const text = textNode.textContent;
+    const match = RECIPE_PATH_RE.exec(text);
+    if (!match) return;
+
+    const recipePath = match[0];
+    const href = `/recipes?rid=${recipePath}`;
+    // eslint-disable-next-line no-console
+    console.log('[linkifyRecipePaths] path found:', recipePath, '→', href);
+
+    // Find the nearest unlinked <strong> or <b> within the same list-item / paragraph
+    const container = textNode.parentElement?.closest('li, p') || textNode.parentElement;
+    const titleEl = container
+      ? Array.from(container.querySelectorAll('strong, b')).find((s) => !s.closest('a'))
+      : null;
+
+    // eslint-disable-next-line no-console
+    console.log('[linkifyRecipePaths] title element found:', titleEl?.textContent ?? '(none)');
+
+    if (titleEl) {
+      const anchor = document.createElement('a');
+      anchor.href = href;
+      titleEl.parentNode.insertBefore(anchor, titleEl);
+      anchor.appendChild(titleEl);
+    }
+
+    // Remove the raw path from the text node; keep any surrounding text
+    RECIPE_PATH_RE.lastIndex = 0;
+    const cleaned = text.replace(RECIPE_PATH_RE, '').replace(/\s{2,}/g, ' ').trim();
+    if (cleaned) {
+      textNode.textContent = cleaned;
+    } else {
+      textNode.parentNode?.removeChild(textNode);
+    }
+  });
+}
+
+/**
+ * Converts absolute https:// URLs in chat message text nodes into <a> elements.
+ * Root-relative paths are intentionally excluded to avoid false positives.
+ * @param {Element} el - .ais-ChatMessage-message container
+ */
+function linkifyUrls(el) {
+  const URL_TEST = /https?:\/\/[^\s<>"']+/;
+  const URL_REPLACE = /https?:\/\/[^\s<>"']+/g;
+
+  const walker = document.createTreeWalker(el, NodeFilter.SHOW_TEXT, {
+    acceptNode(node) {
+      if (node.parentElement?.closest('a')) return NodeFilter.FILTER_REJECT;
+      return URL_TEST.test(node.textContent) ? NodeFilter.FILTER_ACCEPT : NodeFilter.FILTER_REJECT;
+    },
+  });
+
+  const textNodes = [];
+  let node = walker.nextNode();
+  while (node) { textNodes.push(node); node = walker.nextNode(); }
+
+  // eslint-disable-next-line no-console
+  console.log(`[linkifyUrls] found ${textNodes.length} text node(s) with absolute URLs`);
+
+  textNodes.forEach((textNode) => {
+    const text = textNode.textContent;
+    URL_REPLACE.lastIndex = 0;
+    const frag = document.createDocumentFragment();
+    let lastIndex = 0;
+    let match = URL_REPLACE.exec(text);
+    while (match) {
+      // eslint-disable-next-line no-console
+      console.log('[linkifyUrls] match:', match[0]);
+      if (match.index > lastIndex) {
+        frag.appendChild(document.createTextNode(text.slice(lastIndex, match.index)));
+      }
+      const anchor = document.createElement('a');
+      [anchor.href] = match;
+      [anchor.textContent] = match;
+      anchor.target = '_blank';
+      frag.appendChild(anchor);
+      lastIndex = match.index + match[0].length;
+      match = URL_REPLACE.exec(text);
+    }
+    if (lastIndex < text.length) {
+      frag.appendChild(document.createTextNode(text.slice(lastIndex)));
+    }
+    textNode.parentNode.replaceChild(frag, textNode);
+  });
+}
+
 function isOnShopPage() {
   const { pathname } = window.location;
   return pathname === '/shop' || pathname === '/shop.html' || pathname.startsWith('/shop/');
@@ -549,25 +662,56 @@ export default async function decorate(block) {
     const chatContainer = block.querySelector('.ais-Chat-container');
     if (!chatContainer || chatObserver) return;
 
-    // Use MutationObserver to detect when chat opens
+    // Debounced sweep — runs linkifyUrls on all assistant messages after mutations
+    // settle. Using a debounce handles streaming responses (text node updates) and
+    // avoids running on every individual character update during streaming.
+    let linkifyTimer = null;
+    const scheduleLinkify = () => {
+      clearTimeout(linkifyTimer);
+      linkifyTimer = setTimeout(() => {
+        const messageEls = chatContainer.querySelectorAll('.ais-ChatMessage-message');
+        // eslint-disable-next-line no-console
+        console.log(`[agent] scheduleLinkify fired — found ${messageEls.length} .ais-ChatMessage-message element(s)`);
+        messageEls.forEach((msgEl) => {
+          linkifyRecipePaths(msgEl);
+          linkifyUrls(msgEl);
+        });
+      }, 600);
+    };
+
+    // Use MutationObserver to detect when chat opens and to linkify URLs in new messages
     chatObserver = new MutationObserver((mutations) => {
+      let needsLinkify = false;
       mutations.forEach((mutation) => {
         if (mutation.type === 'attributes' && mutation.attributeName === 'class') {
           const isOpen = chatContainer.classList.contains('ais-Chat-container--open');
           if (isOpen) {
-            // Small delay to ensure chat is fully rendered
             setTimeout(() => {
               addWelcomeMessage();
             }, 300);
           }
         }
+        if (mutation.type === 'childList' || mutation.type === 'characterData') {
+          needsLinkify = true;
+        }
       });
+      if (needsLinkify) {
+        // eslint-disable-next-line no-console
+        console.log('[agent] mutation detected — scheduling linkify');
+        scheduleLinkify();
+      }
     });
 
     chatObserver.observe(chatContainer, {
       attributes: true,
       attributeFilter: ['class'],
+      childList: true,
+      subtree: true,
+      characterData: true,
     });
+
+    // eslint-disable-next-line no-console
+    console.log('[agent] chatObserver attached to', chatContainer);
   }
 
   // Try to setup observer immediately, or wait for chat container to be created

@@ -223,6 +223,7 @@ export default function decorate(block) {
     } = sourceModule;
 
     const searchContainer = document.createElement('div');
+    // searchContainer.className = 'search-results-container';
     searchContainer.innerHTML = layoutTemplateFunction(
       { indexName, hasFacets, showActiveRefinements },
     );

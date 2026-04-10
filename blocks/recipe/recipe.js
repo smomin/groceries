@@ -125,7 +125,7 @@ export default function decorate(block) {
   }
 
   const recipeContainer = document.createElement('div');
-  // recipeContainer.className = 'recipe-container';
+  recipeContainer.className = 'recipe-container';
   recipeContainer.innerHTML = `
     <nav class="recipe-breadcrumb" aria-label="Breadcrumb">
       <a href="/" class="breadcrumb-link">Home</a>
