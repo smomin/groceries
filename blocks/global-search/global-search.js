@@ -242,6 +242,18 @@ export default async function decorate(block) {
   }
 
   setTimeout(async () => {
+    // Correct panel top position whenever it is appended to document.body.
+    // The panel is position:fixed (viewport-relative), so top = form's viewport bottom.
+    // Algolia's internal calculation uses offsetTop which is relative to the fixed header's
+    // inner container and gives the wrong value, especially for the minimized header.
+    const repositionPanel = () => {
+      const panel = document.querySelector('.aa-Panel');
+      const form = autocompleteContainer.querySelector('.aa-Form');
+      if (panel && form) {
+        panel.style.top = `${form.getBoundingClientRect().bottom}px`;
+      }
+    };
+
     const autocompleteInstance = autocomplete({
       container: '#autocomplete',
       shouldPanelOpen: false,
@@ -253,6 +265,11 @@ export default async function decorate(block) {
       onReset() { setInstantSearchUiState({ query: '' }); },
       onStateChange({ prevState, state }) {
         if (prevState.query !== state.query) setInstantSearchUiState({ query: state.query });
+        if (state.isOpen && !prevState.isOpen) {
+          // Belt-and-suspenders: also reposition when panel transitions to open,
+          // covering cases where the panel element was already in the DOM.
+          setTimeout(repositionPanel, 0);
+        }
       },
       getSources({ query: searchQuery }) {
         return validSources.map((s) => s.source({ searchQuery }));
@@ -267,6 +284,10 @@ export default async function decorate(block) {
       },
       render: layoutTemplateFunction,
     });
+
+    // Primary trigger: fires when panel is appended to (or removed from) body
+    const panelPositionObserver = new MutationObserver(repositionPanel);
+    panelPositionObserver.observe(document.body, { childList: true, subtree: false });
 
     // Keep Autocomplete in sync with browser history navigation
     window.addEventListener('popstate', () => {

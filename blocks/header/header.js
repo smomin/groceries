@@ -42,6 +42,38 @@ function normalizeCategoryLabel(categoryPath = '') {
   return label;
 }
 
+/**
+ * Build a `/shop` URL whose query string drives the search-results block's
+ * InstantSearch `hierarchicalMenu` widget to the given category path.
+ *
+ * InstantSearch's default `simple` router serializes a hierarchical
+ * refinement as:
+ *   <indexName>[hierarchicalMenu][<firstAttribute>][<level>]=<leafValue>
+ * where `firstAttribute` is always the first entry in the menu's
+ * `attributes` array (here `categories.lvl0`) and each level holds just the
+ * leaf segment (NOT the full ` > `-joined path).
+ *
+ * Example: "Default Category > Baking > Baking Ingredients" produces
+ *   ...[categories.lvl0][0]=Default Category
+ *   ...[categories.lvl0][1]=Baking
+ *   ...[categories.lvl0][2]=Baking Ingredients
+ */
+function buildShopDeepLink(categoryPath = '') {
+  if (!categoryPath) return '/shop';
+  const segments = categoryPath
+    .split(' > ')
+    .map((segment) => segment.trim())
+    .filter(Boolean);
+  if (!segments.length) return '/shop';
+
+  const params = new URLSearchParams();
+  const baseKey = `${ALGOLIA_CONFIG.indexName}[hierarchicalMenu][categories.lvl0]`;
+  segments.forEach((segment, index) => {
+    params.append(`${baseKey}[${index}]`, segment);
+  });
+  return `/shop?${params.toString()}`;
+}
+
 function sortAndNormalizeCategories(categories = []) {
   return categories
     .filter((category) => category.path)
@@ -68,6 +100,19 @@ async function fetchProductCategories() {
 
     let categories = [];
 
+    const loadViaRegularSearch = async () => {
+      const facetResult = await index.search('', {
+        hitsPerPage: 0,
+        facets: [ALGOLIA_CONFIG.facetName],
+        maxValuesPerFacet: 200,
+      });
+
+      const rawFacetValues = facetResult?.facets?.[ALGOLIA_CONFIG.facetName] || {};
+      return sortAndNormalizeCategories(
+        Object.entries(rawFacetValues).map(([path, count]) => ({ path, count })),
+      );
+    };
+
     try {
       const { facetHits = [] } = await index.searchForFacetValues(ALGOLIA_CONFIG.facetName, '', {
         maxFacetHits: 100,
@@ -80,22 +125,13 @@ async function fetchProductCategories() {
         })),
       );
     } catch (error) {
-      const isSearchableFacetError = error?.message?.includes('searchable(');
-      if (!isSearchableFacetError) {
-        throw error;
-      }
-
-      // Fallback when facet isn't configured as searchable(...)
-      const facetResult = await index.search('', {
-        hitsPerPage: 0,
-        facets: [ALGOLIA_CONFIG.facetName],
-        maxValuesPerFacet: 200,
-      });
-
-      const rawFacetValues = facetResult?.facets?.[ALGOLIA_CONFIG.facetName] || {};
-      categories = sortAndNormalizeCategories(
-        Object.entries(rawFacetValues).map(([path, count]) => ({ path, count })),
-      );
+      // `searchForFacetValues` requires the facet to be configured as
+      // `searchable(...)` in attributesForFaceting. When it isn't, Algolia
+      // returns a 400 whose message varies. Fall back to a regular search
+      // and surface the original error only if the fallback also fails.
+      // eslint-disable-next-line no-console
+      console.warn('[header] searchForFacetValues failed, falling back to search():', error);
+      categories = await loadViaRegularSearch();
     }
 
     categoriesState.categories = categories;
@@ -144,7 +180,7 @@ function renderCategoriesMarkup(categories = []) {
         <li class="categories-overlay__item">
           <a
             class="categories-overlay__link"
-            href="/shop?category=${encodeURIComponent(category.path)}"
+            href="${buildShopDeepLink(category.path)}"
             data-category-path="${category.path}"
           >
             <span class="categories-overlay__name">${category.label}</span>

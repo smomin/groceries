@@ -46,6 +46,7 @@
 }
 
 .aa-Panel {
+    position: fixed !important;
     left: 50% !important;
     right: auto !important;
     transform: translateX(-50%);
